@@ -4,6 +4,8 @@ export class Player {
     cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     keyA: Phaser.Input.Keyboard.Key;
     keyD: Phaser.Input.Keyboard.Key;
+    keyW: Phaser.Input.Keyboard.Key;
+    keyS: Phaser.Input.Keyboard.Key;
 
     readonly speed: number = 160;
 
@@ -30,11 +32,15 @@ export class Player {
         this.cursors = scene.input.keyboard!.createCursorKeys();
         this.keyA = scene.input.keyboard!.addKey('A');
         this.keyD = scene.input.keyboard!.addKey('D');
+        this.keyW = scene.input.keyboard!.addKey('W');
+        this.keyS = scene.input.keyboard!.addKey('S');
     }
 
     update(delta: number) {
-        const goLeft  = this.cursors.left.isDown  || this.keyA.isDown;
+        const goLeft = this.cursors.left.isDown || this.keyA.isDown;
         const goRight = this.cursors.right.isDown || this.keyD.isDown;
+        const goUp = this.cursors.up.isDown || this.keyW.isDown;
+        const goDown = this.cursors.down.isDown || this.keyS.isDown;
         const distance = this.speed * (delta / 1000);
 
         if (goLeft) {
@@ -44,6 +50,12 @@ export class Player {
         } else if (goRight) {
             this.sprite.x += distance;
             this.sprite.setFlipX(false);
+            this.sprite.play('walk', true);
+        } else if (goUp) {
+            this.sprite.y -= distance;
+            this.sprite.play('walk', true);
+        } else if (goDown) {
+            this.sprite.y += distance;
             this.sprite.play('walk', true);
         } else {
             this.sprite.play('idle', true);
