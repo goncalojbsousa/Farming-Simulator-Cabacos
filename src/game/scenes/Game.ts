@@ -12,14 +12,17 @@ export class Game extends Scene {
 
     create() {
         this.camera = this.cameras.main;
-        this.camera.setBackgroundColor(0x00ff00);
 
-        this.background = this.add.image(512, 384, 'background');
-        this.background.setAlpha(0.5);
+        // Create tilemap and layers loaded in Preloader
+        const map = this.make.tilemap({ key: 'tilemap' });
+        const tileset = map.addTilesetImage('tiles1', 'tilesetImage');
+        if (tileset) {
+            map.createLayer('Tile Layer 1', tileset, 0, 0);
+            map.createLayer('Tile Layer 2', tileset, 0, 0);
+        }
 
         this.player = new Player(this, 512, 384);
     }
-
     update(_time: number, delta: number) {
         this.player.update(delta);
     }
