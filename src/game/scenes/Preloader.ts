@@ -27,11 +27,19 @@ export class Preloader extends Scene {
     preload() {
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
-
-        this.load.image('logo', 'logo.png');
         // Load the tilemap JSON exported from Tiled and the tileset image
         this.load.tilemapTiledJSON('tilemap', 'tilemap/jsontilemap.tmj');
         this.load.image('tilesetImage', 'tilemap/tileset.png');
+
+        this.load.spritesheet('idle', 'characters/player/idle/base_waiting_strip9.png', {
+            frameWidth: 96,
+            frameHeight: 64
+        });
+
+        this.load.spritesheet('walk', 'characters/player/walk/base_walk_strip8.png', {
+            frameWidth: 96,
+            frameHeight: 64
+        });
     }
 
     create() {
