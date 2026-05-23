@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { getAllItems } from '../data/ItemData';
 
 export class Preloader extends Scene {
     constructor() {
@@ -28,6 +29,16 @@ export class Preloader extends Scene {
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
         this.load.image('logo', 'logo.png');
+        this.load.image('hotbarSelector', 'inventory/hotbar_selector.png');
+        this.load.image('inventoryPanelTile', 'inventory/InventoryRect.png');
+        this.load.spritesheet('inventorySlot', 'inventory/inventorySlot.png', {
+            frameWidth: 20,
+            frameHeight: 20
+        });
+
+        for (const item of getAllItems()) {
+            this.load.image(item.textureKey, item.assetPath);
+        }
 
         // Load the tilemap JSON exported from Tiled and the tileset image
         this.load.tilemapTiledJSON('tilemap', 'tilemap/jsontilemap.tmj');
