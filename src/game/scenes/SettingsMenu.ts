@@ -15,9 +15,12 @@ export class SettingsMenu extends Scene {
     }
 
     create() {
-        this.add.image(512, 384, 'background');
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
 
-        this.add.text(512, 170, translate('settingsTitle'), {
+        this.add.image(centerX, centerY, 'background').setDisplaySize(this.scale.width, this.scale.height);
+
+        this.add.text(centerX, centerY - 215, translate('settingsTitle'), {
             fontFamily: 'Arial Black',
             fontSize: 46,
             color: '#ffffff',
@@ -26,7 +29,7 @@ export class SettingsMenu extends Scene {
             align: 'center'
         }).setOrigin(0.5);
 
-        this.add.text(512, 275, translate('language'), {
+        this.add.text(centerX, centerY - 110, translate('language'), {
             fontFamily: 'Arial',
             fontSize: 30,
             color: '#ffffff',
@@ -37,7 +40,7 @@ export class SettingsMenu extends Scene {
 
         this.createLanguageButtons();
 
-        createTextButton(this, 512, 590, 260, 56, translate('back'), () => {
+        createTextButton(this, centerX, centerY + 205, 260, 56, translate('back'), () => {
             this.scene.start('MainMenu');
         });
     }
@@ -45,10 +48,12 @@ export class SettingsMenu extends Scene {
     private createLanguageButtons(): void {
         const languages = getAvailableLanguages();
         const currentLanguage = getCurrentLanguage();
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
 
         languages.forEach((language, index) => {
-            const x = 512;
-            const y = 355 + index * 75;
+            const x = centerX;
+            const y = centerY - 30 + index * 75;
             const isSelected = language === currentLanguage;
 
             createTextButton(

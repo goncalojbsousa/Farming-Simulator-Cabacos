@@ -1,15 +1,27 @@
+html,
 body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
     color: rgba(255, 255, 255, 0.87);
     background-color: #0f0f0f;
+    overflow: hidden;
 }
 
 #app {
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+}
+
+#game-container canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }

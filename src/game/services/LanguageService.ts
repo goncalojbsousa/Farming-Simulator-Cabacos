@@ -6,7 +6,6 @@ const languageStorageKey = 'farming-simulator-cabacos-language';
 const translations = {
     en: {
         gameTitle: 'Cabacos Farm',
-        mainMenu: 'Main Menu',
         startGame: 'Start Game',
         settings: 'Settings',
         settingsTitle: 'Settings',
@@ -14,11 +13,17 @@ const translations = {
         english: 'English',
         portuguese: 'Portuguese',
         back: 'Back',
-        gameOver: 'Game Over'
+        gameOver: 'Game Over',
+        inventoryTitle: 'Inventory',
+        itemAxe: 'Axe',
+        itemHammer: 'Hammer',
+        itemPickaxe: 'Pickaxe',
+        itemRod: 'Fishing Rod',
+        itemShovel: 'Shovel',
+        itemSword: 'Sword'
     },
     pt: {
         gameTitle: 'Quinta Cabacos',
-        mainMenu: 'Menu Principal',
         startGame: 'Começar Jogo',
         settings: 'Definições',
         settingsTitle: 'Definições',
@@ -26,7 +31,14 @@ const translations = {
         english: 'Inglês',
         portuguese: 'Português',
         back: 'Voltar',
-        gameOver: 'Fim do Jogo'
+        gameOver: 'Fim do Jogo',
+        inventoryTitle: 'Inventário',
+        itemAxe: 'Machado',
+        itemHammer: 'Martelo',
+        itemPickaxe: 'Picareta',
+        itemRod: 'Cana de Pesca',
+        itemShovel: 'Pá',
+        itemSword: 'Espada'
     }
 };
 
