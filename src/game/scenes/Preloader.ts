@@ -27,6 +27,8 @@ export class Preloader extends Scene {
     preload() {
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
+        this.load.image('logo', 'logo.png');
+
         // Load the tilemap JSON exported from Tiled and the tileset image
         this.load.tilemapTiledJSON('tilemap', 'tilemap/jsontilemap.tmj');
         this.load.image('tilesetImage', 'tilemap/tileset.png');
@@ -46,7 +48,6 @@ export class Preloader extends Scene {
         //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
         //  For example, you can define global animations here, so we can use them in other scenes.
 
-        //  Start the Game scene directly
-        this.scene.start('Game');
+        this.scene.start('MainMenu');
     }
 }
