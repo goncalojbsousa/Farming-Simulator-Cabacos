@@ -51,6 +51,20 @@ export class InventoryPanel {
         this.setOpen(!this.isOpen);
     }
 
+    getSlotIndexAtPosition(x: number, y: number): number | null {
+        if (!this.isOpen) {
+            return null;
+        }
+
+        const slotIndex = this.slotViews.findIndex((slotView) => slotView.containsPoint(x, y));
+
+        if (slotIndex === -1) {
+            return null;
+        }
+
+        return slotIndex;
+    }
+
     private setOpen(isOpen: boolean): void {
         this.isOpen = isOpen;
         this.background.setVisible(isOpen);

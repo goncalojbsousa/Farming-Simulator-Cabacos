@@ -41,6 +41,41 @@ export class InventoryService {
         this.selectedSlotIndex = slotIndex;
     }
 
+    moveSlot(sourceSlotIndex: number, targetSlotIndex: number): boolean {
+        if (!this.isValidSlotIndex(sourceSlotIndex) || !this.isValidSlotIndex(targetSlotIndex)) {
+            return false;
+        }
+
+        if (sourceSlotIndex === targetSlotIndex) {
+            this.selectSlot(targetSlotIndex);
+            return false;
+        }
+
+        const sourceSlot = this.slots[sourceSlotIndex];
+        const targetSlot = this.slots[targetSlotIndex];
+
+        if (sourceSlot.itemId === null) {
+            return false;
+        }
+
+        if (targetSlot.itemId === null) {
+            this.moveItemToEmptySlot(sourceSlot, targetSlot);
+            this.selectSlot(targetSlotIndex);
+            return true;
+        }
+
+        if (sourceSlot.itemId === targetSlot.itemId) {
+            const didMerge = this.mergeMatchingSlots(sourceSlot, targetSlot);
+
+            this.selectSlot(targetSlotIndex);
+            return didMerge;
+        }
+
+        this.swapSlots(sourceSlot, targetSlot);
+        this.selectSlot(targetSlotIndex);
+        return true;
+    }
+
     addItem(itemId: ItemId, quantity: number): number {
         let quantityLeft = quantity;
 
@@ -134,6 +169,46 @@ export class InventoryService {
     private clearSlot(slot: InventorySlot): void {
         slot.itemId = null;
         slot.quantity = 0;
+    }
+
+    private moveItemToEmptySlot(sourceSlot: InventorySlot, targetSlot: InventorySlot): void {
+        targetSlot.itemId = sourceSlot.itemId;
+        targetSlot.quantity = sourceSlot.quantity;
+        this.clearSlot(sourceSlot);
+    }
+
+    private mergeMatchingSlots(sourceSlot: InventorySlot, targetSlot: InventorySlot): boolean {
+        if (sourceSlot.itemId === null || targetSlot.itemId === null) {
+            return false;
+        }
+
+        const item = getItemById(sourceSlot.itemId);
+        const freeSpace = item.maxStackSize - targetSlot.quantity;
+
+        if (freeSpace <= 0) {
+            return false;
+        }
+
+        const movedQuantity = Math.min(freeSpace, sourceSlot.quantity);
+
+        targetSlot.quantity += movedQuantity;
+        sourceSlot.quantity -= movedQuantity;
+
+        if (sourceSlot.quantity === 0) {
+            this.clearSlot(sourceSlot);
+        }
+
+        return movedQuantity > 0;
+    }
+
+    private swapSlots(firstSlot: InventorySlot, secondSlot: InventorySlot): void {
+        const firstItemId = firstSlot.itemId;
+        const firstQuantity = firstSlot.quantity;
+
+        firstSlot.itemId = secondSlot.itemId;
+        firstSlot.quantity = secondSlot.quantity;
+        secondSlot.itemId = firstItemId;
+        secondSlot.quantity = firstQuantity;
     }
 
     private createEmptySlot(): InventorySlot {

@@ -31,6 +31,16 @@ export class Hotbar {
         this.refresh();
     }
 
+    getSlotIndexAtPosition(x: number, y: number): number | null {
+        const slotIndex = this.slotViews.findIndex((slotView) => slotView.containsPoint(x, y));
+
+        if (slotIndex === -1) {
+            return null;
+        }
+
+        return slotIndex;
+    }
+
     private createSlots(scene: Scene): void {
         const scaledSlotSize = slotSize * slotScale;
         const totalWidth = visibleSlotCount * scaledSlotSize + (visibleSlotCount - 1) * slotGap;

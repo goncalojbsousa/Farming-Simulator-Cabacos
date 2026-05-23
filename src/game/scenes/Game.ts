@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
-import { getStartingItemIds } from '../data/ItemData';
+import { getItemById, getStartingItemIds } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
 import { Hotbar } from '../ui/Hotbar';
 import { InventoryPanel } from '../ui/InventoryPanel';
@@ -12,6 +12,8 @@ export class Game extends Scene {
     inventory: InventoryService;
     hotbar: Hotbar;
     inventoryPanel: InventoryPanel;
+    draggedSlotIndex: number | null = null;
+    draggedItemImage: Phaser.GameObjects.Image;
 
     constructor() {
         super('Game');
@@ -33,7 +35,15 @@ export class Game extends Scene {
         this.addStartingItems();
         this.hotbar = new Hotbar(this, this.inventory);
         this.inventoryPanel = new InventoryPanel(this, this.inventory, () => this.hotbar.refresh());
+        this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
+            .setScale(3)
+            .setAlpha(0.85)
+            .setDepth(2000)
+            .setScrollFactor(0)
+            .setVisible(false);
+
         this.setupInventoryKeys();
+        this.setupInventoryMouseControls();
     }
     update(_time: number, delta: number) {
         this.player.update(delta);
@@ -59,5 +69,67 @@ export class Game extends Scene {
                 this.inventoryPanel.toggle();
             }
         });
+    }
+
+    private setupInventoryMouseControls(): void {
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            const slotIndex = this.getInventorySlotIndexAtPointer(pointer);
+
+            if (slotIndex === null) {
+                return;
+            }
+
+            const slot = this.inventory.getSlot(slotIndex);
+
+            if (slot === null || slot.itemId === null) {
+                return;
+            }
+
+            const item = getItemById(slot.itemId);
+
+            this.draggedSlotIndex = slotIndex;
+            this.draggedItemImage.setTexture(item.textureKey);
+            this.draggedItemImage.setPosition(pointer.x, pointer.y);
+            this.draggedItemImage.setVisible(true);
+        });
+
+        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+            if (this.draggedSlotIndex === null) {
+                return;
+            }
+
+            this.draggedItemImage.setPosition(pointer.x, pointer.y);
+        });
+
+        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
+            if (this.draggedSlotIndex === null) {
+                return;
+            }
+
+            const targetSlotIndex = this.getInventorySlotIndexAtPointer(pointer);
+
+            if (targetSlotIndex !== null) {
+                this.inventory.moveSlot(this.draggedSlotIndex, targetSlotIndex);
+                this.refreshInventoryUi();
+            }
+
+            this.draggedSlotIndex = null;
+            this.draggedItemImage.setVisible(false);
+        });
+    }
+
+    private getInventorySlotIndexAtPointer(pointer: Phaser.Input.Pointer): number | null {
+        const panelSlotIndex = this.inventoryPanel.getSlotIndexAtPosition(pointer.x, pointer.y);
+
+        if (panelSlotIndex !== null) {
+            return panelSlotIndex;
+        }
+
+        return this.hotbar.getSlotIndexAtPosition(pointer.x, pointer.y);
+    }
+
+    private refreshInventoryUi(): void {
+        this.hotbar.refresh();
+        this.inventoryPanel.refresh();
     }
 }

@@ -8,8 +8,10 @@ export class InventorySlotView {
     private selectorImage: GameObjects.Image;
     private itemImage: GameObjects.Image;
     private quantityText: GameObjects.Text;
+    private hitSize: number;
 
     constructor(scene: Scene, x: number, y: number, scale: number, onClick: () => void) {
+        this.hitSize = 20 * scale;
         this.container = scene.add.container(x, y).setScrollFactor(0);
         this.slotImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale);
         this.selectorImage = scene.add.image(0, 0, 'hotbarSelector').setScale(scale).setVisible(false);
@@ -35,6 +37,20 @@ export class InventorySlotView {
 
     setVisible(isVisible: boolean): void {
         this.container.setVisible(isVisible);
+    }
+
+    containsPoint(x: number, y: number): boolean {
+        if (!this.container.visible) {
+            return false;
+        }
+
+        const halfSize = this.hitSize / 2;
+        const left = this.container.x - halfSize;
+        const right = this.container.x + halfSize;
+        const top = this.container.y - halfSize;
+        const bottom = this.container.y + halfSize;
+
+        return x >= left && x <= right && y >= top && y <= bottom;
     }
 
     refresh(slot: InventorySlot, isSelected: boolean): void {
