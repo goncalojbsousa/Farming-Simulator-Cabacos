@@ -8,6 +8,7 @@ const slotScale = 3;
 const slotGap = 6;
 
 export class Hotbar {
+    private scene: Scene;
     private inventory: InventoryService;
     private slotViews: InventorySlotView[] = [];
     private onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void;
@@ -19,6 +20,7 @@ export class Hotbar {
         onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void,
         onSlotLeft: () => void
     ) {
+        this.scene = scene;
         this.inventory = inventory;
         this.onSlotHovered = onSlotHovered;
         this.onSlotLeft = onSlotLeft;
@@ -40,6 +42,19 @@ export class Hotbar {
         this.refresh();
     }
 
+    layout(): void {
+        const scaledSlotSize = slotSize * slotScale;
+        const totalWidth = visibleSlotCount * scaledSlotSize + (visibleSlotCount - 1) * slotGap;
+        const startX = this.scene.scale.width / 2 - totalWidth / 2 + scaledSlotSize / 2;
+        const y = this.scene.scale.height - 44;
+
+        this.slotViews.forEach((slotView, slotIndex) => {
+            const x = startX + slotIndex * (scaledSlotSize + slotGap);
+
+            slotView.setPosition(x, y);
+        });
+    }
+
     getSlotIndexAtPosition(x: number, y: number): number | null {
         const slotIndex = this.slotViews.findIndex((slotView) => slotView.containsPoint(x, y));
 
@@ -50,18 +65,16 @@ export class Hotbar {
         return slotIndex;
     }
 
-    private createSlots(scene: Scene): void {
-        const scaledSlotSize = slotSize * slotScale;
-        const totalWidth = visibleSlotCount * scaledSlotSize + (visibleSlotCount - 1) * slotGap;
-        const startX = 512 - totalWidth / 2 + scaledSlotSize / 2;
-        const y = 724;
+    getGameObjects(): Phaser.GameObjects.GameObject[] {
+        return this.slotViews.map((slotView) => slotView.getGameObject());
+    }
 
+    private createSlots(scene: Scene): void {
         for (let slotIndex = 0; slotIndex < visibleSlotCount; slotIndex++) {
-            const x = startX + slotIndex * (scaledSlotSize + slotGap);
             const slotView = new InventorySlotView(
                 scene,
-                x,
-                y,
+                0,
+                0,
                 slotScale,
                 () => this.selectSlot(slotIndex),
                 (pointer) => this.onSlotHovered(slotIndex, pointer),
@@ -71,5 +84,7 @@ export class Hotbar {
             slotView.setDepth(1000);
             this.slotViews.push(slotView);
         }
+
+        this.layout();
     }
 }

@@ -6,7 +6,6 @@ const languageStorageKey = 'farming-simulator-cabacos-language';
 const translations = {
     en: {
         gameTitle: 'Cabacos Farm',
-        mainMenu: 'Main Menu',
         startGame: 'Start Game',
         settings: 'Settings',
         settingsTitle: 'Settings',
@@ -25,7 +24,6 @@ const translations = {
     },
     pt: {
         gameTitle: 'Quinta Cabacos',
-        mainMenu: 'Menu Principal',
         startGame: 'Começar Jogo',
         settings: 'Definições',
         settingsTitle: 'Definições',

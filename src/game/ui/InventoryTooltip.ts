@@ -1,11 +1,13 @@
 import { GameObjects, Scene } from 'phaser';
 
 export class InventoryTooltip {
+    private scene: Scene;
     private container: GameObjects.Container;
     private background: GameObjects.Rectangle;
     private text: GameObjects.Text;
 
     constructor(scene: Scene) {
+        this.scene = scene;
         this.container = scene.add.container(0, 0)
             .setDepth(2100)
             .setScrollFactor(0)
@@ -35,14 +37,18 @@ export class InventoryTooltip {
     }
 
     moveTo(x: number, y: number): void {
-        const tooltipX = this.clamp(x + 10, 0, 1024 - this.background.width);
-        const tooltipY = this.clamp(y - this.background.height - 10, 0, 768 - this.background.height);
+        const tooltipX = this.clamp(x + 10, 0, this.scene.scale.width - this.background.width);
+        const tooltipY = this.clamp(y - this.background.height - 10, 0, this.scene.scale.height - this.background.height);
 
         this.container.setPosition(tooltipX, tooltipY);
     }
 
     hide(): void {
         this.container.setVisible(false);
+    }
+
+    getGameObject(): GameObjects.Container {
+        return this.container;
     }
 
     private clamp(value: number, minimum: number, maximum: number): number {

@@ -9,6 +9,7 @@ const slotScale = 3;
 const slotGap = 8;
 
 export class InventoryPanel {
+    private scene: Scene;
     private inventory: InventoryService;
     private background: GameObjects.Rectangle;
     private titleText: GameObjects.Text;
@@ -25,6 +26,7 @@ export class InventoryPanel {
         onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void,
         onSlotLeft: () => void
     ) {
+        this.scene = scene;
         this.inventory = inventory;
         this.onSlotSelected = onSlotSelected;
         this.onSlotHovered = onSlotHovered;
@@ -45,6 +47,7 @@ export class InventoryPanel {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(901).setVisible(false);
 
         this.createSlots(scene);
+        this.layout();
         this.refresh();
     }
 
@@ -75,6 +78,23 @@ export class InventoryPanel {
         return slotIndex;
     }
 
+    getGameObjects(): Phaser.GameObjects.GameObject[] {
+        return [
+            this.background,
+            this.titleText,
+            ...this.slotViews.map((slotView) => slotView.getGameObject())
+        ];
+    }
+
+    layout(): void {
+        const centerX = this.scene.scale.width / 2;
+        const centerY = this.scene.scale.height / 2;
+
+        this.background.setPosition(centerX, centerY);
+        this.titleText.setPosition(centerX, centerY - 164);
+        this.layoutSlots(centerX, centerY);
+    }
+
     private setOpen(isOpen: boolean): void {
         this.isOpen = isOpen;
         this.background.setVisible(isOpen);
@@ -88,19 +108,11 @@ export class InventoryPanel {
     }
 
     private createSlots(scene: Scene): void {
-        const scaledSlotSize = slotSize * slotScale;
-        const startX = 512 - ((columnCount - 1) * (scaledSlotSize + slotGap)) / 2;
-        const startY = 300;
-
         this.inventory.getSlots().forEach((_slot, slotIndex) => {
-            const column = slotIndex % columnCount;
-            const row = Math.floor(slotIndex / columnCount);
-            const x = startX + column * (scaledSlotSize + slotGap);
-            const y = startY + row * (scaledSlotSize + slotGap);
             const slotView = new InventorySlotView(
                 scene,
-                x,
-                y,
+                0,
+                0,
                 slotScale,
                 () => {
                     this.inventory.selectSlot(slotIndex);
@@ -114,6 +126,21 @@ export class InventoryPanel {
             slotView.setDepth(902);
             slotView.setVisible(false);
             this.slotViews.push(slotView);
+        });
+    }
+
+    private layoutSlots(centerX: number, centerY: number): void {
+        const scaledSlotSize = slotSize * slotScale;
+        const startX = centerX - ((columnCount - 1) * (scaledSlotSize + slotGap)) / 2;
+        const startY = centerY - 84;
+
+        this.slotViews.forEach((slotView, slotIndex) => {
+            const column = slotIndex % columnCount;
+            const row = Math.floor(slotIndex / columnCount);
+            const x = startX + column * (scaledSlotSize + slotGap);
+            const y = startY + row * (scaledSlotSize + slotGap);
+
+            slotView.setPosition(x, y);
         });
     }
 }

@@ -8,11 +8,14 @@ export class MainMenu extends Scene {
     }
 
     create() {
-        this.add.image(512, 384, 'background');
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
 
-        this.add.image(512, 245, 'logo');
+        this.add.image(centerX, centerY, 'background').setDisplaySize(this.scale.width, this.scale.height);
 
-        this.add.text(512, 380, translate('gameTitle'), {
+        this.add.image(centerX, centerY - 140, 'logo');
+
+        this.add.text(centerX, centerY - 5, translate('gameTitle'), {
             fontFamily: 'Arial Black',
             fontSize: 44,
             color: '#ffffff',
@@ -21,11 +24,11 @@ export class MainMenu extends Scene {
             align: 'center'
         }).setOrigin(0.5);
 
-        createTextButton(this, 512, 500, 280, 60, translate('startGame'), () => {
+        createTextButton(this, centerX, centerY + 115, 280, 60, translate('startGame'), () => {
             this.scene.start('Game');
         });
 
-        createTextButton(this, 512, 580, 280, 60, translate('settings'), () => {
+        createTextButton(this, centerX, centerY + 195, 280, 60, translate('settings'), () => {
             this.scene.start('SettingsMenu');
         });
     }

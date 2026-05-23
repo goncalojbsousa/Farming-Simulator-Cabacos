@@ -7,30 +7,25 @@ export class Preloader extends Scene {
     }
 
     init() {
-        //  We loaded this image in our Boot Scene, so we can display it here
-        this.add.image(512, 384, 'background');
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
 
-        //  A simple progress bar. This is the outline of the bar.
-        this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
+        this.add.image(centerX, centerY, 'background').setDisplaySize(this.scale.width, this.scale.height);
 
-        //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
-        const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
+        this.add.rectangle(centerX, centerY, 468, 32).setStrokeStyle(1, 0xffffff);
 
-        //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
+        const bar = this.add.rectangle(centerX - 230, centerY, 4, 28, 0xffffff);
+
         this.load.on('progress', (progress: number) => {
-
-            //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
+            // The bar starts at 4px wide and grows to match the loader progress.
             bar.width = 4 + (460 * progress);
-
         });
     }
 
     preload() {
-        //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
         this.load.image('logo', 'logo.png');
         this.load.image('hotbarSelector', 'inventory/hotbar_selector.png');
-        this.load.image('inventoryPanelTile', 'inventory/InventoryRect.png');
         this.load.spritesheet('inventorySlot', 'inventory/inventorySlot.png', {
             frameWidth: 20,
             frameHeight: 20
@@ -40,7 +35,6 @@ export class Preloader extends Scene {
             this.load.image(item.textureKey, item.assetPath);
         }
 
-        // Load the tilemap JSON exported from Tiled and the tileset image
         this.load.tilemapTiledJSON('tilemap', 'tilemap/jsontilemap.tmj');
         this.load.image('tilesetImage', 'tilemap/tileset.png');
 
@@ -56,9 +50,6 @@ export class Preloader extends Scene {
     }
 
     create() {
-        //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-        //  For example, you can define global animations here, so we can use them in other scenes.
-
         this.scene.start('MainMenu');
     }
 }

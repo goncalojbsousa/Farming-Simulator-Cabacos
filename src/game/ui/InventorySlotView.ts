@@ -47,8 +47,16 @@ export class InventorySlotView {
         this.container.setDepth(depth);
     }
 
+    getGameObject(): GameObjects.Container {
+        return this.container;
+    }
+
     setVisible(isVisible: boolean): void {
         this.container.setVisible(isVisible);
+    }
+
+    setPosition(x: number, y: number): void {
+        this.container.setPosition(x, y);
     }
 
     containsPoint(x: number, y: number): boolean {

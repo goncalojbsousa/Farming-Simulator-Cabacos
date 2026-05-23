@@ -29,10 +29,6 @@ export class InventoryService {
         return this.selectedSlotIndex;
     }
 
-    getSelectedSlot(): InventorySlot {
-        return this.slots[this.selectedSlotIndex];
-    }
-
     selectSlot(slotIndex: number): void {
         if (!this.isValidSlotIndex(slotIndex)) {
             return;
@@ -59,18 +55,21 @@ export class InventoryService {
         }
 
         if (targetSlot.itemId === null) {
+            // Empty target slots receive the source stack directly.
             this.moveItemToEmptySlot(sourceSlot, targetSlot);
             this.selectSlot(targetSlotIndex);
             return true;
         }
 
         if (sourceSlot.itemId === targetSlot.itemId) {
+            // Matching item stacks merge first, then keep any leftover in the source slot.
             const didMerge = this.mergeMatchingSlots(sourceSlot, targetSlot);
 
             this.selectSlot(targetSlotIndex);
             return didMerge;
         }
 
+        // Different items swap places so the player never loses an item by dragging.
         this.swapSlots(sourceSlot, targetSlot);
         this.selectSlot(targetSlotIndex);
         return true;
