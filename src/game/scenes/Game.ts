@@ -34,6 +34,8 @@ export class Game extends Scene {
             .filter((tileset): tileset is Phaser.Tilemaps.Tileset => tileset !== null);
 
         for (const layerData of map.layers) {
+            if (layerData.name === 'Collision') continue;
+
             const layer = map.createLayer(layerData.name, tilesets, 0, 0);
 
             if (layer) {
@@ -49,8 +51,19 @@ export class Game extends Scene {
             }
         }
 
-        this.player = new Player(this, 512, 384);
+        const collisionLayer = map.createLayer('Collision', tilesets, 0, 0);
+        if (collisionLayer) {
+            collisionLayer.setCollisionByExclusion([-1]);
+            collisionLayer.setAlpha(0);
+            this.worldCameraObjects.push(collisionLayer);
+        }
+
+        this.player = new Player(this, 672, 496);
         this.worldCameraObjects.push(this.player.sprite);
+
+        if (collisionLayer) {
+            this.physics.add.collider(this.player.sprite, collisionLayer);
+        }
         this.setupCamera(map);
         this.inventory = new InventoryService(16);
         this.addStartingItems();
