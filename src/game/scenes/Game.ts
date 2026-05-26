@@ -28,19 +28,24 @@ export class Game extends Scene {
     create() {
         this.camera = this.cameras.main;
 
-        // Create tilemap and layers loaded in Preloader
         const map = this.make.tilemap({ key: 'tilemap' });
-        const tileset = map.addTilesetImage('tiles1', 'tilesetImage');
-        if (tileset) {
-            const groundLayer = map.createLayer('Tile Layer 1', tileset, 0, 0);
-            const objectLayer = map.createLayer('Tile Layer 2', tileset, 0, 0);
+        const tilesets = map.tilesets
+            .map((tileset) => map.addTilesetImage(tileset.name, tileset.name))
+            .filter((tileset): tileset is Phaser.Tilemaps.Tileset => tileset !== null);
 
-            if (groundLayer) {
-                this.worldCameraObjects.push(groundLayer);
-            }
+        for (const layerData of map.layers) {
+            const layer = map.createLayer(layerData.name, tilesets, 0, 0);
 
-            if (objectLayer) {
-                this.worldCameraObjects.push(objectLayer);
+            if (layer) {
+                const depth = Array.isArray((layerData as any).properties)
+                    ? (layerData as any).properties.find((property: { name?: string }) => property.name === 'gamemaker_depth')
+                    : null;
+
+                if (typeof depth?.value === 'number') {
+                    layer.setDepth(-depth.value);
+                }
+
+                this.worldCameraObjects.push(layer);
             }
         }
 
