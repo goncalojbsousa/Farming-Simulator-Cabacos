@@ -7,15 +7,15 @@ export class Player {
     keyW: Phaser.Input.Keyboard.Key;
     keyS: Phaser.Input.Keyboard.Key;
 
-    readonly speed: number = 160;
+    readonly speed: number = 80;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
 
         this.sprite = scene.physics.add.sprite(x, y, 'idle');
         this.sprite.setCollideWorldBounds(true);
         // Ajustar o body ao tamanho real do personagem (sprite é 96x64, personagem ~16x16)
-        this.sprite.setBodySize(12, 12);
-        this.sprite.setOffset(42, 24);
+        this.sprite.setBodySize(8, 8);
+        this.sprite.setOffset(44, 28);
 
         scene.anims.create({
             key: 'idle',
