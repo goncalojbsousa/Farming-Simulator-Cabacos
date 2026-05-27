@@ -28,24 +28,42 @@ export class Game extends Scene {
     create() {
         this.camera = this.cameras.main;
 
-        // Create tilemap and layers loaded in Preloader
         const map = this.make.tilemap({ key: 'tilemap' });
-        const tileset = map.addTilesetImage('tiles1', 'tilesetImage');
-        if (tileset) {
-            const groundLayer = map.createLayer('Tile Layer 1', tileset, 0, 0);
-            const objectLayer = map.createLayer('Tile Layer 2', tileset, 0, 0);
+        const tilesets = map.tilesets
+            .map((tileset) => map.addTilesetImage(tileset.name, tileset.name))
+            .filter((tileset): tileset is Phaser.Tilemaps.Tileset => tileset !== null);
 
-            if (groundLayer) {
-                this.worldCameraObjects.push(groundLayer);
-            }
+        for (const layerData of map.layers) {
+            if (layerData.name === 'Collision') continue;
 
-            if (objectLayer) {
-                this.worldCameraObjects.push(objectLayer);
+            const layer = map.createLayer(layerData.name, tilesets, 0, 0);
+
+            if (layer) {
+                const depth = Array.isArray((layerData as any).properties)
+                    ? (layerData as any).properties.find((property: { name?: string }) => property.name === 'gamemaker_depth')
+                    : null;
+
+                if (typeof depth?.value === 'number') {
+                    layer.setDepth(-depth.value);
+                }
+
+                this.worldCameraObjects.push(layer);
             }
         }
 
-        this.player = new Player(this, 512, 384);
+        const collisionLayer = map.createLayer('Collision', tilesets, 0, 0);
+        if (collisionLayer) {
+            collisionLayer.setCollisionByExclusion([-1]);
+            collisionLayer.setAlpha(0);
+            this.worldCameraObjects.push(collisionLayer);
+        }
+
+        this.player = new Player(this, 672, 496);
         this.worldCameraObjects.push(this.player.sprite);
+
+        if (collisionLayer) {
+            this.physics.add.collider(this.player.sprite, collisionLayer);
+        }
         this.setupCamera(map);
         this.inventory = new InventoryService(16);
         this.addStartingItems();

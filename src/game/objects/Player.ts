@@ -1,17 +1,21 @@
 export class Player {
 
-    sprite: Phaser.GameObjects.Sprite;
+    sprite: Phaser.Physics.Arcade.Sprite;
     cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     keyA: Phaser.Input.Keyboard.Key;
     keyD: Phaser.Input.Keyboard.Key;
     keyW: Phaser.Input.Keyboard.Key;
     keyS: Phaser.Input.Keyboard.Key;
 
-    readonly speed: number = 160;
+    readonly speed: number = 80;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
 
-        this.sprite = scene.add.sprite(x, y, 'idle');
+        this.sprite = scene.physics.add.sprite(x, y, 'idle');
+        this.sprite.setCollideWorldBounds(true);
+        // Ajustar o body ao tamanho real do personagem (sprite é 96x64, personagem ~16x16)
+        this.sprite.setBodySize(8, 8);
+        this.sprite.setOffset(44, 28);
 
         scene.anims.create({
             key: 'idle',
@@ -36,26 +40,27 @@ export class Player {
         this.keyS = scene.input.keyboard!.addKey('S');
     }
 
-    update(delta: number) {
+    update(_delta: number) {
         const goLeft = this.cursors.left.isDown || this.keyA.isDown;
         const goRight = this.cursors.right.isDown || this.keyD.isDown;
         const goUp = this.cursors.up.isDown || this.keyW.isDown;
         const goDown = this.cursors.down.isDown || this.keyS.isDown;
-        const distance = this.speed * (delta / 1000);
+
+        this.sprite.setVelocity(0, 0);
 
         if (goLeft) {
-            this.sprite.x -= distance;
+            this.sprite.setVelocityX(-this.speed);
             this.sprite.setFlipX(true);
             this.sprite.play('walk', true);
         } else if (goRight) {
-            this.sprite.x += distance;
+            this.sprite.setVelocityX(this.speed);
             this.sprite.setFlipX(false);
             this.sprite.play('walk', true);
         } else if (goUp) {
-            this.sprite.y -= distance;
+            this.sprite.setVelocityY(-this.speed);
             this.sprite.play('walk', true);
         } else if (goDown) {
-            this.sprite.y += distance;
+            this.sprite.setVelocityY(this.speed);
             this.sprite.play('walk', true);
         } else {
             this.sprite.play('idle', true);

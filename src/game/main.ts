@@ -15,6 +15,13 @@ const config: Phaser.Types.Core.GameConfig = {
     parent: 'game-container',
     backgroundColor: '#028af8',
     pixelArt: true,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { x: 0, y: 0 },
+            debug: false
+        }
+    },
     scale: {
         mode: Scale.RESIZE,
         autoCenter: Scale.CENTER_BOTH
