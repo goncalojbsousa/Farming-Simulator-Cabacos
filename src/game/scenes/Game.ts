@@ -6,8 +6,10 @@ import { translate } from '../services/LanguageService';
 import { Hotbar } from '../ui/Hotbar';
 import { InventoryPanel } from '../ui/InventoryPanel';
 import { InventoryTooltip } from '../ui/InventoryTooltip';
+import { FarmingSystem } from '../systems/FarmingSystem';
 
 const gameCameraZoom = 2;
+const playerDepth = 10;
 
 export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
@@ -20,6 +22,8 @@ export class Game extends Scene {
     draggedInventorySlotIndex: number | null = null;
     draggedItemImage: Phaser.GameObjects.Image;
     worldCameraObjects: Phaser.GameObjects.GameObject[] = [];
+    farmLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+    farmingSystem: FarmingSystem;
 
     constructor() {
         super('Game');
@@ -39,6 +43,10 @@ export class Game extends Scene {
             const layer = map.createLayer(layerData.name, tilesets, 0, 0);
 
             if (layer) {
+                if (layerData.name === 'farm') {
+                    this.farmLayer = layer;
+                }
+
                 const depth = Array.isArray((layerData as any).properties)
                     ? (layerData as any).properties.find((property: { name?: string }) => property.name === 'gamemaker_depth')
                     : null;
@@ -59,6 +67,7 @@ export class Game extends Scene {
         }
 
         this.player = new Player(this, 672, 496);
+        this.player.sprite.setDepth(playerDepth);
         this.worldCameraObjects.push(this.player.sprite);
 
         if (collisionLayer) {
@@ -89,6 +98,16 @@ export class Game extends Scene {
             .setVisible(false);
 
         this.setupUiCamera();
+        this.farmingSystem = new FarmingSystem({
+            scene: this,
+            worldCamera: this.camera,
+            uiCamera: this.uiCamera,
+            player: this.player,
+            inventory: this.inventory,
+            farmLayer: this.farmLayer,
+            worldCameraObjects: this.worldCameraObjects,
+            isPointerOverUi: (pointer) => this.getInventorySlotIndexAtPointer(pointer) !== null
+        });
         this.setupInventoryKeys();
         this.setupInventoryMouseControls();
         this.scale.on('resize', this.handleResize, this);
@@ -98,6 +117,7 @@ export class Game extends Scene {
     }
     update(_time: number, delta: number) {
         this.player.update(delta);
+        this.farmingSystem.update(this.input.activePointer);
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 

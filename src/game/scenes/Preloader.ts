@@ -38,6 +38,7 @@ export class Preloader extends Scene {
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');
         this.load.image('ts_map', 'tilemap/ts_map.png');
         this.load.image('ts_forest', 'tilemap/ts_forest.png');
+        this.load.image('soil', 'plantation/soil.png');
 
         this.load.spritesheet('idle', 'characters/player/idle/base_waiting_strip9.png', {
             frameWidth: 96,
