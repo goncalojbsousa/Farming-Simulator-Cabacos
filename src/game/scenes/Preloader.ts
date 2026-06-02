@@ -32,7 +32,7 @@ export class Preloader extends Scene {
         });
 
         for (const item of getAllItems()) {
-            this.load.image(item.textureKey, item.assetPath);
+            this.load.image(item.id, item.assetPath);
         }
 
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');

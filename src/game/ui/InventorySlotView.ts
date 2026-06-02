@@ -26,9 +26,9 @@ export class InventorySlotView {
         this.slotImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale);
         this.selectorImage = scene.add.image(0, 0, 'hotbarSelector').setScale(scale).setVisible(false);
         this.itemImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale).setVisible(false);
-        this.quantityText = scene.add.text(17 * scale, 15 * scale, '', {
+        this.quantityText = scene.add.text(8 * scale, 8 * scale, '', {
             fontFamily: 'Arial',
-            fontSize: `${9 * scale}px`,
+            fontSize: `${8 * scale}px`,
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3,
@@ -84,7 +84,7 @@ export class InventorySlotView {
 
         const item = getItemById(slot.itemId);
 
-        this.itemImage.setTexture(item.textureKey);
+        this.itemImage.setTexture(item.id);
         this.itemImage.setVisible(true);
         this.quantityText.setText(String(slot.quantity));
         this.quantityText.setVisible(slot.quantity > 1);
