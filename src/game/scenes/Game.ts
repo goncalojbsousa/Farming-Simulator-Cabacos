@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
-import { getItemById, getStartingItemIds } from '../data/ItemData';
+import { getItemById, getStartingItemIds, getStartingSeedItemIds } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { Hotbar } from '../ui/Hotbar';
@@ -125,6 +125,10 @@ export class Game extends Scene {
         for (const itemId of getStartingItemIds()) {
             this.inventory.addItem(itemId, 1);
         }
+
+        for (const seedItemId of getStartingSeedItemIds()) {
+            this.inventory.addItem(seedItemId, 5);
+        }
     }
 
     private setupCamera(map: Phaser.Tilemaps.Tilemap): void {
@@ -190,7 +194,7 @@ export class Game extends Scene {
 
             this.draggedInventorySlotIndex = slotIndex;
             this.inventoryTooltip.hide();
-            this.draggedItemImage.setTexture(item.textureKey);
+            this.draggedItemImage.setTexture(item.id);
             this.draggedItemImage.setPosition(pointer.x, pointer.y);
             this.draggedItemImage.setVisible(true);
         });
