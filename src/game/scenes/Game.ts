@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
 import { getItemById, getStartingItemIds, getStartingSeedItemIds } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
+import { MoneyService } from '../services/MoneyService';
 import { translate } from '../services/LanguageService';
 import { Hotbar } from '../ui/Hotbar';
 import { InventoryPanel } from '../ui/InventoryPanel';
@@ -10,12 +11,16 @@ import { FarmingSystem } from '../systems/FarmingSystem';
 
 const gameCameraZoom = 2;
 const playerDepth = 10;
+const startingMoney = 100;
 
 export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     uiCamera: Phaser.Cameras.Scene2D.Camera;
     player: Player;
     inventory: InventoryService;
+    money: MoneyService;
+    moneyBackground: Phaser.GameObjects.Rectangle;
+    moneyText: Phaser.GameObjects.Text;
     hotbar: Hotbar;
     inventoryPanel: InventoryPanel;
     inventoryTooltip: InventoryTooltip;
@@ -75,6 +80,8 @@ export class Game extends Scene {
         }
         this.setupCamera(map);
         this.inventory = new InventoryService(16);
+        this.money = new MoneyService(startingMoney);
+        this.createMoneyUi();
         this.addStartingItems();
         this.inventoryTooltip = new InventoryTooltip(this);
         this.hotbar = new Hotbar(
@@ -141,6 +148,8 @@ export class Game extends Scene {
         const uiObjects = [
             ...this.hotbar.getGameObjects(),
             ...this.inventoryPanel.getGameObjects(),
+            this.moneyBackground,
+            this.moneyText,
             this.inventoryTooltip.getGameObject(),
             this.draggedItemImage
         ];
@@ -156,7 +165,35 @@ export class Game extends Scene {
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.hotbar.layout();
         this.inventoryPanel.layout();
+        this.layoutMoneyUi();
         this.inventoryTooltip.hide();
+    }
+
+    refreshMoneyUi(): void {
+        this.moneyText.setText(`Dinheiro: ${this.money.getBalance()}`);
+    }
+
+    private createMoneyUi(): void {
+        this.moneyBackground = this.add.rectangle(16, 16, 158, 36, 0x1f2d24, 0.85)
+            .setOrigin(0)
+            .setStrokeStyle(2, 0xe2a36f)
+            .setScrollFactor(0)
+            .setDepth(950);
+
+        this.moneyText = this.add.text(28, 23, '', {
+            fontFamily: 'Arial Black',
+            fontSize: 16,
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setScrollFactor(0).setDepth(951);
+
+        this.refreshMoneyUi();
+    }
+
+    private layoutMoneyUi(): void {
+        this.moneyBackground.setPosition(16, 16);
+        this.moneyText.setPosition(28, 23);
     }
 
     private setupInventoryKeys(): void {
