@@ -26,7 +26,6 @@ export class FarmingSystem {
     private isPointerOverUi: (pointer: Phaser.Input.Pointer) => boolean;
     private tileHighlight: Phaser.GameObjects.Graphics;
     private tilledTileKeys = new Set<string>();
-    private soilSprites = new Map<string, Phaser.GameObjects.Image>();
 
     constructor(config: FarmingSystemConfig) {
         this.scene = config.scene;
@@ -86,7 +85,6 @@ export class FarmingSystem {
         this.worldCameraObjects.push(soil);
         this.uiCamera.ignore(soil);
         this.tilledTileKeys.add(tileKey);
-        this.soilSprites.set(tileKey, soil);
     }
 
     private updateTileHighlight(pointer: Phaser.Input.Pointer): void {

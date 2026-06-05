@@ -16,21 +16,15 @@ export class InventoryPanel {
     private slotViews: InventorySlotView[] = [];
     private isOpen = false;
     private onSlotSelected: () => void;
-    private onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void;
-    private onSlotLeft: () => void;
 
     constructor(
         scene: Scene,
         inventory: InventoryService,
-        onSlotSelected: () => void,
-        onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void,
-        onSlotLeft: () => void
+        onSlotSelected: () => void
     ) {
         this.scene = scene;
         this.inventory = inventory;
         this.onSlotSelected = onSlotSelected;
-        this.onSlotHovered = onSlotHovered;
-        this.onSlotLeft = onSlotLeft;
         this.background = scene.add.rectangle(512, 384, 360, 430, 0x1f2d24, 0.95)
             .setStrokeStyle(4, 0xe2a36f)
             .setScrollFactor(0)
@@ -118,9 +112,7 @@ export class InventoryPanel {
                     this.inventory.selectSlot(slotIndex);
                     this.refresh();
                     this.onSlotSelected();
-                },
-                (pointer) => this.onSlotHovered(slotIndex, pointer),
-                this.onSlotLeft
+                }
             );
 
             slotView.setDepth(902);

@@ -55,13 +55,13 @@ export class Game extends Scene {
                 if (layerData.name === 'farm') {
                     this.farmLayer = layer;
                 }
-
-                const depth = Array.isArray((layerData as any).properties)
+                // This property from Tiled defines the visual order of the layers.
+                const depthProperty = Array.isArray((layerData as any).properties)
                     ? (layerData as any).properties.find((property: { name?: string }) => property.name === 'gamemaker_depth')
                     : null;
 
-                if (typeof depth?.value === 'number') {
-                    layer.setDepth(-depth.value);
+                if (typeof depthProperty?.value === 'number') {
+                    layer.setDepth(-depthProperty.value);
                 }
 
                 this.worldCameraObjects.push(layer);
@@ -89,18 +89,11 @@ export class Game extends Scene {
         this.loadSeedShopInteractionZones(map);
         this.addStartingItems();
         this.inventoryTooltip = new InventoryTooltip(this);
-        this.hotbar = new Hotbar(
-            this,
-            this.inventory,
-            (slotIndex, pointer) => this.showInventoryTooltip(slotIndex, pointer),
-            () => this.inventoryTooltip.hide()
-        );
+        this.hotbar = new Hotbar(this, this.inventory);
         this.inventoryPanel = new InventoryPanel(
             this,
             this.inventory,
-            () => this.hotbar.refresh(),
-            (slotIndex, pointer) => this.showInventoryTooltip(slotIndex, pointer),
-            () => this.inventoryTooltip.hide()
+            () => this.hotbar.refresh()
         );
         this.seedShopPanel = new SeedShopPanel({
             scene: this,
@@ -190,7 +183,6 @@ export class Game extends Scene {
         this.inventoryPanel.layout();
         this.seedShopPanel.layout();
         this.layoutSeedShopPrompt();
-        this.layoutMoneyUi();
         this.inventoryTooltip.hide();
     }
 
@@ -216,23 +208,18 @@ export class Game extends Scene {
         this.refreshMoneyUi();
     }
 
-    private layoutMoneyUi(): void {
-        this.moneyBackground.setPosition(16, 16);
-        this.moneyText.setPosition(28, 23);
-    }
-
     private loadSeedShopInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
         const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
 
         for (const tiledObject of interactionLayer?.objects ?? []) {
             if (
                 tiledObject.type !== 'shop'
-                || !this.tiledObjectHasProperty(tiledObject, 'action', 'open_shop')
+                || !this.hasTiledProperty(tiledObject, 'action', 'open_shop')
             ) {
                 continue;
             }
 
-            if (!this.tiledObjectHasProperty(tiledObject, 'shopType', 'seeds')) {
+            if (!this.hasTiledProperty(tiledObject, 'shopType', 'seeds')) {
                 continue;
             }
 
@@ -246,13 +233,13 @@ export class Game extends Scene {
     }
 
     private updateSeedShopPrompt(): void {
-        const playerIsInsideInteractionZone = this.isPlayerInSeedShopZone();
+        const isInSeedShopZone = this.isPlayerInSeedShopZone();
 
         this.seedShopPromptText.setVisible(
-            playerIsInsideInteractionZone && !this.seedShopPanel.isOpen()
+            isInSeedShopZone && !this.seedShopPanel.isOpen()
         );
 
-        if (!playerIsInsideInteractionZone && this.seedShopPanel.isOpen()) {
+        if (!isInSeedShopZone && this.seedShopPanel.isOpen()) {
             this.seedShopPanel.close();
         }
     }
@@ -264,6 +251,7 @@ export class Game extends Scene {
     private setupInventoryKeys(): void {
         this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
             const slotNumber = Number(event.key);
+            const pressedKey = event.key.toLowerCase();
 
             if (slotNumber >= 1 && slotNumber <= 8) {
                 this.hotbar.selectSlot(slotNumber - 1);
@@ -271,13 +259,13 @@ export class Game extends Scene {
                 return;
             }
 
-            if (event.key.toLowerCase() === 'i') {
+            if (pressedKey === 'i') {
                 this.inventoryPanel.toggle();
                 this.inventoryTooltip.hide();
                 return;
             }
 
-            if (event.key.toLowerCase() === 'e' && this.isPlayerInSeedShopZone()) {
+            if (pressedKey === 'e' && this.isPlayerInSeedShopZone()) {
                 this.seedShopPanel.toggle();
                 this.inventoryTooltip.hide();
             }
@@ -308,12 +296,9 @@ export class Game extends Scene {
         });
 
         this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (this.draggedInventorySlotIndex === null) {
-                this.updateInventoryTooltipAtPointer(pointer);
-                return;
+            if (this.draggedInventorySlotIndex !== null) {
+                this.draggedItemImage.setPosition(pointer.x, pointer.y);
             }
-
-            this.draggedItemImage.setPosition(pointer.x, pointer.y);
         });
 
         this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
@@ -340,11 +325,7 @@ export class Game extends Scene {
 
         const panelSlotIndex = this.inventoryPanel.getSlotIndexAtPosition(pointer.x, pointer.y);
 
-        if (panelSlotIndex !== null) {
-            return panelSlotIndex;
-        }
-
-        return this.hotbar.getSlotIndexAtPosition(pointer.x, pointer.y);
+        return panelSlotIndex ?? this.hotbar.getSlotIndexAtPosition(pointer.x, pointer.y);
     }
 
     private isPointerOverUi(pointer: Phaser.Input.Pointer): boolean {
@@ -356,19 +337,21 @@ export class Game extends Scene {
         const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
 
         // The Tiled rectangle is exact, the full sprite bounds would make the interaction area too large.
-        return this.seedShopInteractionZones.some((interactionZone) => {
-            return interactionZone.contains(playerBody.center.x, playerBody.center.y);
-        });
+        return this.seedShopInteractionZones.some((zone) =>
+            zone.contains(playerBody.center.x, playerBody.center.y)
+        );
     }
 
-    private tiledObjectHasProperty(
+    // Checks whether a Tiled object has a property with the expected name and value.
+    private hasTiledProperty(
         tiledObject: Phaser.Types.Tilemaps.TiledObject,
         propertyName: string,
         expectedValue: string
     ): boolean {
-        return tiledObject.properties?.some((property: { name?: string; value?: unknown }) => {
-            return property.name === propertyName && property.value === expectedValue;
-        }) ?? false;
+        return tiledObject.properties?.some(
+            (property: { name?: string; value?: unknown }) =>
+                property.name === propertyName && property.value === expectedValue
+        ) ?? false;
     }
 
     private refreshInventoryUi(): void {
