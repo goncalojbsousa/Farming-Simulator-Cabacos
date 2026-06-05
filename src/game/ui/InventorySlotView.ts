@@ -2,8 +2,6 @@ import { GameObjects, Scene } from 'phaser';
 import { getItemById } from '../data/ItemData';
 import { InventorySlot } from '../services/InventoryService';
 
-type SlotHoverCallback = (pointer: Phaser.Input.Pointer) => void;
-
 export class InventorySlotView {
     private container: GameObjects.Container;
     private slotImage: GameObjects.Image;
@@ -17,9 +15,7 @@ export class InventorySlotView {
         x: number,
         y: number,
         scale: number,
-        onClick: () => void,
-        onHover?: SlotHoverCallback,
-        onLeave?: () => void
+        onClick: () => void
     ) {
         this.hitSize = 20 * scale;
         this.container = scene.add.container(x, y).setScrollFactor(0);
@@ -37,8 +33,6 @@ export class InventorySlotView {
 
         this.slotImage.setInteractive({ useHandCursor: true });
         this.slotImage.on('pointerdown', onClick);
-        this.slotImage.on('pointerover', (pointer: Phaser.Input.Pointer) => onHover?.(pointer));
-        this.slotImage.on('pointerout', () => onLeave?.());
 
         this.container.add([this.slotImage, this.itemImage, this.selectorImage, this.quantityText]);
     }

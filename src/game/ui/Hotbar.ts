@@ -11,19 +11,10 @@ export class Hotbar {
     private scene: Scene;
     private inventory: InventoryService;
     private slotViews: InventorySlotView[] = [];
-    private onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void;
-    private onSlotLeft: () => void;
 
-    constructor(
-        scene: Scene,
-        inventory: InventoryService,
-        onSlotHovered: (slotIndex: number, pointer: Phaser.Input.Pointer) => void,
-        onSlotLeft: () => void
-    ) {
+    constructor(scene: Scene, inventory: InventoryService) {
         this.scene = scene;
         this.inventory = inventory;
-        this.onSlotHovered = onSlotHovered;
-        this.onSlotLeft = onSlotLeft;
         this.createSlots(scene);
         this.refresh();
     }
@@ -76,9 +67,7 @@ export class Hotbar {
                 0,
                 0,
                 slotScale,
-                () => this.selectSlot(slotIndex),
-                (pointer) => this.onSlotHovered(slotIndex, pointer),
-                this.onSlotLeft
+                () => this.selectSlot(slotIndex)
             );
 
             slotView.setDepth(1000);

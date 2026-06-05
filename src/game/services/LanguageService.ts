@@ -111,12 +111,9 @@ export function getAvailableLanguages(): GameLanguage[] {
 }
 
 export function getLanguageLabel(language: GameLanguage): string {
-    const labelKeyByLanguage: Record<GameLanguage, TranslationKey> = {
-        en: 'english',
-        pt: 'portuguese'
-    };
+    const labelKey: TranslationKey = language === 'pt' ? 'portuguese' : 'english';
 
-    return translations[getCurrentLanguage()][labelKeyByLanguage[language]];
+    return translate(labelKey);
 }
 
 function isGameLanguage(value: string | null): value is GameLanguage {

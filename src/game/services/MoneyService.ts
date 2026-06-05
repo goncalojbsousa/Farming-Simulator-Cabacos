@@ -19,7 +19,7 @@ export class MoneyService {
     spend(amount: number): boolean {
         this.assertValidAmount(amount);
 
-        if (!this.canAfford(amount)) {
+        if (this.balance < amount) {
             return false;
         }
 
