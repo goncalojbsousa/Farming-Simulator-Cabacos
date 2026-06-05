@@ -7,6 +7,7 @@ import { translate } from '../services/LanguageService';
 import { Hotbar } from '../ui/Hotbar';
 import { InventoryPanel } from '../ui/InventoryPanel';
 import { InventoryTooltip } from '../ui/InventoryTooltip';
+import { SeedShopPanel } from '../ui/SeedShopPanel';
 import { FarmingSystem } from '../systems/FarmingSystem';
 
 const gameCameraZoom = 2;
@@ -24,9 +25,12 @@ export class Game extends Scene {
     hotbar: Hotbar;
     inventoryPanel: InventoryPanel;
     inventoryTooltip: InventoryTooltip;
+    seedShopPanel: SeedShopPanel;
+    seedShopPromptText: Phaser.GameObjects.Text;
     draggedInventorySlotIndex: number | null = null;
     draggedItemImage: Phaser.GameObjects.Image;
     worldCameraObjects: Phaser.GameObjects.GameObject[] = [];
+    seedShopInteractionZones: Phaser.Geom.Rectangle[] = [];
     farmLayer: Phaser.Tilemaps.TilemapLayer | null = null;
     farmingSystem: FarmingSystem;
 
@@ -82,6 +86,7 @@ export class Game extends Scene {
         this.inventory = new InventoryService(16);
         this.money = new MoneyService(startingMoney);
         this.createMoneyUi();
+        this.loadSeedShopInteractionZones(map);
         this.addStartingItems();
         this.inventoryTooltip = new InventoryTooltip(this);
         this.hotbar = new Hotbar(
@@ -97,6 +102,21 @@ export class Game extends Scene {
             (slotIndex, pointer) => this.showInventoryTooltip(slotIndex, pointer),
             () => this.inventoryTooltip.hide()
         );
+        this.seedShopPanel = new SeedShopPanel({
+            scene: this,
+            inventory: this.inventory,
+            money: this.money,
+            onInventoryChanged: () => this.refreshInventoryUi(),
+            onMoneyChanged: () => this.refreshMoneyUi()
+        });
+        this.seedShopPromptText = this.add.text(0, 0, 'E - Comprar sementes', {
+            fontFamily: 'Arial Black',
+            fontSize: 16,
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(960).setVisible(false);
+        this.layoutSeedShopPrompt();
         this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
             .setScale(3)
             .setAlpha(0.85)
@@ -113,7 +133,7 @@ export class Game extends Scene {
             inventory: this.inventory,
             farmLayer: this.farmLayer,
             worldCameraObjects: this.worldCameraObjects,
-            isPointerOverUi: (pointer) => this.getInventorySlotIndexAtPointer(pointer) !== null
+            isPointerOverUi: (pointer) => this.isPointerOverUi(pointer)
         });
         this.setupInventoryKeys();
         this.setupInventoryMouseControls();
@@ -125,6 +145,7 @@ export class Game extends Scene {
     update(_time: number, delta: number) {
         this.player.update(delta);
         this.farmingSystem.update(this.input.activePointer);
+        this.updateSeedShopPrompt();
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 
@@ -150,6 +171,8 @@ export class Game extends Scene {
             ...this.inventoryPanel.getGameObjects(),
             this.moneyBackground,
             this.moneyText,
+            ...this.seedShopPanel.getGameObjects(),
+            this.seedShopPromptText,
             this.inventoryTooltip.getGameObject(),
             this.draggedItemImage
         ];
@@ -165,6 +188,8 @@ export class Game extends Scene {
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.hotbar.layout();
         this.inventoryPanel.layout();
+        this.seedShopPanel.layout();
+        this.layoutSeedShopPrompt();
         this.layoutMoneyUi();
         this.inventoryTooltip.hide();
     }
@@ -196,6 +221,46 @@ export class Game extends Scene {
         this.moneyText.setPosition(28, 23);
     }
 
+    private loadSeedShopInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
+        const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
+
+        for (const tiledObject of interactionLayer?.objects ?? []) {
+            if (
+                tiledObject.type !== 'shop'
+                || !this.tiledObjectHasProperty(tiledObject, 'action', 'open_shop')
+            ) {
+                continue;
+            }
+
+            if (!this.tiledObjectHasProperty(tiledObject, 'shopType', 'seeds')) {
+                continue;
+            }
+
+            this.seedShopInteractionZones.push(new Phaser.Geom.Rectangle(
+                tiledObject.x,
+                tiledObject.y,
+                tiledObject.width ?? 0,
+                tiledObject.height ?? 0
+            ));
+        }
+    }
+
+    private updateSeedShopPrompt(): void {
+        const playerIsInsideInteractionZone = this.isPlayerInSeedShopZone();
+
+        this.seedShopPromptText.setVisible(
+            playerIsInsideInteractionZone && !this.seedShopPanel.isOpen()
+        );
+
+        if (!playerIsInsideInteractionZone && this.seedShopPanel.isOpen()) {
+            this.seedShopPanel.close();
+        }
+    }
+
+    private layoutSeedShopPrompt(): void {
+        this.seedShopPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
     private setupInventoryKeys(): void {
         this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
             const slotNumber = Number(event.key);
@@ -208,6 +273,12 @@ export class Game extends Scene {
 
             if (event.key.toLowerCase() === 'i') {
                 this.inventoryPanel.toggle();
+                this.inventoryTooltip.hide();
+                return;
+            }
+
+            if (event.key.toLowerCase() === 'e' && this.isPlayerInSeedShopZone()) {
+                this.seedShopPanel.toggle();
                 this.inventoryTooltip.hide();
             }
         });
@@ -263,6 +334,10 @@ export class Game extends Scene {
     }
 
     private getInventorySlotIndexAtPointer(pointer: Phaser.Input.Pointer): number | null {
+        if (this.seedShopPanel.isOpen()) {
+            return null;
+        }
+
         const panelSlotIndex = this.inventoryPanel.getSlotIndexAtPosition(pointer.x, pointer.y);
 
         if (panelSlotIndex !== null) {
@@ -270,6 +345,30 @@ export class Game extends Scene {
         }
 
         return this.hotbar.getSlotIndexAtPosition(pointer.x, pointer.y);
+    }
+
+    private isPointerOverUi(pointer: Phaser.Input.Pointer): boolean {
+        return this.getInventorySlotIndexAtPointer(pointer) !== null
+            || this.seedShopPanel.containsScreenPoint(pointer.x, pointer.y);
+    }
+
+    private isPlayerInSeedShopZone(): boolean {
+        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+
+        // The Tiled rectangle is exact, the full sprite bounds would make the interaction area too large.
+        return this.seedShopInteractionZones.some((interactionZone) => {
+            return interactionZone.contains(playerBody.center.x, playerBody.center.y);
+        });
+    }
+
+    private tiledObjectHasProperty(
+        tiledObject: Phaser.Types.Tilemaps.TiledObject,
+        propertyName: string,
+        expectedValue: string
+    ): boolean {
+        return tiledObject.properties?.some((property: { name?: string; value?: unknown }) => {
+            return property.name === propertyName && property.value === expectedValue;
+        }) ?? false;
     }
 
     private refreshInventoryUi(): void {
