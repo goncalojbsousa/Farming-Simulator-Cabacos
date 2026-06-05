@@ -15,24 +15,33 @@ const playerDepth = 10;
 const startingMoney = 100;
 
 export class Game extends Scene {
+    // World
     camera: Phaser.Cameras.Scene2D.Camera;
-    uiCamera: Phaser.Cameras.Scene2D.Camera;
     player: Player;
+    farmLayer: Phaser.Tilemaps.TilemapLayer | null = null;
+    farmingSystem: FarmingSystem;
+    worldCameraObjects: Phaser.GameObjects.GameObject[] = [];
+
+    // Game data
     inventory: InventoryService;
     money: MoneyService;
-    moneyBackground: Phaser.GameObjects.Rectangle;
-    moneyText: Phaser.GameObjects.Text;
+
+    // UI
+    uiCamera: Phaser.Cameras.Scene2D.Camera;
     hotbar: Hotbar;
     inventoryPanel: InventoryPanel;
     inventoryTooltip: InventoryTooltip;
+    moneyBackground: Phaser.GameObjects.Rectangle;
+    moneyText: Phaser.GameObjects.Text;
+
+    // Seed shop
     seedShopPanel: SeedShopPanel;
     seedShopPromptText: Phaser.GameObjects.Text;
+    seedShopInteractionZones: Phaser.Geom.Rectangle[] = [];
+
+    // Inventory dragging
     draggedInventorySlotIndex: number | null = null;
     draggedItemImage: Phaser.GameObjects.Image;
-    worldCameraObjects: Phaser.GameObjects.GameObject[] = [];
-    seedShopInteractionZones: Phaser.Geom.Rectangle[] = [];
-    farmLayer: Phaser.Tilemaps.TilemapLayer | null = null;
-    farmingSystem: FarmingSystem;
 
     constructor() {
         super('Game');
@@ -41,6 +50,7 @@ export class Game extends Scene {
     create() {
         this.camera = this.cameras.main;
 
+        // Create the map and its layers.
         const map = this.make.tilemap({ key: 'tilemap' });
         const tilesets = map.tilesets
             .map((tileset) => map.addTilesetImage(tileset.name, tileset.name))
@@ -68,6 +78,7 @@ export class Game extends Scene {
             }
         }
 
+        // Create collisions and the player.
         const collisionLayer = map.createLayer('Collision', tilesets, 0, 0);
         if (collisionLayer) {
             collisionLayer.setCollisionByExclusion([-1]);
@@ -82,7 +93,10 @@ export class Game extends Scene {
         if (collisionLayer) {
             this.physics.add.collider(this.player.sprite, collisionLayer);
         }
+
         this.setupCamera(map);
+
+        // Create game data and UI.
         this.inventory = new InventoryService(16);
         this.money = new MoneyService(startingMoney);
         this.createMoneyUi();
@@ -117,7 +131,10 @@ export class Game extends Scene {
             .setScrollFactor(0)
             .setVisible(false);
 
+        // Keep the UI fixed while the world camera follows the player.
         this.setupUiCamera();
+
+        // Create gameplay systems and controls.
         this.farmingSystem = new FarmingSystem({
             scene: this,
             worldCamera: this.camera,
@@ -135,6 +152,7 @@ export class Game extends Scene {
             this.scale.off('resize', this.handleResize, this);
         });
     }
+
     update(_time: number, delta: number) {
         this.player.update(delta);
         this.farmingSystem.update(this.input.activePointer);
@@ -142,21 +160,15 @@ export class Game extends Scene {
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 
-    private addStartingItems(): void {
-        for (const itemId of getStartingItemIds()) {
-            this.inventory.addItem(itemId, 1);
-        }
-
-        for (const seedItemId of getStartingSeedItemIds()) {
-            this.inventory.addItem(seedItemId, 5);
-        }
-    }
+    // World and cameras
 
     private setupCamera(map: Phaser.Tilemaps.Tilemap): void {
         this.camera.setZoom(gameCameraZoom);
         this.camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.camera.startFollow(this.player.sprite, true, 0.08, 0.08);
     }
+
+    // UI
 
     private setupUiCamera(): void {
         const uiObjects = [
@@ -186,10 +198,6 @@ export class Game extends Scene {
         this.inventoryTooltip.hide();
     }
 
-    refreshMoneyUi(): void {
-        this.moneyText.setText(`Dinheiro: ${this.money.getBalance()}`);
-    }
-
     private createMoneyUi(): void {
         this.moneyBackground = this.add.rectangle(16, 16, 158, 36, 0x1f2d24, 0.85)
             .setOrigin(0)
@@ -207,6 +215,12 @@ export class Game extends Scene {
 
         this.refreshMoneyUi();
     }
+
+    refreshMoneyUi(): void {
+        this.moneyText.setText(`Dinheiro: ${this.money.getBalance()}`);
+    }
+
+    // Seed shop
 
     private loadSeedShopInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
         const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
@@ -246,6 +260,39 @@ export class Game extends Scene {
 
     private layoutSeedShopPrompt(): void {
         this.seedShopPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
+    private isPlayerInSeedShopZone(): boolean {
+        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+
+        // The Tiled rectangle is exact, the full sprite bounds would make the interaction area too large.
+        return this.seedShopInteractionZones.some((zone) =>
+            zone.contains(playerBody.center.x, playerBody.center.y)
+        );
+    }
+
+    // Checks whether a Tiled object has a property with the expected name and value.
+    private hasTiledProperty(
+        tiledObject: Phaser.Types.Tilemaps.TiledObject,
+        propertyName: string,
+        expectedValue: string
+    ): boolean {
+        return tiledObject.properties?.some(
+            (property: { name?: string; value?: unknown }) =>
+                property.name === propertyName && property.value === expectedValue
+        ) ?? false;
+    }
+
+    // Inventory
+
+    private addStartingItems(): void {
+        for (const itemId of getStartingItemIds()) {
+            this.inventory.addItem(itemId, 1);
+        }
+
+        for (const seedItemId of getStartingSeedItemIds()) {
+            this.inventory.addItem(seedItemId, 5);
+        }
     }
 
     private setupInventoryKeys(): void {
@@ -331,27 +378,6 @@ export class Game extends Scene {
     private isPointerOverUi(pointer: Phaser.Input.Pointer): boolean {
         return this.getInventorySlotIndexAtPointer(pointer) !== null
             || this.seedShopPanel.containsScreenPoint(pointer.x, pointer.y);
-    }
-
-    private isPlayerInSeedShopZone(): boolean {
-        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
-
-        // The Tiled rectangle is exact, the full sprite bounds would make the interaction area too large.
-        return this.seedShopInteractionZones.some((zone) =>
-            zone.contains(playerBody.center.x, playerBody.center.y)
-        );
-    }
-
-    // Checks whether a Tiled object has a property with the expected name and value.
-    private hasTiledProperty(
-        tiledObject: Phaser.Types.Tilemaps.TiledObject,
-        propertyName: string,
-        expectedValue: string
-    ): boolean {
-        return tiledObject.properties?.some(
-            (property: { name?: string; value?: unknown }) =>
-                property.name === propertyName && property.value === expectedValue
-        ) ?? false;
     }
 
     private refreshInventoryUi(): void {
