@@ -1,6 +1,7 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 type InteriorConfig = {
     sceneKey: string;
@@ -16,8 +17,9 @@ export class BuildingInteriorScene extends Scene {
     protected worldObjects: Phaser.GameObjects.GameObject[] = [];
 
     private exitZone: Geom.Rectangle;
-    private exitPrompt: Phaser.GameObjects.Text;
+    private exitPrompt: InteractionPrompt;
     private uiCamera?: Phaser.Cameras.Scene2D.Camera;
+    private uiObjects: Phaser.GameObjects.GameObject[] = [];
 
     constructor(private config: InteriorConfig) {
         super(config.sceneKey);
@@ -40,10 +42,11 @@ export class BuildingInteriorScene extends Scene {
         this.physics.add.collider(this.player.sprite, walls);
 
         this.exitZone = this.getInteractionZone(this.config.exitObjectName);
-        this.exitPrompt = this.createPrompt(this.exitZone, 'E - Sair');
+        this.exitPrompt = this.createPrompt('E - Sair');
 
         this.cameras.main.setZoom(2).setBackgroundColor('#15151f');
         this.centerCamera();
+        this.createUiCamera();
 
         this.gameInput = new GameInput(this);
         this.scale.on('resize', this.resizeScene, this);
@@ -57,7 +60,11 @@ export class BuildingInteriorScene extends Scene {
         this.player.update(this.gameInput);
 
         const canExit = this.isPlayerInside(this.exitZone) && !this.interactionIsBlocked();
-        this.exitPrompt.setVisible(canExit);
+        if (canExit) {
+            this.exitPrompt.show();
+        } else {
+            this.exitPrompt.hide();
+        }
 
         if (canExit && this.gameInput.interactPressed()) {
             this.scene.stop();
@@ -77,20 +84,12 @@ export class BuildingInteriorScene extends Scene {
         );
     }
 
-    protected createPrompt(zone: Geom.Rectangle, message: string): Phaser.GameObjects.Text {
-        const prompt = this.add.text(zone.centerX, zone.y - 6, message, {
-            fontFamily: 'Arial Black',
-            fontSize: 9,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 2,
-            resolution: 4
-        })
-            .setOrigin(0.5)
-            .setDepth(1000)
-            .setVisible(false);
+    protected createPrompt(message: string): InteractionPrompt {
+        const prompt = new InteractionPrompt(this, message);
+        prompt.setScrollFactor(0);
 
-        this.worldObjects.push(prompt);
+        this.uiObjects.push(prompt.getGameObject());
+        this.positionPrompt(prompt);
         return prompt;
     }
 
@@ -105,9 +104,8 @@ export class BuildingInteriorScene extends Scene {
     }
 
     protected setupUi(uiObjects: Phaser.GameObjects.GameObject[]): void {
-        this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
-        this.uiCamera.ignore(this.worldObjects);
-        this.cameras.main.ignore(uiObjects);
+        this.uiObjects.push(...uiObjects);
+        this.createUiCamera();
     }
 
     protected layoutUi(): void {}
@@ -135,6 +133,7 @@ export class BuildingInteriorScene extends Scene {
     private resizeScene(): void {
         this.centerCamera();
         this.uiCamera?.setViewport(0, 0, this.scale.width, this.scale.height);
+        this.positionPrompt(this.exitPrompt);
         this.layoutUi();
     }
 
@@ -142,5 +141,21 @@ export class BuildingInteriorScene extends Scene {
         this.cameras.main
             .setViewport(0, 0, this.scale.width, this.scale.height)
             .centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
+    }
+
+    private positionPrompt(prompt: InteractionPrompt): void {
+        prompt.setPosition(this.scale.width / 2, this.scale.height - 80);
+    }
+
+    private createUiCamera(): void {
+        this.uiCamera ??= this.cameras.add(
+            0,
+            0,
+            this.scale.width,
+            this.scale.height
+        );
+
+        this.uiCamera.ignore(this.worldObjects);
+        this.cameras.main.ignore(this.uiObjects);
     }
 }

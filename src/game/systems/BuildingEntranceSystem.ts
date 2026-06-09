@@ -3,6 +3,7 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
+import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 type BuildingEntrance = {
     zone: Geom.Rectangle;
@@ -19,7 +20,7 @@ const buildings = [
 
 export class BuildingEntranceSystem {
     private entrances: BuildingEntrance[] = [];
-    private prompt: Phaser.GameObjects.Text;
+    private prompt: InteractionPrompt;
 
     constructor(
         private scene: Scene,
@@ -47,17 +48,8 @@ export class BuildingEntranceSystem {
             }
         }
 
-        this.prompt = scene.add.text(0, 0, '', {
-            fontFamily: 'Arial Black',
-            fontSize: 16,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 3
-        })
-            .setOrigin(0.5)
-            .setScrollFactor(0)
-            .setDepth(1000)
-            .setVisible(false);
+        this.prompt = new InteractionPrompt(scene);
+        this.prompt.setScrollFactor(0);
 
         this.layout();
     }
@@ -65,9 +57,11 @@ export class BuildingEntranceSystem {
     update(input: GameInput): void {
         const entrance = this.getCurrentEntrance();
 
-        this.prompt
-            .setText(entrance?.message ?? '')
-            .setVisible(entrance !== undefined);
+        if (entrance) {
+            this.prompt.show(entrance.message);
+        } else {
+            this.prompt.hide();
+        }
 
         if (entrance && input.interactPressed()) {
             this.scene.scene.sleep('Game');
@@ -86,7 +80,7 @@ export class BuildingEntranceSystem {
     }
 
     getUiObjects(): Phaser.GameObjects.GameObject[] {
-        return [this.prompt];
+        return [this.prompt.getGameObject()];
     }
 
     private getCurrentEntrance(): BuildingEntrance | undefined {

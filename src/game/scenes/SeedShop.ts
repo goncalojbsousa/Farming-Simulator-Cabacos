@@ -2,6 +2,7 @@ import { Geom } from 'phaser';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
 import { MoneyDisplay } from '../ui/MoneyDisplay';
+import { InteractionPrompt } from '../ui/InteractionPrompt';
 import { SeedShopPanel } from '../ui/SeedShopPanel';
 import { BuildingInteriorScene } from './BuildingInteriorScene';
 
@@ -14,7 +15,7 @@ export class SeedShop extends BuildingInteriorScene {
     private inventory: InventoryService;
     private money: MoneyService;
     private shopZone: Geom.Rectangle;
-    private shopPrompt: Phaser.GameObjects.Text;
+    private shopPrompt: InteractionPrompt;
     private shopPanel: SeedShopPanel;
     private moneyDisplay: MoneyDisplay;
 
@@ -36,10 +37,7 @@ export class SeedShop extends BuildingInteriorScene {
         super.create();
 
         this.shopZone = this.getInteractionZone('seed_shop');
-        this.shopPrompt = this.createPrompt(
-            this.shopZone,
-            'E - Comprar sementes'
-        );
+        this.shopPrompt = this.createPrompt('E - Comprar sementes');
         this.moneyDisplay = new MoneyDisplay(this, this.money);
         this.shopPanel = new SeedShopPanel(
             this,
@@ -58,7 +56,11 @@ export class SeedShop extends BuildingInteriorScene {
         super.update();
 
         const canShop = this.isPlayerInside(this.shopZone);
-        this.shopPrompt.setVisible(canShop && !this.shopPanel.isOpen());
+        if (canShop && !this.shopPanel.isOpen()) {
+            this.shopPrompt.show();
+        } else {
+            this.shopPrompt.hide();
+        }
 
         if (!canShop) {
             this.shopPanel.close();
