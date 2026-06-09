@@ -1,18 +1,18 @@
 import { GameObjects, Scene } from 'phaser';
 
-type UiPanelConfig = {
+type MenuPanelConfig = {
     width: number;
     height: number;
     title: string;
     depth: number;
 };
 
-export class UiPanel {
+export class MenuPanel {
     readonly container: GameObjects.Container;
 
     constructor(
         private scene: Scene,
-        private config: UiPanelConfig
+        private config: MenuPanelConfig
     ) {
         const background = scene.add.rectangle(
             0,
@@ -36,23 +36,31 @@ export class UiPanel {
             .setDepth(config.depth);
     }
 
-    add(gameObject: GameObjects.GameObject): void {
+    addContent(gameObject: GameObjects.GameObject): void {
         this.container.add(gameObject);
     }
 
-    show(): void {
+    open(): void {
         this.container.setVisible(true);
     }
 
-    hide(): void {
+    close(): void {
         this.container.setVisible(false);
+    }
+
+    toggle(): void {
+        this.container.setVisible(!this.container.visible);
+    }
+
+    isOpen(): boolean {
+        return this.container.visible;
     }
 
     containsPoint(x: number, y: number): boolean {
         return this.container.visible && this.container.getBounds().contains(x, y);
     }
 
-    centerOnScreen(scaleToFit = false): void {
+    center(scaleToFit = false): void {
         const { width, height } = this.scene.scale;
         const scale = scaleToFit
             ? Math.min(1, (width - 24) / this.config.width, (height - 24) / this.config.height)

@@ -2,64 +2,55 @@ import { Scene } from 'phaser';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { InventorySlotView } from './InventorySlotView';
-import { UiPanel } from './UiPanel';
+import { MenuPanel } from './MenuPanel';
 
 const columns = 4;
 const slotScale = 3;
 const slotSpacing = 68;
 
 export class InventoryPanel {
-    private panel: UiPanel;
+    private menu: MenuPanel;
     private slotViews: InventorySlotView[] = [];
-    private panelIsOpen = false;
 
     constructor(
         private inventory: InventoryService,
-        scene: Scene,
-        private onSelectedSlotChanged: () => void
+        scene: Scene
     ) {
-        this.panel = new UiPanel(scene, {
+        this.menu = new MenuPanel(scene, {
             width: 360,
             height: 430,
             title: translate('inventoryTitle'),
             depth: 900
         });
 
-        inventory.getSlots().forEach((_slot, slotIndex) => {
-            const slotView = new InventorySlotView(
-                scene,
-                0,
-                0,
-                slotScale,
-                () => this.selectSlot(slotIndex)
-            );
+        inventory.slots.forEach(() => {
+            const slotView = new InventorySlotView(scene, slotScale);
 
             this.slotViews.push(slotView);
-            this.panel.add(slotView.getGameObject());
+            this.menu.addContent(slotView.container);
         });
 
         this.layout();
         this.refresh();
-        this.panel.hide();
+        this.menu.close();
     }
 
     refresh(): void {
-        const inventorySlots = this.inventory.getSlots();
-        const selectedSlotIndex = this.inventory.getSelectedSlotIndex();
-
         this.slotViews.forEach((slotView, slotIndex) => {
-            slotView.refresh(inventorySlots[slotIndex], slotIndex === selectedSlotIndex);
+            slotView.refresh(
+                this.inventory.slots[slotIndex],
+                slotIndex === this.inventory.selectedSlotIndex
+            );
         });
     }
 
     toggle(): void {
-        this.panelIsOpen = !this.panelIsOpen;
-        this.panelIsOpen ? this.panel.show() : this.panel.hide();
+        this.menu.toggle();
         this.refresh();
     }
 
     findSlotAt(x: number, y: number): number | null {
-        if (!this.panelIsOpen) {
+        if (!this.menu.isOpen()) {
             return null;
         }
 
@@ -68,13 +59,13 @@ export class InventoryPanel {
     }
 
     layout(): void {
-        this.panel.centerOnScreen();
+        this.menu.center();
 
         this.slotViews.forEach((slotView, slotIndex) => {
             const column = slotIndex % columns;
             const row = Math.floor(slotIndex / columns);
 
-            slotView.setPosition(
+            slotView.container.setPosition(
                 (column - 1.5) * slotSpacing,
                 -84 + row * slotSpacing
             );
@@ -82,12 +73,6 @@ export class InventoryPanel {
     }
 
     getUiObjects(): Phaser.GameObjects.GameObject[] {
-        return [this.panel.container];
-    }
-
-    private selectSlot(slotIndex: number): void {
-        this.inventory.selectSlot(slotIndex);
-        this.refresh();
-        this.onSelectedSlotChanged();
+        return [this.menu.container];
     }
 }

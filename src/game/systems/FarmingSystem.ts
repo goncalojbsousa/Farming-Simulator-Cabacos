@@ -1,4 +1,5 @@
 import { getCropTextureKey, getItemById, SeedItem } from '../data/ItemData';
+import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 
@@ -24,14 +25,15 @@ export class FarmingSystem {
         game.worldObjects.push(this.tileHighlight);
         game.uiCamera.ignore(this.tileHighlight);
 
-        game.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            if (!game.isPointerOverUi(pointer)) {
-                this.useSelectedItem(pointer);
-            }
-        });
     }
 
-    update(pointer: Phaser.Input.Pointer): void {
+    update(input: GameInput): void {
+        const pointer = input.pointer;
+
+        if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
+            this.useSelectedItem(pointer);
+        }
+
         const tile = this.getTile(pointer);
 
         this.tileHighlight.clear();
@@ -54,9 +56,9 @@ export class FarmingSystem {
             return;
         }
 
-        const selectedSlot = this.game.inventory.getSlot(
-            this.game.inventory.getSelectedSlotIndex()
-        );
+        const selectedSlot = this.game.inventory.slots[
+            this.game.inventory.selectedSlotIndex
+        ];
 
         if (selectedSlot.itemId === 'shovel') {
             this.tillTile(tile);
@@ -78,7 +80,7 @@ export class FarmingSystem {
     }
 
     private plantSeed(tile: Phaser.Tilemaps.Tile, seed: SeedItem): void {
-        const selectedSlot = this.game.inventory.getSelectedSlotIndex();
+        const selectedSlot = this.game.inventory.selectedSlotIndex;
         this.game.inventory.removeOneFromSlot(selectedSlot);
 
         const crop = this.game.scene.add.image(
@@ -111,9 +113,9 @@ export class FarmingSystem {
     }
 
     private canUseSelectedItem(tile: Phaser.Tilemaps.Tile): boolean {
-        const itemId = this.game.inventory.getSlot(
-            this.game.inventory.getSelectedSlotIndex()
-        ).itemId;
+        const itemId = this.game.inventory.slots[
+            this.game.inventory.selectedSlotIndex
+        ].itemId;
         const key = `${tile.x},${tile.y}`;
 
         if (itemId === 'shovel') {

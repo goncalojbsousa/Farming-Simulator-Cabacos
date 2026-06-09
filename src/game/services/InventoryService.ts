@@ -6,8 +6,8 @@ export type InventorySlot = {
 };
 
 export class InventoryService {
-    private slots: InventorySlot[];
-    private selectedSlot = 0;
+    readonly slots: InventorySlot[];
+    selectedSlotIndex = 0;
 
     constructor(numberOfSlots: number) {
         this.slots = Array.from({ length: numberOfSlots }, () => ({
@@ -16,20 +16,8 @@ export class InventoryService {
         }));
     }
 
-    getSlots(): InventorySlot[] {
-        return this.slots;
-    }
-
-    getSlot(index: number): InventorySlot {
-        return this.slots[index];
-    }
-
-    getSelectedSlotIndex(): number {
-        return this.selectedSlot;
-    }
-
     selectSlot(index: number): void {
-        this.selectedSlot = index;
+        this.selectedSlotIndex = index;
     }
 
     addItem(itemId: ItemId, quantity: number): boolean {
@@ -82,6 +70,6 @@ export class InventoryService {
             this.slots[toIndex] = savedSlot;
         }
 
-        this.selectedSlot = toIndex;
+        this.selectedSlotIndex = toIndex;
     }
 }

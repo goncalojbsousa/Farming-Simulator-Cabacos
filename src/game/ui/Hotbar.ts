@@ -15,22 +15,24 @@ export class Hotbar {
     constructor(scene: Scene, inventory: InventoryService) {
         this.scene = scene;
         this.inventory = inventory;
-        this.createSlots(scene);
+
+        for (let slotIndex = 0; slotIndex < visibleSlotCount; slotIndex++) {
+            const slotView = new InventorySlotView(scene, slotScale);
+            slotView.container.setDepth(1000);
+            this.slotViews.push(slotView);
+        }
+
+        this.layout();
         this.refresh();
     }
 
     refresh(): void {
-        const slots = this.inventory.getSlots();
-        const selectedSlotIndex = this.inventory.getSelectedSlotIndex();
-
         this.slotViews.forEach((slotView, slotIndex) => {
-            slotView.refresh(slots[slotIndex], slotIndex === selectedSlotIndex);
+            slotView.refresh(
+                this.inventory.slots[slotIndex],
+                slotIndex === this.inventory.selectedSlotIndex
+            );
         });
-    }
-
-    selectSlot(slotIndex: number): void {
-        this.inventory.selectSlot(slotIndex);
-        this.refresh();
     }
 
     layout(): void {
@@ -42,7 +44,7 @@ export class Hotbar {
         this.slotViews.forEach((slotView, slotIndex) => {
             const x = startX + slotIndex * (scaledSlotSize + slotGap);
 
-            slotView.setPosition(x, y);
+            slotView.container.setPosition(x, y);
         });
     }
 
@@ -52,23 +54,6 @@ export class Hotbar {
     }
 
     getUiObjects(): Phaser.GameObjects.GameObject[] {
-        return this.slotViews.map((slotView) => slotView.getGameObject());
-    }
-
-    private createSlots(scene: Scene): void {
-        for (let slotIndex = 0; slotIndex < visibleSlotCount; slotIndex++) {
-            const slotView = new InventorySlotView(
-                scene,
-                0,
-                0,
-                slotScale,
-                () => this.selectSlot(slotIndex)
-            );
-
-            slotView.setDepth(1000);
-            this.slotViews.push(slotView);
-        }
-
-        this.layout();
+        return this.slotViews.map((slotView) => slotView.container);
     }
 }

@@ -3,13 +3,12 @@ import { getSeedItems, SeedItem } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { MenuPanel } from './MenuPanel';
 import { SeedShopRow } from './SeedShopRow';
-import { UiPanel } from './UiPanel';
 
 export class SeedShopPanel {
-    private panel: UiPanel;
+    private menu: MenuPanel;
     private purchaseMessage: GameObjects.Text;
-    private panelIsOpen = false;
 
     constructor(
         private scene: Scene,
@@ -17,7 +16,7 @@ export class SeedShopPanel {
         private money: MoneyService,
         private onPurchase: () => void
     ) {
-        this.panel = new UiPanel(scene, {
+        this.menu = new MenuPanel(scene, {
             width: 560,
             height: 570,
             title: 'Loja de Sementes',
@@ -30,8 +29,8 @@ export class SeedShopPanel {
             color: '#ffe7a3'
         }).setOrigin(0.5);
 
-        this.panel.add(this.purchaseMessage);
-        this.panel.add(this.createCloseButton());
+        this.menu.addContent(this.purchaseMessage);
+        this.menu.addContent(this.createCloseButton());
 
         getSeedItems().forEach((seed, index) => {
             const seedRow = new SeedShopRow(
@@ -41,7 +40,7 @@ export class SeedShopPanel {
                 () => this.buySeed(seed)
             );
 
-            this.panel.add(seedRow.container);
+            this.menu.addContent(seedRow.container);
         });
 
         this.layout();
@@ -49,34 +48,28 @@ export class SeedShopPanel {
     }
 
     toggle(): void {
-        this.panelIsOpen ? this.close() : this.open();
+        this.purchaseMessage.setText('');
+        this.menu.toggle();
     }
 
     close(): void {
-        this.panelIsOpen = false;
-        this.panel.hide();
+        this.menu.close();
     }
 
     isOpen(): boolean {
-        return this.panelIsOpen;
+        return this.menu.isOpen();
     }
 
     containsScreenPoint(x: number, y: number): boolean {
-        return this.panel.containsPoint(x, y);
+        return this.menu.containsPoint(x, y);
     }
 
     layout(): void {
-        this.panel.centerOnScreen(true);
+        this.menu.center(true);
     }
 
     getUiObjects(): GameObjects.GameObject[] {
-        return [this.panel.container];
-    }
-
-    private open(): void {
-        this.panelIsOpen = true;
-        this.purchaseMessage.setText('');
-        this.panel.show();
+        return [this.menu.container];
     }
 
     private createCloseButton(): GameObjects.Text {

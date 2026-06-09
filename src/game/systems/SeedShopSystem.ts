@@ -1,3 +1,4 @@
+import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
@@ -33,17 +34,15 @@ export class SeedShopSystem {
             shop.height!
         );
 
-        scene.input.keyboard!.on('keydown-E', () => {
-            if (this.playerIsInShop()) {
-                this.panel.toggle();
-            }
-        });
-
         this.layout();
     }
 
-    update(): void {
+    update(input: GameInput): void {
         const playerIsInShop = this.playerIsInShop();
+
+        if (input.shopPressed() && playerIsInShop) {
+            this.panel.toggle();
+        }
 
         this.prompt.setVisible(playerIsInShop && !this.panel.isOpen());
 

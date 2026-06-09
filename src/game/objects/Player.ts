@@ -1,7 +1,7 @@
+import { GameInput } from '../input/GameInput';
+
 export class Player {
     sprite: Phaser.Physics.Arcade.Sprite;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    keys: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
     readonly speed = 80;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -26,31 +26,27 @@ export class Player {
 
         this.sprite.play('idle');
 
-        this.cursors = scene.input.keyboard!.createCursorKeys();
-        this.keys = scene.input.keyboard!.addKeys('W,A,S,D') as typeof this.keys;
     }
 
-    update(): void {
-        const goLeft = this.cursors.left.isDown || this.keys.A.isDown;
-        const goRight = this.cursors.right.isDown || this.keys.D.isDown;
-        const goUp = this.cursors.up.isDown || this.keys.W.isDown;
-        const goDown = this.cursors.down.isDown || this.keys.S.isDown;
+    update(input: GameInput): void {
+        const horizontalMovement =
+            Number(input.isRightDown()) - Number(input.isLeftDown());
+        const verticalMovement =
+            Number(input.isDownDown()) - Number(input.isUpDown());
+        const movement = new Phaser.Math.Vector2(
+            horizontalMovement,
+            verticalMovement
+        ).normalize().scale(this.speed);
 
-        this.sprite.setVelocity(0, 0);
+        this.sprite.setVelocity(movement.x, movement.y);
 
-        if (goLeft) {
-            this.sprite.setVelocityX(-this.speed);
+        if (horizontalMovement < 0) {
             this.sprite.setFlipX(true);
-            this.sprite.play('walk', true);
-        } else if (goRight) {
-            this.sprite.setVelocityX(this.speed);
+        } else if (horizontalMovement > 0) {
             this.sprite.setFlipX(false);
-            this.sprite.play('walk', true);
-        } else if (goUp) {
-            this.sprite.setVelocityY(-this.speed);
-            this.sprite.play('walk', true);
-        } else if (goDown) {
-            this.sprite.setVelocityY(this.speed);
+        }
+
+        if (horizontalMovement !== 0 || verticalMovement !== 0) {
             this.sprite.play('walk', true);
         } else {
             this.sprite.play('idle', true);

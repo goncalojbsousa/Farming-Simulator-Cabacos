@@ -3,7 +3,7 @@ import { getItemById } from '../data/ItemData';
 import { InventorySlot } from '../services/InventoryService';
 
 export class InventorySlotView {
-    private container: GameObjects.Container;
+    readonly container: GameObjects.Container;
     private slotImage: GameObjects.Image;
     private selectorImage: GameObjects.Image;
     private itemImage: GameObjects.Image;
@@ -11,12 +11,9 @@ export class InventorySlotView {
 
     constructor(
         scene: Scene,
-        x: number,
-        y: number,
-        scale: number,
-        onClick: () => void
+        scale: number
     ) {
-        this.container = scene.add.container(x, y).setScrollFactor(0);
+        this.container = scene.add.container(0, 0).setScrollFactor(0);
         this.slotImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale);
         this.selectorImage = scene.add.image(0, 0, 'hotbarSelector').setScale(scale).setVisible(false);
         this.itemImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale).setVisible(false);
@@ -30,25 +27,8 @@ export class InventorySlotView {
         }).setOrigin(1, 1);
 
         this.slotImage.setInteractive({ useHandCursor: true });
-        this.slotImage.on('pointerdown', onClick);
 
         this.container.add([this.slotImage, this.itemImage, this.selectorImage, this.quantityText]);
-    }
-
-    setDepth(depth: number): void {
-        this.container.setDepth(depth);
-    }
-
-    getGameObject(): GameObjects.Container {
-        return this.container;
-    }
-
-    setVisible(isVisible: boolean): void {
-        this.container.setVisible(isVisible);
-    }
-
-    setPosition(x: number, y: number): void {
-        this.container.setPosition(x, y);
     }
 
     containsPoint(x: number, y: number): boolean {
