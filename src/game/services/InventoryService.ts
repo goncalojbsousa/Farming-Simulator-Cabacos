@@ -7,10 +7,10 @@ export type InventorySlot = {
 
 export class InventoryService {
     private slots: InventorySlot[];
-    private selectedSlotIndex = 0;
+    private selectedSlot = 0;
 
-    constructor(slotCount: number) {
-        this.slots = Array.from({ length: slotCount }, () => ({
+    constructor(numberOfSlots: number) {
+        this.slots = Array.from({ length: numberOfSlots }, () => ({
             itemId: null,
             quantity: 0
         }));
@@ -20,116 +20,68 @@ export class InventoryService {
         return this.slots;
     }
 
-    getSlot(index: number): InventorySlot | null {
-        return this.slots[index] ?? null;
+    getSlot(index: number): InventorySlot {
+        return this.slots[index];
     }
 
     getSelectedSlotIndex(): number {
-        return this.selectedSlotIndex;
+        return this.selectedSlot;
     }
 
     selectSlot(index: number): void {
-        if (this.getSlot(index)) {
-            this.selectedSlotIndex = index;
-        }
+        this.selectedSlot = index;
     }
 
-    addItem(itemId: ItemId, quantity: number): number {
+    addItem(itemId: ItemId, quantity: number): boolean {
         const maxStack = getItemById(itemId).maxStackSize;
-        let quantityLeft = quantity;
+        let slot = this.slots.find((slot) =>
+            slot.itemId === itemId && slot.quantity + quantity <= maxStack
+        );
 
-        for (const slot of this.slots) {
-            if (slot.itemId !== itemId || slot.quantity === maxStack) {
-                continue;
-            }
+        slot ??= this.slots.find((slot) => slot.itemId === null);
 
-            const added = Math.min(maxStack - slot.quantity, quantityLeft);
-            slot.quantity += added;
-            quantityLeft -= added;
-
-            if (quantityLeft === 0) {
-                return 0;
-            }
-        }
-
-        for (const slot of this.slots) {
-            if (slot.itemId !== null) {
-                continue;
-            }
-
-            const added = Math.min(maxStack, quantityLeft);
-            slot.itemId = itemId;
-            slot.quantity = added;
-            quantityLeft -= added;
-
-            if (quantityLeft === 0) {
-                return 0;
-            }
-        }
-
-        return quantityLeft;
-    }
-
-    removeFromSlot(index: number, quantity: number): boolean {
-        const slot = this.getSlot(index);
-
-        if (!slot?.itemId || slot.quantity < quantity) {
+        if (!slot) {
             return false;
         }
 
-        slot.quantity -= quantity;
-
-        if (slot.quantity === 0) {
-            this.emptySlot(slot);
-        }
-
+        slot.itemId = itemId;
+        slot.quantity += quantity;
         return true;
     }
 
-    moveSlot(sourceIndex: number, targetIndex: number): void {
-        const source = this.getSlot(sourceIndex);
-        const target = this.getSlot(targetIndex);
+    removeOneFromSlot(index: number): void {
+        const slot = this.slots[index];
+        slot.quantity--;
 
-        if (!source?.itemId || !target || sourceIndex === targetIndex) {
+        if (slot.quantity === 0) {
+            slot.itemId = null;
+        }
+    }
+
+    moveSlot(fromIndex: number, toIndex: number): void {
+        if (fromIndex === toIndex) {
             return;
         }
 
-        if (target.itemId === null) {
-            target.itemId = source.itemId;
-            target.quantity = source.quantity;
-            this.emptySlot(source);
-        } else if (target.itemId === source.itemId) {
-            this.mergeSlots(source, target);
+        const from = this.slots[fromIndex];
+        const to = this.slots[toIndex];
+
+        if (from.itemId === to.itemId && from.itemId !== null) {
+            const maxStack = getItemById(from.itemId).maxStackSize;
+            const quantityToMove = Math.min(from.quantity, maxStack - to.quantity);
+
+            to.quantity += quantityToMove;
+            from.quantity -= quantityToMove;
+
+            if (from.quantity === 0) {
+                from.itemId = null;
+            }
         } else {
-            this.swapSlots(source, target);
+            const savedSlot = { ...from };
+            this.slots[fromIndex] = { ...to };
+            this.slots[toIndex] = savedSlot;
         }
 
-        this.selectSlot(targetIndex);
-    }
-
-    private mergeSlots(source: InventorySlot, target: InventorySlot): void {
-        const maxStack = getItemById(source.itemId!).maxStackSize;
-        const moved = Math.min(maxStack - target.quantity, source.quantity);
-
-        target.quantity += moved;
-        source.quantity -= moved;
-
-        if (source.quantity === 0) {
-            this.emptySlot(source);
-        }
-    }
-
-    private swapSlots(first: InventorySlot, second: InventorySlot): void {
-        const savedSlot = { ...first };
-
-        first.itemId = second.itemId;
-        first.quantity = second.quantity;
-        second.itemId = savedSlot.itemId;
-        second.quantity = savedSlot.quantity;
-    }
-
-    private emptySlot(slot: InventorySlot): void {
-        slot.itemId = null;
-        slot.quantity = 0;
+        this.selectedSlot = toIndex;
     }
 }

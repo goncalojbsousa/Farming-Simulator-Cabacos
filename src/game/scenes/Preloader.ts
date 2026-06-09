@@ -1,10 +1,9 @@
 import { Scene } from 'phaser';
 import {
     cropStages,
-    getAllItems,
+    gameItems,
     getCropAssetPath,
-    getCropTextureKey,
-    isSeedItem
+    getCropTextureKey
 } from '../data/ItemData';
 
 export class Preloader extends Scene {
@@ -37,14 +36,14 @@ export class Preloader extends Scene {
             frameHeight: 20
         });
 
-        for (const item of getAllItems()) {
+        for (const item of gameItems) {
             this.load.image(item.id, item.assetPath);
 
-            if (isSeedItem(item)) {
+            if (item.type === 'seed') {
                 for (const stage of cropStages) {
                     this.load.image(
-                        getCropTextureKey(item.cropId, stage),
-                        getCropAssetPath(item.cropId, stage)
+                        getCropTextureKey(item.cropId!, stage),
+                        getCropAssetPath(item.cropId!, stage)
                     );
                 }
             }

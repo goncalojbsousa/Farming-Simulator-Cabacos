@@ -8,20 +8,24 @@ import { InventoryTooltip } from './InventoryTooltip';
 
 export class InventoryUi {
     private hotbar: Hotbar;
-    private panel: InventoryPanel;
-    private tooltip: InventoryTooltip;
+    private inventoryPanel: InventoryPanel;
+    private itemTooltip: InventoryTooltip;
     private draggedSlotIndex: number | null = null;
-    private draggedItem: Phaser.GameObjects.Image;
+    private draggedItemImage: Phaser.GameObjects.Image;
 
     constructor(
         private scene: Scene,
         private inventory: InventoryService,
-        private isBlocked: () => boolean
+        private isInteractionBlocked: () => boolean
     ) {
-        this.tooltip = new InventoryTooltip(scene);
+        this.itemTooltip = new InventoryTooltip(scene);
         this.hotbar = new Hotbar(scene, inventory);
-        this.panel = new InventoryPanel(scene, inventory, () => this.hotbar.refresh());
-        this.draggedItem = scene.add.image(0, 0, 'inventorySlot')
+        this.inventoryPanel = new InventoryPanel(
+            inventory,
+            scene,
+            () => this.hotbar.refresh()
+        );
+        this.draggedItemImage = scene.add.image(0, 0, 'inventorySlot')
             .setScale(3)
             .setAlpha(0.85)
             .setDepth(2000)
@@ -33,48 +37,40 @@ export class InventoryUi {
     }
 
     update(pointer: Phaser.Input.Pointer): void {
-        if (this.draggedSlotIndex !== null) {
-            return;
-        }
-
         const slotIndex = this.getSlotIndex(pointer.x, pointer.y);
+        const itemId = slotIndex === null
+            ? null
+            : this.inventory.getSlot(slotIndex).itemId;
 
-        if (slotIndex === null) {
-            this.tooltip.hide();
+        if (this.draggedSlotIndex !== null || !itemId) {
+            this.itemTooltip.hide();
             return;
         }
 
-        const slot = this.inventory.getSlot(slotIndex);
-
-        if (!slot?.itemId) {
-            this.tooltip.hide();
-            return;
-        }
-
-        this.tooltip.show(translate(getItemById(slot.itemId).nameKey), pointer.x, pointer.y);
+        this.itemTooltip.show(translate(getItemById(itemId).nameKey), pointer.x, pointer.y);
     }
 
     refresh(): void {
         this.hotbar.refresh();
-        this.panel.refresh();
+        this.inventoryPanel.refresh();
     }
 
     layout(): void {
         this.hotbar.layout();
-        this.panel.layout();
-        this.tooltip.hide();
+        this.inventoryPanel.layout();
+        this.itemTooltip.hide();
     }
 
-    containsPoint(x: number, y: number): boolean {
+    containsInteractiveElement(x: number, y: number): boolean {
         return this.getSlotIndex(x, y) !== null;
     }
 
-    getGameObjects(): Phaser.GameObjects.GameObject[] {
+    getUiObjects(): Phaser.GameObjects.GameObject[] {
         return [
-            ...this.hotbar.getGameObjects(),
-            ...this.panel.getGameObjects(),
-            this.tooltip.getGameObject(),
-            this.draggedItem
+            ...this.hotbar.getUiObjects(),
+            ...this.inventoryPanel.getUiObjects(),
+            this.itemTooltip.getGameObject(),
+            this.draggedItemImage
         ];
     }
 
@@ -84,12 +80,12 @@ export class InventoryUi {
 
             if (slotNumber >= 1 && slotNumber <= 8) {
                 this.hotbar.selectSlot(slotNumber - 1);
-                this.panel.refresh();
+                this.inventoryPanel.refresh();
             }
 
             if (event.key.toLowerCase() === 'i') {
-                this.panel.toggle();
-                this.tooltip.hide();
+                this.inventoryPanel.toggle();
+                this.itemTooltip.hide();
             }
         });
     }
@@ -97,23 +93,25 @@ export class InventoryUi {
     private setupMouse(): void {
         this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const slotIndex = this.getSlotIndex(pointer.x, pointer.y);
-            const slot = slotIndex === null ? null : this.inventory.getSlot(slotIndex);
+            const itemId = slotIndex === null
+                ? null
+                : this.inventory.getSlot(slotIndex).itemId;
 
-            if (slotIndex === null || !slot?.itemId) {
+            if (slotIndex === null || !itemId) {
                 return;
             }
 
             this.draggedSlotIndex = slotIndex;
-            this.tooltip.hide();
-            this.draggedItem
-                .setTexture(getItemById(slot.itemId).id)
+            this.itemTooltip.hide();
+            this.draggedItemImage
+                .setTexture(itemId)
                 .setPosition(pointer.x, pointer.y)
                 .setVisible(true);
         });
 
         this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
             if (this.draggedSlotIndex !== null) {
-                this.draggedItem.setPosition(pointer.x, pointer.y);
+                this.draggedItemImage.setPosition(pointer.x, pointer.y);
             }
         });
 
@@ -130,16 +128,16 @@ export class InventoryUi {
             }
 
             this.draggedSlotIndex = null;
-            this.draggedItem.setVisible(false);
+            this.draggedItemImage.setVisible(false);
         });
     }
 
     private getSlotIndex(x: number, y: number): number | null {
-        if (this.isBlocked()) {
+        if (this.isInteractionBlocked()) {
             return null;
         }
 
-        return this.panel.getSlotIndexAtPosition(x, y)
-            ?? this.hotbar.getSlotIndexAtPosition(x, y);
+        return this.inventoryPanel.findSlotAt(x, y)
+            ?? this.hotbar.findSlotAt(x, y);
     }
 }
