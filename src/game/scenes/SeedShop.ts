@@ -1,4 +1,5 @@
 import { Geom, Scene } from 'phaser';
+import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
@@ -27,6 +28,7 @@ export class SeedShop extends Scene {
     uiCamera: Phaser.Cameras.Scene2D.Camera;
     worldCameraObjects: Phaser.GameObjects.GameObject[] = [];
     player: Player;
+    gameInput: GameInput;
     exitZones: Geom.Rectangle[] = [];
     shopZones: Geom.Rectangle[] = [];
     exitText: Phaser.GameObjects.Text;
@@ -68,6 +70,7 @@ export class SeedShop extends Scene {
         const collisionGroup = this.createCollisionGroup(map);
 
         this.player = new Player(this, playerStartX, playerStartY);
+        this.gameInput = new GameInput(this);
         this.player.sprite.setDepth(playerDepth);
         this.resizePlayerForSeedShop();
         this.worldCameraObjects.push(this.player.sprite);
@@ -82,18 +85,25 @@ export class SeedShop extends Scene {
         this.createSeedShopPanel();
         this.setupCamera(map);
         this.setupUiCamera();
-        this.setupKeys();
-
         this.scale.on('resize', this.handleResize, this);
         this.events.once('shutdown', () => {
             this.scale.off('resize', this.handleResize, this);
         });
     }
 
-    update(_time: number, delta: number) {
-        this.player.update(delta);
+    update() {
+        this.gameInput.update();
+        this.player.update(this.gameInput);
         this.updateExitText();
         this.updateShopText();
+
+        if (this.gameInput.shopPressed()) {
+            this.tryInteract();
+        }
+
+        if (this.gameInput.escapePressed()) {
+            this.seedShopPanel.close();
+        }
     }
 
     private createCollisionGroup(map: Phaser.Tilemaps.Tilemap): Phaser.Physics.Arcade.StaticGroup {
@@ -264,13 +274,12 @@ export class SeedShop extends Scene {
     }
 
     private createSeedShopPanel(): void {
-        this.seedShopPanel = new SeedShopPanel({
-            scene: this,
-            inventory: this.inventory,
-            money: this.money,
-            onInventoryChanged: () => {},
-            onMoneyChanged: () => this.refreshMoneyUi()
-        });
+        this.seedShopPanel = new SeedShopPanel(
+            this,
+            this.inventory,
+            this.money,
+            () => this.refreshMoneyUi()
+        );
     }
 
     private refreshMoneyUi(): void {
@@ -308,7 +317,7 @@ export class SeedShop extends Scene {
         const uiObjects = [
             this.moneyBackground,
             this.moneyText,
-            ...this.seedShopPanel.getGameObjects()
+            ...this.seedShopPanel.getUiObjects()
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -331,16 +340,6 @@ export class SeedShop extends Scene {
         camera.centerOn(this.mapWidth / 2, this.mapHeight / 2);
     }
 
-    private setupKeys(): void {
-        this.input.keyboard!.on('keydown-E', this.tryInteract, this);
-        this.input.keyboard!.on('keydown-ESC', this.closeSeedShopPanel, this);
-
-        this.events.once('shutdown', () => {
-            this.input.keyboard?.off('keydown-E', this.tryInteract, this);
-            this.input.keyboard?.off('keydown-ESC', this.closeSeedShopPanel, this);
-        });
-    }
-
     private tryInteract(): void {
         if (this.isPlayerInShopZone()) {
             this.seedShopPanel.toggle();
@@ -352,17 +351,9 @@ export class SeedShop extends Scene {
         }
 
         if (this.isPlayerInExitZone()) {
-            this.scene.start('Game', {
-                spawnX: this.returnX,
-                spawnY: this.returnY,
-                inventory: this.inventory,
-                money: this.money
-            });
+            this.scene.stop();
+            this.scene.wake('Game');
         }
-    }
-
-    private closeSeedShopPanel(): void {
-        this.seedShopPanel.close();
     }
 
     private isPlayerInExitZone(): boolean {

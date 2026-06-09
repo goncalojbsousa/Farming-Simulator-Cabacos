@@ -1,674 +1,116 @@
-import { Geom, Scene } from 'phaser';
-import { Player } from '../objects/Player';
-import { getItemById, getStartingItemIds, getStartingSeedItemIds } from '../data/ItemData';
+import { Scene } from 'phaser';
+import { startingSeedIds, startingToolIds } from '../data/ItemData';
+import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
-import { translate } from '../services/LanguageService';
-import { Hotbar } from '../ui/Hotbar';
-import { InventoryPanel } from '../ui/InventoryPanel';
-import { InventoryTooltip } from '../ui/InventoryTooltip';
-import { SeedShopPanel } from '../ui/SeedShopPanel';
+import { TimeService } from '../services/TimeService';
+import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
-
-const gameCameraZoom = 2;
-const playerDepth = 10;
-const startingMoney = 100;
-const defaultPlayerX = 672;
-const defaultPlayerY = 496;
-const houseDoorObjectName = 'player_house_door';
-const cropMarketDoorObjectName = 'player_crop_market_door';
-const seedShopDoorObjectName = 'player_seed_shop_door';
-const townHallDoorObjectName = 'player_town_hall_door';
-
-type GameSceneData = {
-    spawnX?: number;
-    spawnY?: number;
-    inventory?: InventoryService;
-    money?: MoneyService;
-};
+import { InventoryUi } from '../ui/InventoryUi';
+import { MoneyDisplay } from '../ui/MoneyDisplay';
+import { TimeDisplay } from '../ui/TimeDisplay';
+import { GameWorld } from '../world/GameWorld';
 
 export class Game extends Scene {
-    // World
-    camera: Phaser.Cameras.Scene2D.Camera;
-    player: Player;
-    farmLayer: Phaser.Tilemaps.TilemapLayer | null = null;
-    farmingSystem: FarmingSystem;
-    worldCameraObjects: Phaser.GameObjects.GameObject[] = [];
-
-    // Game data
-    inventory: InventoryService;
-    money: MoneyService;
-    savedInventory: InventoryService | null = null;
-    savedMoney: MoneyService | null = null;
-
-    // UI
-    uiCamera: Phaser.Cameras.Scene2D.Camera;
-    hotbar: Hotbar;
-    inventoryPanel: InventoryPanel;
-    inventoryTooltip: InventoryTooltip;
-    moneyBackground: Phaser.GameObjects.Rectangle;
-    moneyText: Phaser.GameObjects.Text;
-
-    // Seed shop
-    seedShopPanel: SeedShopPanel;
-    seedShopPromptText: Phaser.GameObjects.Text;
-    seedShopInteractionZones: Geom.Rectangle[] = [];
-
-    // House entrance
-    playerSpawnX = defaultPlayerX;
-    playerSpawnY = defaultPlayerY;
-    houseDoorInteractionZones: Geom.Rectangle[] = [];
-    houseDoorPromptText: Phaser.GameObjects.Text;
-    cropMarketDoorInteractionZones: Geom.Rectangle[] = [];
-    cropMarketDoorPromptText: Phaser.GameObjects.Text;
-    seedShopDoorInteractionZones: Geom.Rectangle[] = [];
-    seedShopDoorPromptText: Phaser.GameObjects.Text;
-    townHallDoorInteractionZones: Geom.Rectangle[] = [];
-    townHallDoorPromptText: Phaser.GameObjects.Text;
-
-    // Inventory dragging
-    draggedInventorySlotIndex: number | null = null;
-    draggedItemImage: Phaser.GameObjects.Image;
+    private gameWorld: GameWorld;
+    private gameInput: GameInput;
+    private inventory: InventoryService;
+    private money: MoneyService;
+    private gameTime: TimeService;
+    private inventoryUi: InventoryUi;
+    private moneyDisplay: MoneyDisplay;
+    private timeDisplay: TimeDisplay;
+    private farmingSystem: FarmingSystem;
+    private buildingEntrances: BuildingEntranceSystem;
+    private uiCamera: Phaser.Cameras.Scene2D.Camera;
 
     constructor() {
         super('Game');
     }
 
-    init(data: GameSceneData = {}) {
-        this.playerSpawnX = data.spawnX ?? defaultPlayerX;
-        this.playerSpawnY = data.spawnY ?? defaultPlayerY;
-        this.savedInventory = data.inventory ?? null;
-        this.savedMoney = data.money ?? null;
-    }
+    create(): void {
+        this.gameWorld = new GameWorld(this);
+        this.gameInput = new GameInput(this);
+        this.inventory = new InventoryService(16);
+        this.money = new MoneyService(100);
+        this.gameTime = new TimeService();
+        this.addStartingItems();
 
-    create() {
-        this.camera = this.cameras.main;
-        this.farmLayer = null;
-        this.worldCameraObjects = [];
-        this.seedShopInteractionZones = [];
-        this.houseDoorInteractionZones = [];
-        this.cropMarketDoorInteractionZones = [];
-        this.seedShopDoorInteractionZones = [];
-        this.townHallDoorInteractionZones = [];
-
-        // Create the map and its layers.
-        const map = this.make.tilemap({ key: 'tilemap' });
-        const tilesets = map.tilesets
-            .map((tileset) => map.addTilesetImage(tileset.name, tileset.name))
-            .filter((tileset): tileset is Phaser.Tilemaps.Tileset => tileset !== null);
-
-        for (const layerData of map.layers) {
-            if (layerData.name === 'Collision') continue;
-
-            const layer = map.createLayer(layerData.name, tilesets, 0, 0);
-
-            if (layer) {
-                if (layerData.name === 'farm') {
-                    this.farmLayer = layer as Phaser.Tilemaps.TilemapLayer;
-                }
-                // This property from Tiled defines the visual order of the layers.
-                const depthProperty = Array.isArray((layerData as any).properties)
-                    ? (layerData as any).properties.find((property: { name?: string }) => property.name === 'gamemaker_depth')
-                    : null;
-
-                if (typeof depthProperty?.value === 'number') {
-                    layer.setDepth(-depthProperty.value);
-                }
-
-                this.worldCameraObjects.push(layer);
-            }
-        }
-
-        // Create collisions and the player.
-        const collisionLayer = map.createLayer('Collision', tilesets, 0, 0);
-        if (collisionLayer) {
-            collisionLayer.setCollisionByExclusion([-1]);
-            collisionLayer.setAlpha(0);
-            this.worldCameraObjects.push(collisionLayer);
-        }
-
-        this.player = new Player(this, this.playerSpawnX, this.playerSpawnY);
-        this.player.sprite.setDepth(playerDepth);
-        this.worldCameraObjects.push(this.player.sprite);
-
-        if (collisionLayer) {
-            this.physics.add.collider(this.player.sprite, collisionLayer);
-        }
-
-        this.setupCamera(map);
-
-        // Create game data and UI.
-        this.inventory = this.savedInventory ?? new InventoryService(16);
-        this.money = this.savedMoney ?? new MoneyService(startingMoney);
-        this.createMoneyUi();
-        this.loadSeedShopInteractionZones(map);
-        this.loadHouseDoorInteractionZones(map);
-        this.loadCropMarketDoorInteractionZones(map);
-        this.loadSeedShopDoorInteractionZones(map);
-        this.loadTownHallDoorInteractionZones(map);
-        if (this.savedInventory === null) {
-            this.addStartingItems();
-        }
-        this.inventoryTooltip = new InventoryTooltip(this);
-        this.hotbar = new Hotbar(this, this.inventory);
-        this.inventoryPanel = new InventoryPanel(
+        this.inventoryUi = new InventoryUi(this, this.inventory, () => false);
+        this.moneyDisplay = new MoneyDisplay(this, this.money);
+        this.timeDisplay = new TimeDisplay(this, this.gameTime);
+        this.buildingEntrances = new BuildingEntranceSystem(
             this,
+            this.gameWorld.map,
+            this.gameWorld.player,
             this.inventory,
-            () => this.hotbar.refresh()
+            this.money
         );
-        this.seedShopPanel = new SeedShopPanel({
-            scene: this,
-            inventory: this.inventory,
-            money: this.money,
-            onInventoryChanged: () => this.refreshInventoryUi(),
-            onMoneyChanged: () => this.refreshMoneyUi()
-        });
-        this.seedShopPromptText = this.createInteractionPromptText('E - Comprar sementes');
-        this.layoutSeedShopPrompt();
-        this.houseDoorPromptText = this.createInteractionPromptText('E - Entrar em casa');
-        this.layoutHouseDoorPrompt();
-        this.cropMarketDoorPromptText = this.createInteractionPromptText('E - Entrar no mercado');
-        this.layoutCropMarketDoorPrompt();
-        this.seedShopDoorPromptText = this.createInteractionPromptText('E - Entrar na loja');
-        this.layoutSeedShopDoorPrompt();
-        this.townHallDoorPromptText = this.createInteractionPromptText('E - Entrar na camara');
-        this.layoutTownHallDoorPrompt();
-        this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
-            .setScale(3)
-            .setAlpha(0.85)
-            .setDepth(2000)
-            .setScrollFactor(0)
-            .setVisible(false);
 
-        // Keep the UI fixed while the world camera follows the player.
-        this.setupUiCamera();
-
-        // Create gameplay systems and controls.
+        this.createUiCamera();
         this.farmingSystem = new FarmingSystem({
             scene: this,
-            worldCamera: this.camera,
+            worldCamera: this.gameWorld.camera,
             uiCamera: this.uiCamera,
-            player: this.player,
+            player: this.gameWorld.player,
             inventory: this.inventory,
-            farmLayer: this.farmLayer,
-            worldCameraObjects: this.worldCameraObjects,
-            isPointerOverUi: (pointer) => this.isPointerOverUi(pointer)
+            farmLayer: this.gameWorld.farmLayer,
+            worldObjects: this.gameWorld.worldObjects,
+            isPointerOverUi: (pointer) =>
+                this.inventoryUi.containsInteractiveElement(pointer.x, pointer.y),
+            refreshInventory: () => this.inventoryUi.refresh()
         });
-        this.setupInventoryKeys();
-        this.setupInventoryMouseControls();
-        this.scale.on('resize', this.handleResize, this);
+
+        this.scale.on('resize', this.resizeGame, this);
+        this.events.on('wake', this.refreshUi, this);
         this.events.once('shutdown', () => {
-            this.scale.off('resize', this.handleResize, this);
+            this.scale.off('resize', this.resizeGame, this);
+            this.events.off('wake', this.refreshUi, this);
         });
     }
 
-    update(_time: number, delta: number) {
-        this.player.update(delta);
-        this.farmingSystem.update(this.input.activePointer);
-        this.updateSeedShopPrompt();
-        this.updateHouseDoorPrompt();
-        this.updateCropMarketDoorPrompt();
-        this.updateSeedShopDoorPrompt();
-        this.updateTownHallDoorPrompt();
-        this.updateInventoryTooltipAtPointer(this.input.activePointer);
+    update(time: number): void {
+        this.gameInput.update();
+        this.gameTime.update(time);
+        this.timeDisplay.refresh();
+        this.gameWorld.player.update(this.gameInput);
+        this.farmingSystem.update(this.gameInput, this.gameTime.day);
+        this.inventoryUi.update(this.gameInput);
+        this.buildingEntrances.update(this.gameInput);
     }
 
-    // World and cameras
-
-    private setupCamera(map: Phaser.Tilemaps.Tilemap): void {
-        this.camera.setZoom(gameCameraZoom);
-        this.camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-        this.camera.startFollow(this.player.sprite, true, 0.08, 0.08);
-    }
-
-    // UI
-
-    private setupUiCamera(): void {
+    private createUiCamera(): void {
         const uiObjects = [
-            ...this.hotbar.getGameObjects(),
-            ...this.inventoryPanel.getGameObjects(),
-            this.moneyBackground,
-            this.moneyText,
-            ...this.seedShopPanel.getGameObjects(),
-            this.seedShopPromptText,
-            this.houseDoorPromptText,
-            this.cropMarketDoorPromptText,
-            this.seedShopDoorPromptText,
-            this.inventoryTooltip.getGameObject(),
-            this.draggedItemImage
+            ...this.inventoryUi.getUiObjects(),
+            ...this.moneyDisplay.getUiObjects(),
+            ...this.timeDisplay.getUiObjects(),
+            ...this.buildingEntrances.getUiObjects()
         ];
 
-        // The world camera can zoom and follow the player without scaling the UI.
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
-        this.uiCamera.ignore(this.worldCameraObjects);
-        this.camera.ignore(uiObjects);
+        this.uiCamera.ignore(this.gameWorld.worldObjects);
+        this.gameWorld.camera.ignore(uiObjects);
     }
-
-    private handleResize(): void {
-        this.camera.setViewport(0, 0, this.scale.width, this.scale.height);
-        this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
-        this.hotbar.layout();
-        this.inventoryPanel.layout();
-        this.seedShopPanel.layout();
-        this.layoutSeedShopPrompt();
-        this.layoutHouseDoorPrompt();
-        this.layoutCropMarketDoorPrompt();
-        this.layoutSeedShopDoorPrompt();
-        this.layoutTownHallDoorPrompt();
-        this.inventoryTooltip.hide();
-    }
-
-    private createMoneyUi(): void {
-        this.moneyBackground = this.add.rectangle(16, 16, 158, 36, 0x1f2d24, 0.85)
-            .setOrigin(0)
-            .setStrokeStyle(2, 0xe2a36f)
-            .setScrollFactor(0)
-            .setDepth(950);
-
-        this.moneyText = this.add.text(28, 23, '', {
-            fontFamily: 'Arial Black',
-            fontSize: 16,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 3
-        }).setScrollFactor(0).setDepth(951);
-
-        this.refreshMoneyUi();
-    }
-
-    private createInteractionPromptText(text: string): Phaser.GameObjects.Text {
-        return this.add.text(0, 0, text, {
-            fontFamily: 'Arial Black',
-            fontSize: 16,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        })
-            .setOrigin(0.5)
-            .setScrollFactor(0)
-            .setDepth(1100)
-            .setVisible(false);
-    }
-
-    refreshMoneyUi(): void {
-        this.moneyText.setText(`Dinheiro: ${this.money.getBalance()}`);
-    }
-
-    // Seed shop
-
-    private loadSeedShopInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
-        const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
-
-        for (const tiledObject of interactionLayer?.objects ?? []) {
-            if (
-                tiledObject.type !== 'shop'
-                || !this.hasTiledProperty(tiledObject, 'action', 'open_shop')
-            ) {
-                continue;
-            }
-
-            if (!this.hasTiledProperty(tiledObject, 'shopType', 'seeds')) {
-                continue;
-            }
-
-            this.seedShopInteractionZones.push(new Geom.Rectangle(
-                tiledObject.x,
-                tiledObject.y,
-                tiledObject.width ?? 0,
-                tiledObject.height ?? 0
-            ));
-        }
-    }
-
-    private updateSeedShopPrompt(): void {
-        const isInSeedShopZone = this.isPlayerInSeedShopZone();
-
-        this.seedShopPromptText.setVisible(
-            isInSeedShopZone && !this.seedShopPanel.isOpen()
-        );
-
-        if (!isInSeedShopZone && this.seedShopPanel.isOpen()) {
-            this.seedShopPanel.close();
-        }
-    }
-
-    private layoutSeedShopPrompt(): void {
-        this.seedShopPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
-    }
-
-    private updateHouseDoorPrompt(): void {
-        this.houseDoorPromptText.setVisible(
-            this.isPlayerInHouseDoorZone() && !this.seedShopPanel.isOpen()
-        );
-    }
-
-    private layoutHouseDoorPrompt(): void {
-        this.houseDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
-    }
-
-    private updateCropMarketDoorPrompt(): void {
-        this.cropMarketDoorPromptText.setVisible(
-            this.isPlayerInCropMarketDoorZone() && !this.seedShopPanel.isOpen()
-        );
-    }
-
-    private layoutCropMarketDoorPrompt(): void {
-        this.cropMarketDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
-    }
-
-    private updateSeedShopDoorPrompt(): void {
-        this.seedShopDoorPromptText.setVisible(
-            this.isPlayerInSeedShopDoorZone() && !this.seedShopPanel.isOpen()
-        );
-    }
-
-    private layoutSeedShopDoorPrompt(): void {
-        this.seedShopDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
-    }
-
-    private updateTownHallDoorPrompt(): void {
-        this.townHallDoorPromptText.setVisible(
-            this.isPlayerInTownHallDoorZone() && !this.seedShopPanel.isOpen()
-        );
-    }
-
-    private layoutTownHallDoorPrompt(): void {
-        this.townHallDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
-    }
-
-    private loadHouseDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
-        this.houseDoorInteractionZones = this.loadInteractionZonesByName(map, houseDoorObjectName);
-    }
-
-    private loadCropMarketDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
-        this.cropMarketDoorInteractionZones = this.loadInteractionZonesByName(map, cropMarketDoorObjectName);
-    }
-
-    private loadSeedShopDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
-        this.seedShopDoorInteractionZones = this.loadInteractionZonesByName(map, seedShopDoorObjectName);
-    }
-
-    private loadTownHallDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
-        this.townHallDoorInteractionZones = this.loadInteractionZonesByName(map, townHallDoorObjectName);
-    }
-
-    private loadInteractionZonesByName(
-        map: Phaser.Tilemaps.Tilemap,
-        objectNameToFind: string
-    ): Geom.Rectangle[] {
-        const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
-        const zones: Geom.Rectangle[] = [];
-
-        for (const tiledObject of interactionLayer?.objects ?? []) {
-            const objectName = tiledObject.name?.trim();
-            const width = tiledObject.width ?? 0;
-            const height = tiledObject.height ?? 0;
-
-            if (objectName !== objectNameToFind || width <= 0 || height <= 0) {
-                continue;
-            }
-
-            zones.push(new Geom.Rectangle(
-                tiledObject.x,
-                tiledObject.y,
-                width,
-                height
-            ));
-        }
-
-        return zones;
-    }
-
-    private isPlayerInHouseDoorZone(): boolean {
-        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
-        const playerRectangle = new Geom.Rectangle(
-            playerBody.x,
-            playerBody.y,
-            playerBody.width,
-            playerBody.height
-        );
-
-        return this.houseDoorInteractionZones.some((zone) =>
-            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
-        );
-    }
-
-    private isPlayerInCropMarketDoorZone(): boolean {
-        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
-        const playerRectangle = new Geom.Rectangle(
-            playerBody.x,
-            playerBody.y,
-            playerBody.width,
-            playerBody.height
-        );
-
-        return this.cropMarketDoorInteractionZones.some((zone) =>
-            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
-        );
-    }
-
-    private isPlayerInSeedShopDoorZone(): boolean {
-        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
-        const playerRectangle = new Geom.Rectangle(
-            playerBody.x,
-            playerBody.y,
-            playerBody.width,
-            playerBody.height
-        );
-
-        return this.seedShopDoorInteractionZones.some((zone) =>
-            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
-        );
-    }
-
-    private isPlayerInTownHallDoorZone(): boolean {
-        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
-        const playerRectangle = new Geom.Rectangle(
-            playerBody.x,
-            playerBody.y,
-            playerBody.width,
-            playerBody.height
-        );
-
-        return this.townHallDoorInteractionZones.some((zone) =>
-            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
-        );
-    }
-
-    private isPlayerInSeedShopZone(): boolean {
-        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
-
-        // The Tiled rectangle is exact, the full sprite bounds would make the interaction area too large.
-        return this.seedShopInteractionZones.some((zone) =>
-            zone.contains(playerBody.center.x, playerBody.center.y)
-        );
-    }
-
-    // Checks whether a Tiled object has a property with the expected name and value.
-    private hasTiledProperty(
-        tiledObject: Phaser.Types.Tilemaps.TiledObject,
-        propertyName: string,
-        expectedValue: string
-    ): boolean {
-        return tiledObject.properties?.some(
-            (property: { name?: string; value?: unknown }) =>
-                property.name === propertyName && property.value === expectedValue
-        ) ?? false;
-    }
-
-    // Inventory
 
     private addStartingItems(): void {
-        for (const itemId of getStartingItemIds()) {
-            this.inventory.addItem(itemId, 1);
+        for (const toolId of startingToolIds) {
+            this.inventory.addItem(toolId, 1);
         }
 
-        for (const seedItemId of getStartingSeedItemIds()) {
-            this.inventory.addItem(seedItemId, 5);
+        for (const seedId of startingSeedIds) {
+            this.inventory.addItem(seedId, 5);
         }
     }
 
-    private setupInventoryKeys(): void {
-        this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
-            const slotNumber = Number(event.key);
-            const pressedKey = event.key.toLowerCase();
-
-            if (slotNumber >= 1 && slotNumber <= 8) {
-                this.hotbar.selectSlot(slotNumber - 1);
-                this.inventoryPanel.refresh();
-                return;
-            }
-
-            if (pressedKey === 'i') {
-                this.inventoryPanel.toggle();
-                this.inventoryTooltip.hide();
-                return;
-            }
-
-            if (pressedKey === 'e') {
-                if (this.isPlayerInSeedShopDoorZone()) {
-                    this.scene.start('SeedShop', {
-                        returnX: this.player.sprite.x,
-                        returnY: this.player.sprite.y,
-                        inventory: this.inventory,
-                        money: this.money
-                    });
-                    return;
-                }
-
-                if (this.isPlayerInTownHallDoorZone()) {
-                    this.scene.start('TownHall', {
-                        returnX: this.player.sprite.x,
-                        returnY: this.player.sprite.y,
-                        inventory: this.inventory,
-                        money: this.money
-                    });
-                    return;
-                }
-
-                if (this.isPlayerInSeedShopZone()) {
-                    this.seedShopPanel.toggle();
-                    this.inventoryTooltip.hide();
-                    return;
-                }
-
-                if (this.isPlayerInHouseDoorZone()) {
-                    this.scene.start('HouseInterior', {
-                        returnX: this.player.sprite.x,
-                        returnY: this.player.sprite.y,
-                        inventory: this.inventory,
-                        money: this.money
-                    });
-                    return;
-                }
-
-                if (this.isPlayerInCropMarketDoorZone()) {
-                    this.scene.start('CropMarket', {
-                        returnX: this.player.sprite.x,
-                        returnY: this.player.sprite.y,
-                        inventory: this.inventory,
-                        money: this.money
-                    });
-                }
-            }
-        });
+    private resizeGame(): void {
+        this.gameWorld.resize();
+        this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
+        this.inventoryUi.layout();
+        this.buildingEntrances.layout();
     }
 
-    private setupInventoryMouseControls(): void {
-        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            const slotIndex = this.getInventorySlotIndexAtPointer(pointer);
-
-            if (slotIndex === null) {
-                return;
-            }
-
-            const slot = this.inventory.getSlot(slotIndex);
-
-            if (slot === null || slot.itemId === null) {
-                return;
-            }
-
-            const item = getItemById(slot.itemId);
-
-            this.draggedInventorySlotIndex = slotIndex;
-            this.inventoryTooltip.hide();
-            this.draggedItemImage.setTexture(item.id);
-            this.draggedItemImage.setPosition(pointer.x, pointer.y);
-            this.draggedItemImage.setVisible(true);
-        });
-
-        this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (this.draggedInventorySlotIndex !== null) {
-                this.draggedItemImage.setPosition(pointer.x, pointer.y);
-            }
-        });
-
-        this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-            if (this.draggedInventorySlotIndex === null) {
-                return;
-            }
-
-            const targetSlotIndex = this.getInventorySlotIndexAtPointer(pointer);
-
-            if (targetSlotIndex !== null) {
-                this.inventory.moveSlot(this.draggedInventorySlotIndex, targetSlotIndex);
-                this.refreshInventoryUi();
-            }
-
-            this.draggedInventorySlotIndex = null;
-            this.draggedItemImage.setVisible(false);
-        });
-    }
-
-    private getInventorySlotIndexAtPointer(pointer: Phaser.Input.Pointer): number | null {
-        if (this.seedShopPanel.isOpen()) {
-            return null;
-        }
-
-        const panelSlotIndex = this.inventoryPanel.getSlotIndexAtPosition(pointer.x, pointer.y);
-
-        return panelSlotIndex ?? this.hotbar.getSlotIndexAtPosition(pointer.x, pointer.y);
-    }
-
-    private isPointerOverUi(pointer: Phaser.Input.Pointer): boolean {
-        return this.getInventorySlotIndexAtPointer(pointer) !== null
-            || this.seedShopPanel.containsScreenPoint(pointer.x, pointer.y);
-    }
-
-    private refreshInventoryUi(): void {
-        this.hotbar.refresh();
-        this.inventoryPanel.refresh();
-    }
-
-    private updateInventoryTooltipAtPointer(pointer: Phaser.Input.Pointer): void {
-        if (this.draggedInventorySlotIndex !== null) {
-            return;
-        }
-
-        const slotIndex = this.getInventorySlotIndexAtPointer(pointer);
-
-        if (slotIndex === null) {
-            this.inventoryTooltip.hide();
-            return;
-        }
-
-        this.showInventoryTooltip(slotIndex, pointer);
-    }
-
-    private showInventoryTooltip(slotIndex: number, pointer: Phaser.Input.Pointer): void {
-        if (this.draggedInventorySlotIndex !== null) {
-            return;
-        }
-
-        const slot = this.inventory.getSlot(slotIndex);
-
-        if (slot === null || slot.itemId === null) {
-            this.inventoryTooltip.hide();
-            return;
-        }
-
-        const item = getItemById(slot.itemId);
-
-        this.inventoryTooltip.show(translate(item.nameKey), pointer.x, pointer.y);
+    private refreshUi(): void {
+        this.inventoryUi.refresh();
+        this.moneyDisplay.refresh();
     }
 }

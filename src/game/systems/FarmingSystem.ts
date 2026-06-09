@@ -1,158 +1,170 @@
+import {
+    CropId,
+    CropStage,
+    getCropTextureKey,
+    getItemById,
+    SeedItem
+} from '../data/ItemData';
+import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 
-type FarmingSystemConfig = {
+type FarmingConfig = {
     scene: Phaser.Scene;
     worldCamera: Phaser.Cameras.Scene2D.Camera;
     uiCamera: Phaser.Cameras.Scene2D.Camera;
     player: Player;
     inventory: InventoryService;
-    farmLayer: Phaser.Tilemaps.TilemapLayer | null;
-    worldCameraObjects: Phaser.GameObjects.GameObject[];
+    farmLayer: Phaser.Tilemaps.TilemapLayer;
+    worldObjects: Phaser.GameObjects.GameObject[];
     isPointerOverUi: (pointer: Phaser.Input.Pointer) => boolean;
+    refreshInventory: () => void;
 };
 
-const shovelToolItemId = 'shovel';
-const farmInteractionDepth = 9;
+type PlantedCrop = {
+    image: Phaser.GameObjects.Image;
+    cropId: CropId;
+    growthDays: number;
+    plantedDay: number;
+    stage: CropStage;
+};
 
 export class FarmingSystem {
-    private scene: Phaser.Scene;
-    private worldCamera: Phaser.Cameras.Scene2D.Camera;
-    private uiCamera: Phaser.Cameras.Scene2D.Camera;
-    private player: Player;
-    private inventory: InventoryService;
-    private farmLayer: Phaser.Tilemaps.TilemapLayer | null;
-    private worldCameraObjects: Phaser.GameObjects.GameObject[];
-    private isPointerOverUi: (pointer: Phaser.Input.Pointer) => boolean;
+    private tilledTiles = new Set<string>();
+    private plantedTiles = new Set<string>();
+    private crops: PlantedCrop[] = [];
     private tileHighlight: Phaser.GameObjects.Graphics;
-    private tilledTileKeys = new Set<string>();
 
-    constructor(config: FarmingSystemConfig) {
-        this.scene = config.scene;
-        this.worldCamera = config.worldCamera;
-        this.uiCamera = config.uiCamera;
-        this.player = config.player;
-        this.inventory = config.inventory;
-        this.farmLayer = config.farmLayer;
-        this.worldCameraObjects = config.worldCameraObjects;
-        this.isPointerOverUi = config.isPointerOverUi;
+    constructor(private game: FarmingConfig) {
+        this.tileHighlight = game.scene.add.graphics().setDepth(9);
+        game.worldObjects.push(this.tileHighlight);
+        game.uiCamera.ignore(this.tileHighlight);
 
-        this.tileHighlight = this.scene.add.graphics();
-        this.tileHighlight.setDepth(farmInteractionDepth);
-        this.tileHighlight.setVisible(false);
-        this.worldCameraObjects.push(this.tileHighlight);
-        this.uiCamera.ignore(this.tileHighlight);
-
-        this.setupMouseControls();
     }
 
-    update(pointer: Phaser.Input.Pointer): void {
-        this.updateTileHighlight(pointer);
-    }
+    update(input: GameInput, currentDay: number): void {
+        const pointer = input.pointer;
 
-    private setupMouseControls(): void {
-        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            if (this.isPointerOverUi(pointer)) {
-                return;
-            }
+        this.growCrops(currentDay);
 
-            this.tryTillTileAtPointer(pointer);
-        });
-    }
-
-    private tryTillTileAtPointer(pointer: Phaser.Input.Pointer): void {
-        const tile = this.getValidFarmTileAtPointer(pointer);
-
-        if (tile === null) {
-            return;
+        if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
+            this.useSelectedItem(pointer, currentDay);
         }
 
-        const tileKey = this.getTileKey(tile.x, tile.y);
+        const tile = this.getTile(pointer);
 
-        if (this.tilledTileKeys.has(tileKey)) {
-            return;
-        }
-
-        const soil = this.scene.add.image(
-            tile.getCenterX(),
-            tile.getCenterY(),
-            'soil'
-        );
-
-        soil.setDisplaySize(tile.width, tile.height);
-        soil.setDepth(farmInteractionDepth);
-
-        this.worldCameraObjects.push(soil);
-        this.uiCamera.ignore(soil);
-        this.tilledTileKeys.add(tileKey);
-    }
-
-    private updateTileHighlight(pointer: Phaser.Input.Pointer): void {
         this.tileHighlight.clear();
 
-        const tile = this.getValidFarmTileAtPointer(pointer);
-
-        if (tile === null) {
-            this.tileHighlight.setVisible(false);
+        if (!tile || !this.canUseSelectedItem(tile)) {
             return;
         }
 
-        this.tileHighlight.setVisible(true);
-        this.tileHighlight.lineStyle(2, 0xffffff, 0.9);
-        this.tileHighlight.fillStyle(0xffffff, 0.2);
-        this.tileHighlight.fillRect(tile.pixelX, tile.pixelY, tile.width, tile.height);
-        this.tileHighlight.strokeRect(tile.pixelX, tile.pixelY, tile.width, tile.height);
+        this.tileHighlight
+            .lineStyle(2, 0xffffff)
+            .fillStyle(0xffffff, 0.2)
+            .fillRect(tile.pixelX, tile.pixelY, tile.width, tile.height)
+            .strokeRect(tile.pixelX, tile.pixelY, tile.width, tile.height);
     }
 
-    private getValidFarmTileAtPointer(pointer: Phaser.Input.Pointer): Phaser.Tilemaps.Tile | null {
-        if (!this.isShovelSelected() || this.farmLayer === null) {
+    private useSelectedItem(pointer: Phaser.Input.Pointer, currentDay: number): void {
+        const tile = this.getTile(pointer);
+
+        if (!tile || !this.canUseSelectedItem(tile)) {
+            return;
+        }
+
+        const selectedSlot = this.game.inventory.slots[
+            this.game.inventory.selectedSlotIndex
+        ];
+
+        if (selectedSlot.itemId === 'shovel') {
+            this.tillTile(tile);
+            return;
+        }
+
+        const seed = getItemById(selectedSlot.itemId!) as SeedItem;
+        this.plantSeed(tile, seed, currentDay);
+    }
+
+    private tillTile(tile: Phaser.Tilemaps.Tile): void {
+        const soil = this.game.scene.add.image(tile.getCenterX(), tile.getCenterY(), 'soil')
+            .setDisplaySize(tile.width, tile.height)
+            .setDepth(9);
+
+        this.game.worldObjects.push(soil);
+        this.game.uiCamera.ignore(soil);
+        this.tilledTiles.add(`${tile.x},${tile.y}`);
+    }
+
+    private plantSeed(tile: Phaser.Tilemaps.Tile, seed: SeedItem, currentDay: number): void {
+        const selectedSlot = this.game.inventory.selectedSlotIndex;
+        this.game.inventory.removeOneFromSlot(selectedSlot);
+
+        const crop = this.game.scene.add.image(
+            tile.getCenterX(),
+            tile.getCenterY() - 4,
+            getCropTextureKey(seed.cropId, 1)
+        ).setDepth(9);
+
+        this.game.worldObjects.push(crop);
+        this.game.uiCamera.ignore(crop);
+        this.plantedTiles.add(`${tile.x},${tile.y}`);
+        this.crops.push({
+            image: crop,
+            cropId: seed.cropId,
+            growthDays: seed.growthDays,
+            plantedDay: currentDay,
+            stage: 1,
+        });
+        this.game.refreshInventory();
+    }
+
+    private growCrops(currentDay: number): void {
+        for (const crop of this.crops) {
+            const daysGrowing = currentDay - crop.plantedDay;
+            const newStage = Math.min(
+                4,
+                Math.floor(daysGrowing * 3 / crop.growthDays) + 1
+            );
+
+            if (newStage !== crop.stage) {
+                crop.stage = newStage;
+                crop.image.setTexture(getCropTextureKey(crop.cropId, crop.stage));
+            }
+        }
+    }
+
+    private getTile(pointer: Phaser.Input.Pointer): Phaser.Tilemaps.Tile | null {
+        const position = pointer.positionToCamera(this.game.worldCamera) as Phaser.Math.Vector2;
+        const tile = this.game.farmLayer.getTileAtWorldXY(position.x, position.y);
+
+        if (!tile) {
             return null;
         }
 
-        const worldPoint = pointer.positionToCamera(this.worldCamera) as Phaser.Math.Vector2;
-        const tile = this.farmLayer.getTileAtWorldXY(worldPoint.x, worldPoint.y);
+        const player = this.game.player.sprite;
+        const playerTileX = this.game.farmLayer.worldToTileX(player.x)!;
+        const playerTileY = this.game.farmLayer.worldToTileY(player.y)!;
+        const isNearPlayer = Math.abs(tile.x - playerTileX) <= 1
+            && Math.abs(tile.y - playerTileY) <= 1;
 
-        if (tile === null || tile.index === -1) {
-            return null;
-        }
-
-        if (!this.isTileWithinPlayerReach(tile)) {
-            return null;
-        }
-
-        if (this.tilledTileKeys.has(this.getTileKey(tile.x, tile.y))) {
-            return null;
-        }
-
-        return tile;
+        return isNearPlayer ? tile : null;
     }
 
-    private isShovelSelected(): boolean {
-        const selectedSlot = this.inventory.getSlot(this.inventory.getSelectedSlotIndex());
+    private canUseSelectedItem(tile: Phaser.Tilemaps.Tile): boolean {
+        const itemId = this.game.inventory.slots[
+            this.game.inventory.selectedSlotIndex
+        ].itemId;
+        const key = `${tile.x},${tile.y}`;
 
-        return selectedSlot?.itemId === shovelToolItemId;
-    }
-
-    private isTileWithinPlayerReach(tile: Phaser.Tilemaps.Tile): boolean {
-        if (this.farmLayer === null) {
-            return false;
+        if (itemId === 'shovel') {
+            return !this.tilledTiles.has(key);
         }
 
-        const playerTileX = this.farmLayer.worldToTileX(this.player.sprite.x);
-        const playerTileY = this.farmLayer.worldToTileY(this.player.sprite.y);
-
-        if (playerTileX === null || playerTileY === null) {
-            return false;
-        }
-
-        const distanceX = Math.abs(tile.x - playerTileX);
-        const distanceY = Math.abs(tile.y - playerTileY);
-
-        // Allows the player to till the tile they stand on and the 8 surrounding tiles.
-        return distanceX <= 1 && distanceY <= 1;
+        const item = itemId ? getItemById(itemId) : null;
+        return item?.type === 'seed'
+            && this.tilledTiles.has(key)
+            && !this.plantedTiles.has(key);
     }
 
-    private getTileKey(tileX: number, tileY: number): string {
-        return `${tileX},${tileY}`;
-    }
 }

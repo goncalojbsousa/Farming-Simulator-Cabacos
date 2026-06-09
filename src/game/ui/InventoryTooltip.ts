@@ -1,13 +1,11 @@
 import { GameObjects, Scene } from 'phaser';
 
 export class InventoryTooltip {
-    private scene: Scene;
-    private container: GameObjects.Container;
+    readonly container: GameObjects.Container;
     private background: GameObjects.Rectangle;
     private text: GameObjects.Text;
 
-    constructor(scene: Scene) {
-        this.scene = scene;
+    constructor(private scene: Scene) {
         this.container = scene.add.container(0, 0)
             .setDepth(2100)
             .setScrollFactor(0)
@@ -32,26 +30,17 @@ export class InventoryTooltip {
         this.text.setText(text);
         this.background.width = this.text.width + 12;
         this.background.height = this.text.height + 8;
-        this.moveTo(x, y);
-        this.container.setVisible(true);
-    }
+        const tooltipX = Phaser.Math.Clamp(x + 10, 0, this.scene.scale.width - this.background.width);
+        const tooltipY = Phaser.Math.Clamp(
+            y - this.background.height - 10,
+            0,
+            this.scene.scale.height - this.background.height
+        );
 
-    moveTo(x: number, y: number): void {
-        const tooltipX = this.clamp(x + 10, 0, this.scene.scale.width - this.background.width);
-        const tooltipY = this.clamp(y - this.background.height - 10, 0, this.scene.scale.height - this.background.height);
-
-        this.container.setPosition(tooltipX, tooltipY);
+        this.container.setPosition(tooltipX, tooltipY).setVisible(true);
     }
 
     hide(): void {
         this.container.setVisible(false);
-    }
-
-    getGameObject(): GameObjects.Container {
-        return this.container;
-    }
-
-    private clamp(value: number, minimum: number, maximum: number): number {
-        return Math.min(Math.max(value, minimum), maximum);
     }
 }

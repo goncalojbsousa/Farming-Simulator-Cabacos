@@ -1,258 +1,98 @@
 import type { TranslationKey } from '../services/LanguageService';
 
-export type ItemType = 'tool' | 'resource' | 'seed';
+export type ItemId = string;
+export type CropId = string;
+export type CropStage = number;
 
-type ItemDefinition = {
-    id: string;
+export type GameItem = {
+    id: ItemId;
     nameKey: TranslationKey;
-    type: ItemType;
+    type: 'tool' | 'seed' | 'resource';
     assetPath: string;
     maxStackSize: number;
+    cropId?: CropId;
     buyPrice?: number;
     sellPrice?: number;
 };
 
-export const gameItems = [
-    {
-        id: 'axe',
-        nameKey: 'itemAxe',
-        type: 'tool',
-        assetPath: 'tools/axe.png',
-        maxStackSize: 1
-    },
-    {
-        id: 'hammer',
-        nameKey: 'itemHammer',
-        type: 'tool',
-        assetPath: 'tools/hammer.png',
-        maxStackSize: 1
-    },
-    {
-        id: 'pickaxe',
-        nameKey: 'itemPickaxe',
-        type: 'tool',
-        assetPath: 'tools/pickaxe.png',
-        maxStackSize: 1
-    },
-    {
-        id: 'rod',
-        nameKey: 'itemRod',
-        type: 'tool',
-        assetPath: 'tools/rod.png',
-        maxStackSize: 1
-    },
-    {
-        id: 'shovel',
-        nameKey: 'itemShovel',
-        type: 'tool',
-        assetPath: 'tools/shovel.png',
-        maxStackSize: 1
-    },
-    {
-        id: 'sword',
-        nameKey: 'itemSword',
-        type: 'tool',
-        assetPath: 'tools/sword.png',
-        maxStackSize: 1
-    },
-    {
-        id: 'beetrootSeed',
-        nameKey: 'seedBeetroot',
-        type: 'seed',
-        assetPath: 'plantation/crops/beetroot_00.png',
-        maxStackSize: 99,
-        buyPrice: 8
-    },
-    {
-        id: 'beetrootHarvest',
-        nameKey: 'cropBeetroot',
-        type: 'resource',
-        assetPath: 'plantation/crops/beetroot_05.png',
-        maxStackSize: 99,
-        sellPrice: 12
-    },
-    {
-        id: 'cabbageSeed',
-        nameKey: 'seedCabbage',
-        type: 'seed',
-        assetPath: 'plantation/crops/cabbage_00.png',
-        maxStackSize: 99,
-        buyPrice: 10
-    },
-    {
-        id: 'cabbageHarvest',
-        nameKey: 'cropCabbage',
-        type: 'resource',
-        assetPath: 'plantation/crops/cabbage_05.png',
-        maxStackSize: 99,
-        sellPrice: 15
-    },
-    {
-        id: 'carrotSeed',
-        nameKey: 'seedCarrot',
-        type: 'seed',
-        assetPath: 'plantation/crops/carrot_00.png',
-        maxStackSize: 99,
-        buyPrice: 5
-    },
-    {
-        id: 'carrotHarvest',
-        nameKey: 'cropCarrot',
-        type: 'resource',
-        assetPath: 'plantation/crops/carrot_05.png',
-        maxStackSize: 99,
-        sellPrice: 8
-    },
-    {
-        id: 'cauliflowerSeed',
-        nameKey: 'seedCauliflower',
-        type: 'seed',
-        assetPath: 'plantation/crops/cauliflower_00.png',
-        maxStackSize: 99,
-        buyPrice: 12
-    },
-    {
-        id: 'cauliflowerHarvest',
-        nameKey: 'cropCauliflower',
-        type: 'resource',
-        assetPath: 'plantation/crops/cauliflower_05.png',
-        maxStackSize: 99,
-        sellPrice: 18
-    },
-    {
-        id: 'kaleSeed',
-        nameKey: 'seedKale',
-        type: 'seed',
-        assetPath: 'plantation/crops/kale_00.png',
-        maxStackSize: 99,
-        buyPrice: 7
-    },
-    {
-        id: 'kaleHarvest',
-        nameKey: 'cropKale',
-        type: 'resource',
-        assetPath: 'plantation/crops/kale_05.png',
-        maxStackSize: 99,
-        sellPrice: 11
-    },
-    {
-        id: 'parsnipSeed',
-        nameKey: 'seedParsnip',
-        type: 'seed',
-        assetPath: 'plantation/crops/parsnip_00.png',
-        maxStackSize: 99,
-        buyPrice: 5
-    },
-    {
-        id: 'parsnipHarvest',
-        nameKey: 'cropParsnip',
-        type: 'resource',
-        assetPath: 'plantation/crops/parsnip_05.png',
-        maxStackSize: 99,
-        sellPrice: 8
-    },
-    {
-        id: 'potatoSeed',
-        nameKey: 'seedPotato',
-        type: 'seed',
-        assetPath: 'plantation/crops/potato_00.png',
-        maxStackSize: 99,
-        buyPrice: 6
-    },
-    {
-        id: 'potatoHarvest',
-        nameKey: 'cropPotato',
-        type: 'resource',
-        assetPath: 'plantation/crops/potato_05.png',
-        maxStackSize: 99,
-        sellPrice: 10
-    },
-    {
-        id: 'pumpkinSeed',
-        nameKey: 'seedPumpkin',
-        type: 'seed',
-        assetPath: 'plantation/crops/pumpkin_00.png',
-        maxStackSize: 99,
-        buyPrice: 15
-    },
-    {
-        id: 'pumpkinHarvest',
-        nameKey: 'cropPumpkin',
-        type: 'resource',
-        assetPath: 'plantation/crops/pumpkin_05.png',
-        maxStackSize: 99,
-        sellPrice: 24
-    },
-    {
-        id: 'radishSeed',
-        nameKey: 'seedRadish',
-        type: 'seed',
-        assetPath: 'plantation/crops/radish_00.png',
-        maxStackSize: 99,
-        buyPrice: 6
-    },
-    {
-        id: 'radishHarvest',
-        nameKey: 'cropRadish',
-        type: 'resource',
-        assetPath: 'plantation/crops/radish_05.png',
-        maxStackSize: 99,
-        sellPrice: 10
-    },
-    {
-        id: 'sunflowerSeed',
-        nameKey: 'seedSunflower',
-        type: 'seed',
-        assetPath: 'plantation/crops/sunflower_00.png',
-        maxStackSize: 99,
-        buyPrice: 10
-    },
-    {
-        id: 'sunflowerHarvest',
-        nameKey: 'cropSunflower',
-        type: 'resource',
-        assetPath: 'plantation/crops/sunflower_05.png',
-        maxStackSize: 99,
-        sellPrice: 16
-    },
-    {
-        id: 'wheatSeed',
-        nameKey: 'seedWheat',
-        type: 'seed',
-        assetPath: 'plantation/crops/wheat_00.png',
-        maxStackSize: 99,
-        buyPrice: 4
-    },
-    {
-        id: 'wheatHarvest',
-        nameKey: 'cropWheat',
-        type: 'resource',
-        assetPath: 'plantation/crops/wheat_05.png',
-        maxStackSize: 99,
-        sellPrice: 7
-    }
-] as const satisfies readonly ItemDefinition[];
+export type SeedItem = GameItem & {
+    type: 'seed';
+    cropId: CropId;
+    buyPrice: number;
+    growthDays: number;
+};
 
-export type GameItem = typeof gameItems[number];
-export type SeedItem = Extract<GameItem, { type: 'seed' }>;
-export type ItemId = typeof gameItems[number]['id'];
+const tools = [
+    { id: 'axe', nameKey: 'itemAxe' },
+    { id: 'hammer', nameKey: 'itemHammer' },
+    { id: 'pickaxe', nameKey: 'itemPickaxe' },
+    { id: 'rod', nameKey: 'itemRod' },
+    { id: 'shovel', nameKey: 'itemShovel' },
+    { id: 'sword', nameKey: 'itemSword' }
+] as const;
+
+// To add a crop, add one line here and its images to the assets folder.
+export const crops = [
+    { id: 'beetroot', seedNameKey: 'seedBeetroot', harvestNameKey: 'cropBeetroot', buyPrice: 8, sellPrice: 12, growthDays: 6 },
+    { id: 'cabbage', seedNameKey: 'seedCabbage', harvestNameKey: 'cropCabbage', buyPrice: 10, sellPrice: 15, growthDays: 9 },
+    { id: 'carrot', seedNameKey: 'seedCarrot', harvestNameKey: 'cropCarrot', buyPrice: 5, sellPrice: 8, growthDays: 4 },
+    { id: 'cauliflower', seedNameKey: 'seedCauliflower', harvestNameKey: 'cropCauliflower', buyPrice: 12, sellPrice: 18, growthDays: 12 },
+    { id: 'kale', seedNameKey: 'seedKale', harvestNameKey: 'cropKale', buyPrice: 7, sellPrice: 11, growthDays: 6 },
+    { id: 'parsnip', seedNameKey: 'seedParsnip', harvestNameKey: 'cropParsnip', buyPrice: 5, sellPrice: 8, growthDays: 4 },
+    { id: 'potato', seedNameKey: 'seedPotato', harvestNameKey: 'cropPotato', buyPrice: 6, sellPrice: 10, growthDays: 6 },
+    { id: 'pumpkin', seedNameKey: 'seedPumpkin', harvestNameKey: 'cropPumpkin', buyPrice: 15, sellPrice: 24, growthDays: 13 },
+    { id: 'radish', seedNameKey: 'seedRadish', harvestNameKey: 'cropRadish', buyPrice: 6, sellPrice: 10, growthDays: 6 },
+    { id: 'sunflower', seedNameKey: 'seedSunflower', harvestNameKey: 'cropSunflower', buyPrice: 10, sellPrice: 16, growthDays: 8 },
+    { id: 'wheat', seedNameKey: 'seedWheat', harvestNameKey: 'cropWheat', buyPrice: 4, sellPrice: 7, growthDays: 4 }
+] as const;
+
+const toolItems: GameItem[] = tools.map((tool) => ({
+    id: tool.id,
+    nameKey: tool.nameKey,
+    type: 'tool',
+    assetPath: `tools/${tool.id}.png`,
+    maxStackSize: 1
+}));
+
+const cropItems: GameItem[] = crops.flatMap((crop) => [
+    {
+        id: `${crop.id}Seed`,
+        nameKey: crop.seedNameKey,
+        type: 'seed',
+        assetPath: `plantation/crops/${crop.id}_00.png`,
+        cropId: crop.id,
+        maxStackSize: 99,
+        buyPrice: crop.buyPrice,
+        growthDays: crop.growthDays
+    },
+    {
+        id: `${crop.id}Harvest`,
+        nameKey: crop.harvestNameKey,
+        type: 'resource',
+        assetPath: `plantation/crops/${crop.id}_05.png`,
+        maxStackSize: 99,
+        sellPrice: crop.sellPrice
+    }
+]);
+
+export const gameItems = [...toolItems, ...cropItems];
+export const cropStages: CropStage[] = [1, 2, 3, 4];
 
 export function getItemById(itemId: ItemId): GameItem {
     return gameItems.find((item) => item.id === itemId)!;
 }
 
-export function getAllItems(): readonly GameItem[] {
-    return gameItems;
-}
-
 export function getSeedItems(): SeedItem[] {
-    return gameItems.filter((item): item is SeedItem => item.type === 'seed');
+    return gameItems.filter((item) => item.type === 'seed') as SeedItem[];
 }
 
-export function getStartingItemIds(): ItemId[] {
-    return ['axe', 'pickaxe', 'shovel', 'hammer', 'rod', 'sword'];
+export function getCropTextureKey(cropId: CropId, stage: CropStage): string {
+    return `${cropId}_${String(stage).padStart(2, '0')}`;
 }
 
-export function getStartingSeedItemIds(): ItemId[] {
-    return ['carrotSeed', 'potatoSeed', 'wheatSeed', 'pumpkinSeed'];
+export function getCropAssetPath(cropId: CropId, stage: CropStage): string {
+    return `plantation/crops/${getCropTextureKey(cropId, stage)}.png`;
 }
+
+export const startingToolIds = ['axe', 'pickaxe', 'shovel', 'hammer', 'rod', 'sword'];
+export const startingSeedIds = ['carrotSeed', 'potatoSeed', 'wheatSeed', 'pumpkinSeed'];
