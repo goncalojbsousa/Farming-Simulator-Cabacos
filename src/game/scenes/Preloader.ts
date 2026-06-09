@@ -36,6 +36,8 @@ export class Preloader extends Scene {
         }
 
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');
+        this.load.tilemapTiledJSON('houseInteriorMap', 'tilemap/Casa_player.tmj');
+        this.load.image('houseInteriorImage', 'tilemap/house_interior_sunnyside_style_384x288.png');
         this.load.image('ts_map', 'tilemap/ts_map.png');
         this.load.image('ts_forest', 'tilemap/ts_forest.png');
         this.load.image('soil', 'plantation/soil.png');

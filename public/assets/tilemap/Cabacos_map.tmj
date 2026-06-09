@@ -1235,6 +1235,24 @@
                  "width":29,
                  "x":520.5,
                  "y":382.5
+                }, 
+                {
+                 "height":13,
+                 "id":255,
+                 "name":"player_house_door",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"enter_house"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":29.5,
+                 "x":666,
+                 "y":481.5
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1243,7 +1261,7 @@
          "y":0
         }],
  "nextlayerid":24,
- "nextobjectid":255,
+ "nextobjectid":256,
  "orientation":"orthogonal",
  "properties":[
         {

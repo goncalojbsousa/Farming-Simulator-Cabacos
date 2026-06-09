@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { Geom, Scene } from 'phaser';
 import { Player } from '../objects/Player';
 import { getItemById, getStartingItemIds, getStartingSeedItemIds } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
@@ -13,6 +13,16 @@ import { FarmingSystem } from '../systems/FarmingSystem';
 const gameCameraZoom = 2;
 const playerDepth = 10;
 const startingMoney = 100;
+const defaultPlayerX = 672;
+const defaultPlayerY = 496;
+const houseDoorObjectName = 'player_house_door';
+
+type GameSceneData = {
+    spawnX?: number;
+    spawnY?: number;
+    inventory?: InventoryService;
+    money?: MoneyService;
+};
 
 export class Game extends Scene {
     // World
@@ -25,6 +35,8 @@ export class Game extends Scene {
     // Game data
     inventory: InventoryService;
     money: MoneyService;
+    savedInventory: InventoryService | null = null;
+    savedMoney: MoneyService | null = null;
 
     // UI
     uiCamera: Phaser.Cameras.Scene2D.Camera;
@@ -37,7 +49,13 @@ export class Game extends Scene {
     // Seed shop
     seedShopPanel: SeedShopPanel;
     seedShopPromptText: Phaser.GameObjects.Text;
-    seedShopInteractionZones: Phaser.Geom.Rectangle[] = [];
+    seedShopInteractionZones: Geom.Rectangle[] = [];
+
+    // House entrance
+    playerSpawnX = defaultPlayerX;
+    playerSpawnY = defaultPlayerY;
+    houseDoorInteractionZones: Geom.Rectangle[] = [];
+    houseDoorPromptText: Phaser.GameObjects.Text;
 
     // Inventory dragging
     draggedInventorySlotIndex: number | null = null;
@@ -47,8 +65,19 @@ export class Game extends Scene {
         super('Game');
     }
 
+    init(data: GameSceneData = {}) {
+        this.playerSpawnX = data.spawnX ?? defaultPlayerX;
+        this.playerSpawnY = data.spawnY ?? defaultPlayerY;
+        this.savedInventory = data.inventory ?? null;
+        this.savedMoney = data.money ?? null;
+    }
+
     create() {
         this.camera = this.cameras.main;
+        this.farmLayer = null;
+        this.worldCameraObjects = [];
+        this.seedShopInteractionZones = [];
+        this.houseDoorInteractionZones = [];
 
         // Create the map and its layers.
         const map = this.make.tilemap({ key: 'tilemap' });
@@ -63,7 +92,7 @@ export class Game extends Scene {
 
             if (layer) {
                 if (layerData.name === 'farm') {
-                    this.farmLayer = layer;
+                    this.farmLayer = layer as Phaser.Tilemaps.TilemapLayer;
                 }
                 // This property from Tiled defines the visual order of the layers.
                 const depthProperty = Array.isArray((layerData as any).properties)
@@ -86,7 +115,7 @@ export class Game extends Scene {
             this.worldCameraObjects.push(collisionLayer);
         }
 
-        this.player = new Player(this, 672, 496);
+        this.player = new Player(this, this.playerSpawnX, this.playerSpawnY);
         this.player.sprite.setDepth(playerDepth);
         this.worldCameraObjects.push(this.player.sprite);
 
@@ -97,11 +126,14 @@ export class Game extends Scene {
         this.setupCamera(map);
 
         // Create game data and UI.
-        this.inventory = new InventoryService(16);
-        this.money = new MoneyService(startingMoney);
+        this.inventory = this.savedInventory ?? new InventoryService(16);
+        this.money = this.savedMoney ?? new MoneyService(startingMoney);
         this.createMoneyUi();
         this.loadSeedShopInteractionZones(map);
-        this.addStartingItems();
+        this.loadHouseDoorInteractionZones(map);
+        if (this.savedInventory === null) {
+            this.addStartingItems();
+        }
         this.inventoryTooltip = new InventoryTooltip(this);
         this.hotbar = new Hotbar(this, this.inventory);
         this.inventoryPanel = new InventoryPanel(
@@ -124,6 +156,14 @@ export class Game extends Scene {
             strokeThickness: 4
         }).setOrigin(0.5).setScrollFactor(0).setDepth(960).setVisible(false);
         this.layoutSeedShopPrompt();
+        this.houseDoorPromptText = this.add.text(0, 0, 'E - Entrar em casa', {
+            fontFamily: 'Arial Black',
+            fontSize: 16,
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(1100).setVisible(false);
+        this.layoutHouseDoorPrompt();
         this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
             .setScale(3)
             .setAlpha(0.85)
@@ -157,6 +197,7 @@ export class Game extends Scene {
         this.player.update(delta);
         this.farmingSystem.update(this.input.activePointer);
         this.updateSeedShopPrompt();
+        this.updateHouseDoorPrompt();
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 
@@ -178,6 +219,7 @@ export class Game extends Scene {
             this.moneyText,
             ...this.seedShopPanel.getGameObjects(),
             this.seedShopPromptText,
+            this.houseDoorPromptText,
             this.inventoryTooltip.getGameObject(),
             this.draggedItemImage
         ];
@@ -195,6 +237,7 @@ export class Game extends Scene {
         this.inventoryPanel.layout();
         this.seedShopPanel.layout();
         this.layoutSeedShopPrompt();
+        this.layoutHouseDoorPrompt();
         this.inventoryTooltip.hide();
     }
 
@@ -237,7 +280,7 @@ export class Game extends Scene {
                 continue;
             }
 
-            this.seedShopInteractionZones.push(new Phaser.Geom.Rectangle(
+            this.seedShopInteractionZones.push(new Geom.Rectangle(
                 tiledObject.x,
                 tiledObject.y,
                 tiledObject.width ?? 0,
@@ -260,6 +303,51 @@ export class Game extends Scene {
 
     private layoutSeedShopPrompt(): void {
         this.seedShopPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
+    private updateHouseDoorPrompt(): void {
+        this.houseDoorPromptText.setVisible(
+            this.isPlayerInHouseDoorZone() && !this.seedShopPanel.isOpen()
+        );
+    }
+
+    private layoutHouseDoorPrompt(): void {
+        this.houseDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
+    private loadHouseDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
+        const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
+
+        for (const tiledObject of interactionLayer?.objects ?? []) {
+            const objectName = tiledObject.name?.trim();
+            const width = tiledObject.width ?? 0;
+            const height = tiledObject.height ?? 0;
+
+            if (objectName !== houseDoorObjectName || width <= 0 || height <= 0) {
+                continue;
+            }
+
+            this.houseDoorInteractionZones.push(new Geom.Rectangle(
+                tiledObject.x,
+                tiledObject.y,
+                width,
+                height
+            ));
+        }
+    }
+
+    private isPlayerInHouseDoorZone(): boolean {
+        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+        const playerRectangle = new Geom.Rectangle(
+            playerBody.x,
+            playerBody.y,
+            playerBody.width,
+            playerBody.height
+        );
+
+        return this.houseDoorInteractionZones.some((zone) =>
+            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
+        );
     }
 
     private isPlayerInSeedShopZone(): boolean {
@@ -312,9 +400,21 @@ export class Game extends Scene {
                 return;
             }
 
-            if (pressedKey === 'e' && this.isPlayerInSeedShopZone()) {
-                this.seedShopPanel.toggle();
-                this.inventoryTooltip.hide();
+            if (pressedKey === 'e') {
+                if (this.isPlayerInSeedShopZone()) {
+                    this.seedShopPanel.toggle();
+                    this.inventoryTooltip.hide();
+                    return;
+                }
+
+                if (this.isPlayerInHouseDoorZone()) {
+                    this.scene.start('HouseInterior', {
+                        returnX: this.player.sprite.x,
+                        returnY: this.player.sprite.y,
+                        inventory: this.inventory,
+                        money: this.money
+                    });
+                }
             }
         });
     }
