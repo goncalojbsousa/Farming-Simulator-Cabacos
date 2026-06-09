@@ -17,6 +17,7 @@ const defaultPlayerX = 672;
 const defaultPlayerY = 496;
 const houseDoorObjectName = 'player_house_door';
 const cropMarketDoorObjectName = 'player_crop_market_door';
+const seedShopDoorObjectName = 'player_seed_shop_door';
 
 type GameSceneData = {
     spawnX?: number;
@@ -59,6 +60,8 @@ export class Game extends Scene {
     houseDoorPromptText: Phaser.GameObjects.Text;
     cropMarketDoorInteractionZones: Geom.Rectangle[] = [];
     cropMarketDoorPromptText: Phaser.GameObjects.Text;
+    seedShopDoorInteractionZones: Geom.Rectangle[] = [];
+    seedShopDoorPromptText: Phaser.GameObjects.Text;
 
     // Inventory dragging
     draggedInventorySlotIndex: number | null = null;
@@ -82,6 +85,7 @@ export class Game extends Scene {
         this.seedShopInteractionZones = [];
         this.houseDoorInteractionZones = [];
         this.cropMarketDoorInteractionZones = [];
+        this.seedShopDoorInteractionZones = [];
 
         // Create the map and its layers.
         const map = this.make.tilemap({ key: 'tilemap' });
@@ -136,6 +140,7 @@ export class Game extends Scene {
         this.loadSeedShopInteractionZones(map);
         this.loadHouseDoorInteractionZones(map);
         this.loadCropMarketDoorInteractionZones(map);
+        this.loadSeedShopDoorInteractionZones(map);
         if (this.savedInventory === null) {
             this.addStartingItems();
         }
@@ -159,6 +164,8 @@ export class Game extends Scene {
         this.layoutHouseDoorPrompt();
         this.cropMarketDoorPromptText = this.createInteractionPromptText('E - Entrar no mercado');
         this.layoutCropMarketDoorPrompt();
+        this.seedShopDoorPromptText = this.createInteractionPromptText('E - Entrar na loja');
+        this.layoutSeedShopDoorPrompt();
         this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
             .setScale(3)
             .setAlpha(0.85)
@@ -194,6 +201,7 @@ export class Game extends Scene {
         this.updateSeedShopPrompt();
         this.updateHouseDoorPrompt();
         this.updateCropMarketDoorPrompt();
+        this.updateSeedShopDoorPrompt();
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 
@@ -217,6 +225,7 @@ export class Game extends Scene {
             this.seedShopPromptText,
             this.houseDoorPromptText,
             this.cropMarketDoorPromptText,
+            this.seedShopDoorPromptText,
             this.inventoryTooltip.getGameObject(),
             this.draggedItemImage
         ];
@@ -236,6 +245,7 @@ export class Game extends Scene {
         this.layoutSeedShopPrompt();
         this.layoutHouseDoorPrompt();
         this.layoutCropMarketDoorPrompt();
+        this.layoutSeedShopDoorPrompt();
         this.inventoryTooltip.hide();
     }
 
@@ -337,12 +347,26 @@ export class Game extends Scene {
         this.cropMarketDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
     }
 
+    private updateSeedShopDoorPrompt(): void {
+        this.seedShopDoorPromptText.setVisible(
+            this.isPlayerInSeedShopDoorZone() && !this.seedShopPanel.isOpen()
+        );
+    }
+
+    private layoutSeedShopDoorPrompt(): void {
+        this.seedShopDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
     private loadHouseDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
         this.houseDoorInteractionZones = this.loadInteractionZonesByName(map, houseDoorObjectName);
     }
 
     private loadCropMarketDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
         this.cropMarketDoorInteractionZones = this.loadInteractionZonesByName(map, cropMarketDoorObjectName);
+    }
+
+    private loadSeedShopDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
+        this.seedShopDoorInteractionZones = this.loadInteractionZonesByName(map, seedShopDoorObjectName);
     }
 
     private loadInteractionZonesByName(
@@ -400,6 +424,20 @@ export class Game extends Scene {
         );
     }
 
+    private isPlayerInSeedShopDoorZone(): boolean {
+        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+        const playerRectangle = new Geom.Rectangle(
+            playerBody.x,
+            playerBody.y,
+            playerBody.width,
+            playerBody.height
+        );
+
+        return this.seedShopDoorInteractionZones.some((zone) =>
+            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
+        );
+    }
+
     private isPlayerInSeedShopZone(): boolean {
         const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
 
@@ -451,6 +489,16 @@ export class Game extends Scene {
             }
 
             if (pressedKey === 'e') {
+                if (this.isPlayerInSeedShopDoorZone()) {
+                    this.scene.start('SeedShop', {
+                        returnX: this.player.sprite.x,
+                        returnY: this.player.sprite.y,
+                        inventory: this.inventory,
+                        money: this.money
+                    });
+                    return;
+                }
+
                 if (this.isPlayerInSeedShopZone()) {
                     this.seedShopPanel.toggle();
                     this.inventoryTooltip.hide();

@@ -40,6 +40,8 @@ export class Preloader extends Scene {
         this.load.image('houseInteriorImage', 'tilemap/house_interior_sunnyside_style_384x288.png');
         this.load.tilemapTiledJSON('cropMarketMap', 'tilemap/Crop_market.tmj');
         this.load.image('cropMarketImage', 'tilemap/crop_market_sunnyside_style_384x288_wide.png');
+        this.load.tilemapTiledJSON('seedShopMap', 'tilemap/Seed_shop.tmj');
+        this.load.image('seedShopImage', 'tilemap/seed_shop_sunnyside_style_384x288.png');
         this.load.image('ts_map', 'tilemap/ts_map.png');
         this.load.image('ts_forest', 'tilemap/ts_forest.png');
         this.load.image('soil', 'plantation/soil.png');
