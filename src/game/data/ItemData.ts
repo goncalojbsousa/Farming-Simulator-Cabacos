@@ -7,10 +7,15 @@ type ItemDefinition = {
     nameKey: TranslationKey;
     type: ItemType;
     assetPath: string;
+    cropId?: string;
     maxStackSize: number;
     buyPrice?: number;
     sellPrice?: number;
 };
+
+export const cropStages = [1, 2, 3, 4] as const;
+
+export type CropStage = typeof cropStages[number];
 
 export const gameItems = [
     {
@@ -60,6 +65,7 @@ export const gameItems = [
         nameKey: 'seedBeetroot',
         type: 'seed',
         assetPath: 'plantation/crops/beetroot_00.png',
+        cropId: 'beetroot',
         maxStackSize: 99,
         buyPrice: 8
     },
@@ -76,6 +82,7 @@ export const gameItems = [
         nameKey: 'seedCabbage',
         type: 'seed',
         assetPath: 'plantation/crops/cabbage_00.png',
+        cropId: 'cabbage',
         maxStackSize: 99,
         buyPrice: 10
     },
@@ -92,6 +99,7 @@ export const gameItems = [
         nameKey: 'seedCarrot',
         type: 'seed',
         assetPath: 'plantation/crops/carrot_00.png',
+        cropId: 'carrot',
         maxStackSize: 99,
         buyPrice: 5
     },
@@ -108,6 +116,7 @@ export const gameItems = [
         nameKey: 'seedCauliflower',
         type: 'seed',
         assetPath: 'plantation/crops/cauliflower_00.png',
+        cropId: 'cauliflower',
         maxStackSize: 99,
         buyPrice: 12
     },
@@ -124,6 +133,7 @@ export const gameItems = [
         nameKey: 'seedKale',
         type: 'seed',
         assetPath: 'plantation/crops/kale_00.png',
+        cropId: 'kale',
         maxStackSize: 99,
         buyPrice: 7
     },
@@ -140,6 +150,7 @@ export const gameItems = [
         nameKey: 'seedParsnip',
         type: 'seed',
         assetPath: 'plantation/crops/parsnip_00.png',
+        cropId: 'parsnip',
         maxStackSize: 99,
         buyPrice: 5
     },
@@ -156,6 +167,7 @@ export const gameItems = [
         nameKey: 'seedPotato',
         type: 'seed',
         assetPath: 'plantation/crops/potato_00.png',
+        cropId: 'potato',
         maxStackSize: 99,
         buyPrice: 6
     },
@@ -172,6 +184,7 @@ export const gameItems = [
         nameKey: 'seedPumpkin',
         type: 'seed',
         assetPath: 'plantation/crops/pumpkin_00.png',
+        cropId: 'pumpkin',
         maxStackSize: 99,
         buyPrice: 15
     },
@@ -188,6 +201,7 @@ export const gameItems = [
         nameKey: 'seedRadish',
         type: 'seed',
         assetPath: 'plantation/crops/radish_00.png',
+        cropId: 'radish',
         maxStackSize: 99,
         buyPrice: 6
     },
@@ -204,6 +218,7 @@ export const gameItems = [
         nameKey: 'seedSunflower',
         type: 'seed',
         assetPath: 'plantation/crops/sunflower_00.png',
+        cropId: 'sunflower',
         maxStackSize: 99,
         buyPrice: 10
     },
@@ -220,6 +235,7 @@ export const gameItems = [
         nameKey: 'seedWheat',
         type: 'seed',
         assetPath: 'plantation/crops/wheat_00.png',
+        cropId: 'wheat',
         maxStackSize: 99,
         buyPrice: 4
     },
@@ -247,6 +263,14 @@ export function getAllItems(): readonly GameItem[] {
 
 export function getSeedItems(): SeedItem[] {
     return gameItems.filter((item): item is SeedItem => item.type === 'seed');
+}
+
+export function getCropTextureKey(cropId: string, stage: CropStage): string {
+    return `${cropId}_${String(stage).padStart(2, '0')}`;
+}
+
+export function getCropAssetPath(cropId: string, stage: CropStage): string {
+    return `plantation/crops/${getCropTextureKey(cropId, stage)}.png`;
 }
 
 export function getStartingItemIds(): ItemId[] {

@@ -13,7 +13,6 @@ export class Player {
 
         this.sprite = scene.physics.add.sprite(x, y, 'idle');
         this.sprite.setCollideWorldBounds(true);
-        // Ajustar o body ao tamanho real do personagem (sprite é 96x64, personagem ~16x16)
         this.sprite.setBodySize(8, 8);
         this.sprite.setOffset(44, 28);
 

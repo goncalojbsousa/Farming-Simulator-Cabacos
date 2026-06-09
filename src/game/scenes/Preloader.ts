@@ -1,5 +1,10 @@
 import { Scene } from 'phaser';
-import { getAllItems } from '../data/ItemData';
+import {
+    cropStages,
+    getAllItems,
+    getCropAssetPath,
+    getCropTextureKey
+} from '../data/ItemData';
 
 export class Preloader extends Scene {
     constructor() {
@@ -33,6 +38,15 @@ export class Preloader extends Scene {
 
         for (const item of getAllItems()) {
             this.load.image(item.id, item.assetPath);
+
+            if (item.type === 'seed') {
+                for (const stage of cropStages) {
+                    this.load.image(
+                        getCropTextureKey(item.cropId, stage),
+                        getCropAssetPath(item.cropId, stage)
+                    );
+                }
+            }
         }
 
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');

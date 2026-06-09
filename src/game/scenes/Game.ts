@@ -143,7 +143,8 @@ export class Game extends Scene {
             inventory: this.inventory,
             farmLayer: this.farmLayer,
             worldCameraObjects: this.worldCameraObjects,
-            isPointerOverUi: (pointer) => this.isPointerOverUi(pointer)
+            isPointerOverUi: (pointer) => this.isPointerOverUi(pointer),
+            onInventoryChanged: () => this.refreshInventoryUi()
         });
         this.setupInventoryKeys();
         this.setupInventoryMouseControls();
