@@ -1266,6 +1266,24 @@
                  "width":27.5,
                  "x":523,
                  "y":383.5
+                }, 
+                {
+                 "height":16.5,
+                 "id":258,
+                 "name":"player_town_hall_door",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"enter_town_hall"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":31,
+                 "x":535.5,
+                 "y":207
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1274,7 +1292,7 @@
          "y":0
         }],
  "nextlayerid":24,
- "nextobjectid":258,
+ "nextobjectid":259,
  "orientation":"orthogonal",
  "properties":[
         {

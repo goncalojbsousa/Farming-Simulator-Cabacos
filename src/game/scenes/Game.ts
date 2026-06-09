@@ -18,6 +18,7 @@ const defaultPlayerY = 496;
 const houseDoorObjectName = 'player_house_door';
 const cropMarketDoorObjectName = 'player_crop_market_door';
 const seedShopDoorObjectName = 'player_seed_shop_door';
+const townHallDoorObjectName = 'player_town_hall_door';
 
 type GameSceneData = {
     spawnX?: number;
@@ -62,6 +63,8 @@ export class Game extends Scene {
     cropMarketDoorPromptText: Phaser.GameObjects.Text;
     seedShopDoorInteractionZones: Geom.Rectangle[] = [];
     seedShopDoorPromptText: Phaser.GameObjects.Text;
+    townHallDoorInteractionZones: Geom.Rectangle[] = [];
+    townHallDoorPromptText: Phaser.GameObjects.Text;
 
     // Inventory dragging
     draggedInventorySlotIndex: number | null = null;
@@ -86,6 +89,7 @@ export class Game extends Scene {
         this.houseDoorInteractionZones = [];
         this.cropMarketDoorInteractionZones = [];
         this.seedShopDoorInteractionZones = [];
+        this.townHallDoorInteractionZones = [];
 
         // Create the map and its layers.
         const map = this.make.tilemap({ key: 'tilemap' });
@@ -141,6 +145,7 @@ export class Game extends Scene {
         this.loadHouseDoorInteractionZones(map);
         this.loadCropMarketDoorInteractionZones(map);
         this.loadSeedShopDoorInteractionZones(map);
+        this.loadTownHallDoorInteractionZones(map);
         if (this.savedInventory === null) {
             this.addStartingItems();
         }
@@ -166,6 +171,8 @@ export class Game extends Scene {
         this.layoutCropMarketDoorPrompt();
         this.seedShopDoorPromptText = this.createInteractionPromptText('E - Entrar na loja');
         this.layoutSeedShopDoorPrompt();
+        this.townHallDoorPromptText = this.createInteractionPromptText('E - Entrar na camara');
+        this.layoutTownHallDoorPrompt();
         this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
             .setScale(3)
             .setAlpha(0.85)
@@ -202,6 +209,7 @@ export class Game extends Scene {
         this.updateHouseDoorPrompt();
         this.updateCropMarketDoorPrompt();
         this.updateSeedShopDoorPrompt();
+        this.updateTownHallDoorPrompt();
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 
@@ -246,6 +254,7 @@ export class Game extends Scene {
         this.layoutHouseDoorPrompt();
         this.layoutCropMarketDoorPrompt();
         this.layoutSeedShopDoorPrompt();
+        this.layoutTownHallDoorPrompt();
         this.inventoryTooltip.hide();
     }
 
@@ -357,6 +366,16 @@ export class Game extends Scene {
         this.seedShopDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
     }
 
+    private updateTownHallDoorPrompt(): void {
+        this.townHallDoorPromptText.setVisible(
+            this.isPlayerInTownHallDoorZone() && !this.seedShopPanel.isOpen()
+        );
+    }
+
+    private layoutTownHallDoorPrompt(): void {
+        this.townHallDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
     private loadHouseDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
         this.houseDoorInteractionZones = this.loadInteractionZonesByName(map, houseDoorObjectName);
     }
@@ -367,6 +386,10 @@ export class Game extends Scene {
 
     private loadSeedShopDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
         this.seedShopDoorInteractionZones = this.loadInteractionZonesByName(map, seedShopDoorObjectName);
+    }
+
+    private loadTownHallDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
+        this.townHallDoorInteractionZones = this.loadInteractionZonesByName(map, townHallDoorObjectName);
     }
 
     private loadInteractionZonesByName(
@@ -438,6 +461,20 @@ export class Game extends Scene {
         );
     }
 
+    private isPlayerInTownHallDoorZone(): boolean {
+        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+        const playerRectangle = new Geom.Rectangle(
+            playerBody.x,
+            playerBody.y,
+            playerBody.width,
+            playerBody.height
+        );
+
+        return this.townHallDoorInteractionZones.some((zone) =>
+            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
+        );
+    }
+
     private isPlayerInSeedShopZone(): boolean {
         const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
 
@@ -491,6 +528,16 @@ export class Game extends Scene {
             if (pressedKey === 'e') {
                 if (this.isPlayerInSeedShopDoorZone()) {
                     this.scene.start('SeedShop', {
+                        returnX: this.player.sprite.x,
+                        returnY: this.player.sprite.y,
+                        inventory: this.inventory,
+                        money: this.money
+                    });
+                    return;
+                }
+
+                if (this.isPlayerInTownHallDoorZone()) {
+                    this.scene.start('TownHall', {
                         returnX: this.player.sprite.x,
                         returnY: this.player.sprite.y,
                         inventory: this.inventory,
