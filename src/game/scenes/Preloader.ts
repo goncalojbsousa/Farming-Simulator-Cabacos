@@ -3,7 +3,8 @@ import {
     cropStages,
     getAllItems,
     getCropAssetPath,
-    getCropTextureKey
+    getCropTextureKey,
+    isSeedItem
 } from '../data/ItemData';
 
 export class Preloader extends Scene {
@@ -39,7 +40,7 @@ export class Preloader extends Scene {
         for (const item of getAllItems()) {
             this.load.image(item.id, item.assetPath);
 
-            if (item.type === 'seed') {
+            if (isSeedItem(item)) {
                 for (const stage of cropStages) {
                     this.load.image(
                         getCropTextureKey(item.cropId, stage),

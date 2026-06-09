@@ -1,5 +1,5 @@
 import { Player } from '../objects/Player';
-import { getCropTextureKey, getItemById, SeedItem } from '../data/ItemData';
+import { getCropTextureKey, getItemById, isSeedItem, SeedItem } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
 
 type FarmingSystemConfig = {
@@ -199,7 +199,7 @@ export class FarmingSystem {
 
         const item = getItemById(selectedSlot.itemId);
 
-        return item.type === 'seed' ? item : null;
+        return isSeedItem(item) ? item : null;
     }
 
     private isTileWithinPlayerReach(tile: Phaser.Tilemaps.Tile): boolean {

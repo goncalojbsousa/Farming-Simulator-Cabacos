@@ -39,7 +39,7 @@ export class Player {
         this.keyS = scene.input.keyboard!.addKey('S');
     }
 
-    update(_delta: number) {
+    update(): void {
         const goLeft = this.cursors.left.isDown || this.keyA.isDown;
         const goRight = this.cursors.right.isDown || this.keyD.isDown;
         const goUp = this.cursors.up.isDown || this.keyW.isDown;
