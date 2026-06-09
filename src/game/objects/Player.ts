@@ -1,16 +1,10 @@
 export class Player {
-
     sprite: Phaser.Physics.Arcade.Sprite;
     cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    keyA: Phaser.Input.Keyboard.Key;
-    keyD: Phaser.Input.Keyboard.Key;
-    keyW: Phaser.Input.Keyboard.Key;
-    keyS: Phaser.Input.Keyboard.Key;
-
-    readonly speed: number = 80;
+    keys: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
+    readonly speed = 80;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
-
         this.sprite = scene.physics.add.sprite(x, y, 'idle');
         this.sprite.setCollideWorldBounds(true);
         this.sprite.setBodySize(8, 8);
@@ -18,14 +12,14 @@ export class Player {
 
         scene.anims.create({
             key: 'idle',
-            frames: scene.anims.generateFrameNumbers('idle', { frames: [0, 1, 2, 3, 4, 5, 6, 7, 8] }),
+            frames: scene.anims.generateFrameNumbers('idle', { start: 0, end: 8 }),
             frameRate: 9,
             repeat: -1
         });
 
         scene.anims.create({
             key: 'walk',
-            frames: scene.anims.generateFrameNumbers('walk', { frames: [0, 1, 2, 3, 4, 5, 6, 7] }),
+            frames: scene.anims.generateFrameNumbers('walk', { start: 0, end: 7 }),
             frameRate: 8,
             repeat: -1
         });
@@ -33,17 +27,14 @@ export class Player {
         this.sprite.play('idle');
 
         this.cursors = scene.input.keyboard!.createCursorKeys();
-        this.keyA = scene.input.keyboard!.addKey('A');
-        this.keyD = scene.input.keyboard!.addKey('D');
-        this.keyW = scene.input.keyboard!.addKey('W');
-        this.keyS = scene.input.keyboard!.addKey('S');
+        this.keys = scene.input.keyboard!.addKeys('W,A,S,D') as typeof this.keys;
     }
 
-    update(_delta: number) {
-        const goLeft = this.cursors.left.isDown || this.keyA.isDown;
-        const goRight = this.cursors.right.isDown || this.keyD.isDown;
-        const goUp = this.cursors.up.isDown || this.keyW.isDown;
-        const goDown = this.cursors.down.isDown || this.keyS.isDown;
+    update(): void {
+        const goLeft = this.cursors.left.isDown || this.keys.A.isDown;
+        const goRight = this.cursors.right.isDown || this.keys.D.isDown;
+        const goUp = this.cursors.up.isDown || this.keys.W.isDown;
+        const goDown = this.cursors.down.isDown || this.keys.S.isDown;
 
         this.sprite.setVelocity(0, 0);
 

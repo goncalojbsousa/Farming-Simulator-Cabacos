@@ -37,8 +37,12 @@ export class InventoryTooltip {
     }
 
     moveTo(x: number, y: number): void {
-        const tooltipX = this.clamp(x + 10, 0, this.scene.scale.width - this.background.width);
-        const tooltipY = this.clamp(y - this.background.height - 10, 0, this.scene.scale.height - this.background.height);
+        const tooltipX = Phaser.Math.Clamp(x + 10, 0, this.scene.scale.width - this.background.width);
+        const tooltipY = Phaser.Math.Clamp(
+            y - this.background.height - 10,
+            0,
+            this.scene.scale.height - this.background.height
+        );
 
         this.container.setPosition(tooltipX, tooltipY);
     }
@@ -49,9 +53,5 @@ export class InventoryTooltip {
 
     getGameObject(): GameObjects.Container {
         return this.container;
-    }
-
-    private clamp(value: number, minimum: number, maximum: number): number {
-        return Math.min(Math.max(value, minimum), maximum);
     }
 }

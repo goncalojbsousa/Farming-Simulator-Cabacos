@@ -46,17 +46,12 @@ export class Hotbar {
         });
     }
 
-    getSlotIndexAtPosition(x: number, y: number): number | null {
+    findSlotAt(x: number, y: number): number | null {
         const slotIndex = this.slotViews.findIndex((slotView) => slotView.containsPoint(x, y));
-
-        if (slotIndex === -1) {
-            return null;
-        }
-
-        return slotIndex;
+        return slotIndex === -1 ? null : slotIndex;
     }
 
-    getGameObjects(): Phaser.GameObjects.GameObject[] {
+    getUiObjects(): Phaser.GameObjects.GameObject[] {
         return this.slotViews.map((slotView) => slotView.getGameObject());
     }
 
