@@ -1253,6 +1253,24 @@
                  "width":29.5,
                  "x":666,
                  "y":481.5
+                }, 
+                {
+                 "height":13,
+                 "id":256,
+                 "name":"player_crop_market_door",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"enter_crop_market"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":37,
+                 "x":240.5,
+                 "y":512.5
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1261,7 +1279,7 @@
          "y":0
         }],
  "nextlayerid":24,
- "nextobjectid":256,
+ "nextobjectid":257,
  "orientation":"orthogonal",
  "properties":[
         {

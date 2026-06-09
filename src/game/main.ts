@@ -1,4 +1,5 @@
 import { Boot } from './scenes/Boot';
+import { CropMarket } from './scenes/CropMarket';
 import { GameOver } from './scenes/GameOver';
 import { Game as MainGame } from './scenes/Game';
 import { HouseInterior } from './scenes/HouseInterior';
@@ -34,6 +35,7 @@ const config: Phaser.Types.Core.GameConfig = {
         SettingsMenu,
         MainGame,
         HouseInterior,
+        CropMarket,
         GameOver
     ]
 };

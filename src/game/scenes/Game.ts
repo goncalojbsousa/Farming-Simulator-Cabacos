@@ -16,6 +16,7 @@ const startingMoney = 100;
 const defaultPlayerX = 672;
 const defaultPlayerY = 496;
 const houseDoorObjectName = 'player_house_door';
+const cropMarketDoorObjectName = 'player_crop_market_door';
 
 type GameSceneData = {
     spawnX?: number;
@@ -56,6 +57,8 @@ export class Game extends Scene {
     playerSpawnY = defaultPlayerY;
     houseDoorInteractionZones: Geom.Rectangle[] = [];
     houseDoorPromptText: Phaser.GameObjects.Text;
+    cropMarketDoorInteractionZones: Geom.Rectangle[] = [];
+    cropMarketDoorPromptText: Phaser.GameObjects.Text;
 
     // Inventory dragging
     draggedInventorySlotIndex: number | null = null;
@@ -78,6 +81,7 @@ export class Game extends Scene {
         this.worldCameraObjects = [];
         this.seedShopInteractionZones = [];
         this.houseDoorInteractionZones = [];
+        this.cropMarketDoorInteractionZones = [];
 
         // Create the map and its layers.
         const map = this.make.tilemap({ key: 'tilemap' });
@@ -131,6 +135,7 @@ export class Game extends Scene {
         this.createMoneyUi();
         this.loadSeedShopInteractionZones(map);
         this.loadHouseDoorInteractionZones(map);
+        this.loadCropMarketDoorInteractionZones(map);
         if (this.savedInventory === null) {
             this.addStartingItems();
         }
@@ -148,22 +153,12 @@ export class Game extends Scene {
             onInventoryChanged: () => this.refreshInventoryUi(),
             onMoneyChanged: () => this.refreshMoneyUi()
         });
-        this.seedShopPromptText = this.add.text(0, 0, 'E - Comprar sementes', {
-            fontFamily: 'Arial Black',
-            fontSize: 16,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(960).setVisible(false);
+        this.seedShopPromptText = this.createInteractionPromptText('E - Comprar sementes');
         this.layoutSeedShopPrompt();
-        this.houseDoorPromptText = this.add.text(0, 0, 'E - Entrar em casa', {
-            fontFamily: 'Arial Black',
-            fontSize: 16,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(1100).setVisible(false);
+        this.houseDoorPromptText = this.createInteractionPromptText('E - Entrar em casa');
         this.layoutHouseDoorPrompt();
+        this.cropMarketDoorPromptText = this.createInteractionPromptText('E - Entrar no mercado');
+        this.layoutCropMarketDoorPrompt();
         this.draggedItemImage = this.add.image(0, 0, 'inventorySlot', 0)
             .setScale(3)
             .setAlpha(0.85)
@@ -198,6 +193,7 @@ export class Game extends Scene {
         this.farmingSystem.update(this.input.activePointer);
         this.updateSeedShopPrompt();
         this.updateHouseDoorPrompt();
+        this.updateCropMarketDoorPrompt();
         this.updateInventoryTooltipAtPointer(this.input.activePointer);
     }
 
@@ -220,6 +216,7 @@ export class Game extends Scene {
             ...this.seedShopPanel.getGameObjects(),
             this.seedShopPromptText,
             this.houseDoorPromptText,
+            this.cropMarketDoorPromptText,
             this.inventoryTooltip.getGameObject(),
             this.draggedItemImage
         ];
@@ -238,6 +235,7 @@ export class Game extends Scene {
         this.seedShopPanel.layout();
         this.layoutSeedShopPrompt();
         this.layoutHouseDoorPrompt();
+        this.layoutCropMarketDoorPrompt();
         this.inventoryTooltip.hide();
     }
 
@@ -257,6 +255,20 @@ export class Game extends Scene {
         }).setScrollFactor(0).setDepth(951);
 
         this.refreshMoneyUi();
+    }
+
+    private createInteractionPromptText(text: string): Phaser.GameObjects.Text {
+        return this.add.text(0, 0, text, {
+            fontFamily: 'Arial Black',
+            fontSize: 16,
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        })
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(1100)
+            .setVisible(false);
     }
 
     refreshMoneyUi(): void {
@@ -315,25 +327,49 @@ export class Game extends Scene {
         this.houseDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
     }
 
+    private updateCropMarketDoorPrompt(): void {
+        this.cropMarketDoorPromptText.setVisible(
+            this.isPlayerInCropMarketDoorZone() && !this.seedShopPanel.isOpen()
+        );
+    }
+
+    private layoutCropMarketDoorPrompt(): void {
+        this.cropMarketDoorPromptText.setPosition(this.scale.width / 2, this.scale.height - 104);
+    }
+
     private loadHouseDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
+        this.houseDoorInteractionZones = this.loadInteractionZonesByName(map, houseDoorObjectName);
+    }
+
+    private loadCropMarketDoorInteractionZones(map: Phaser.Tilemaps.Tilemap): void {
+        this.cropMarketDoorInteractionZones = this.loadInteractionZonesByName(map, cropMarketDoorObjectName);
+    }
+
+    private loadInteractionZonesByName(
+        map: Phaser.Tilemaps.Tilemap,
+        objectNameToFind: string
+    ): Geom.Rectangle[] {
         const interactionLayer = map.getObjectLayer('Interactions') ?? map.getObjectLayer('interactions');
+        const zones: Geom.Rectangle[] = [];
 
         for (const tiledObject of interactionLayer?.objects ?? []) {
             const objectName = tiledObject.name?.trim();
             const width = tiledObject.width ?? 0;
             const height = tiledObject.height ?? 0;
 
-            if (objectName !== houseDoorObjectName || width <= 0 || height <= 0) {
+            if (objectName !== objectNameToFind || width <= 0 || height <= 0) {
                 continue;
             }
 
-            this.houseDoorInteractionZones.push(new Geom.Rectangle(
+            zones.push(new Geom.Rectangle(
                 tiledObject.x,
                 tiledObject.y,
                 width,
                 height
             ));
         }
+
+        return zones;
     }
 
     private isPlayerInHouseDoorZone(): boolean {
@@ -346,6 +382,20 @@ export class Game extends Scene {
         );
 
         return this.houseDoorInteractionZones.some((zone) =>
+            Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
+        );
+    }
+
+    private isPlayerInCropMarketDoorZone(): boolean {
+        const playerBody = this.player.sprite.body as Phaser.Physics.Arcade.Body;
+        const playerRectangle = new Geom.Rectangle(
+            playerBody.x,
+            playerBody.y,
+            playerBody.width,
+            playerBody.height
+        );
+
+        return this.cropMarketDoorInteractionZones.some((zone) =>
             Geom.Intersects.RectangleToRectangle(zone, playerRectangle)
         );
     }
@@ -409,6 +459,16 @@ export class Game extends Scene {
 
                 if (this.isPlayerInHouseDoorZone()) {
                     this.scene.start('HouseInterior', {
+                        returnX: this.player.sprite.x,
+                        returnY: this.player.sprite.y,
+                        inventory: this.inventory,
+                        money: this.money
+                    });
+                    return;
+                }
+
+                if (this.isPlayerInCropMarketDoorZone()) {
+                    this.scene.start('CropMarket', {
                         returnX: this.player.sprite.x,
                         returnY: this.player.sprite.y,
                         inventory: this.inventory,
