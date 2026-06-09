@@ -69,7 +69,7 @@ export class BuildingEntranceSystem {
             .setText(entrance?.message ?? '')
             .setVisible(entrance !== undefined);
 
-        if (entrance && input.shopPressed()) {
+        if (entrance && input.interactPressed()) {
             this.scene.scene.sleep('Game');
             this.scene.scene.launch(entrance.scene, {
                 inventory: this.inventory,

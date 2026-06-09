@@ -4,7 +4,7 @@ export class GameInput {
     private arrows: Phaser.Types.Input.Keyboard.CursorKeys;
     private movementKeys: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
     private inventoryKey: Phaser.Input.Keyboard.Key;
-    private shopKey: Phaser.Input.Keyboard.Key;
+    private interactKey: Phaser.Input.Keyboard.Key;
     private escapeKey: Phaser.Input.Keyboard.Key;
     private hotbarKeys: Phaser.Input.Keyboard.Key[];
     private mouseWasDown = false;
@@ -19,7 +19,7 @@ export class GameInput {
         this.arrows = keyboard.createCursorKeys();
         this.movementKeys = keyboard.addKeys('W,A,S,D') as typeof this.movementKeys;
         this.inventoryKey = keyboard.addKey('I');
-        this.shopKey = keyboard.addKey('E');
+        this.interactKey = keyboard.addKey('E');
         this.escapeKey = keyboard.addKey('ESC');
         this.hotbarKeys = [
             keyboard.addKey('ONE'),
@@ -59,8 +59,8 @@ export class GameInput {
         return Phaser.Input.Keyboard.JustDown(this.inventoryKey);
     }
 
-    shopPressed(): boolean {
-        return Phaser.Input.Keyboard.JustDown(this.shopKey);
+    interactPressed(): boolean {
+        return Phaser.Input.Keyboard.JustDown(this.interactKey);
     }
 
     escapePressed(): boolean {
