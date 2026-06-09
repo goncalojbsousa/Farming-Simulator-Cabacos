@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { getItemById } from '../data/ItemData';
+import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { Hotbar } from './Hotbar';
@@ -14,7 +15,7 @@ export class InventoryUi {
     private draggedItemImage: Phaser.GameObjects.Image;
 
     constructor(
-        private scene: Scene,
+        scene: Scene,
         private inventory: InventoryService,
         private isInteractionBlocked: () => boolean
     ) {
@@ -28,11 +29,30 @@ export class InventoryUi {
             .setScrollFactor(0)
             .setVisible(false);
 
-        this.setupKeyboard();
-        this.setupMouse();
     }
 
-    update(pointer: Phaser.Input.Pointer): void {
+    update(input: GameInput): void {
+        const pointer = input.pointer;
+        const hotbarSlot = input.getHotbarSlotPressed();
+
+        if (hotbarSlot !== null) {
+            this.inventory.selectSlot(hotbarSlot);
+            this.refresh();
+        }
+
+        if (input.inventoryPressed()) {
+            this.inventoryPanel.toggle();
+            this.itemTooltip.hide();
+        }
+
+        if (input.mousePressed) {
+            this.startDragging(pointer);
+        }
+
+        if (input.mouseReleased) {
+            this.stopDragging(pointer);
+        }
+
         if (this.draggedSlotIndex !== null) {
             this.draggedItemImage.setPosition(pointer.x, pointer.y);
             this.itemTooltip.hide();
@@ -76,62 +96,41 @@ export class InventoryUi {
         ];
     }
 
-    private setupKeyboard(): void {
-        this.scene.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
-            const slotNumber = Number(event.key);
+    private startDragging(pointer: Phaser.Input.Pointer): void {
+        const slotIndex = this.getSlotIndex(pointer.x, pointer.y);
 
-            if (slotNumber >= 1 && slotNumber <= 8) {
-                this.inventory.selectSlot(slotNumber - 1);
-                this.refresh();
-            }
+        if (slotIndex === null) {
+            return;
+        }
 
-            if (event.key.toLowerCase() === 'i') {
-                this.inventoryPanel.toggle();
-                this.itemTooltip.hide();
-            }
-        });
-    }
+        this.inventory.selectSlot(slotIndex);
+        this.refresh();
 
-    private setupMouse(): void {
-        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            const slotIndex = this.getSlotIndex(pointer.x, pointer.y);
+        const itemId = this.inventory.slots[slotIndex].itemId;
 
-            if (slotIndex === null) {
-                return;
-            }
-
-            this.inventory.selectSlot(slotIndex);
-            this.refresh();
-
-            const itemId = this.inventory.slots[slotIndex].itemId;
-
-            if (!itemId) {
-                return;
-            }
-
+        if (itemId) {
             this.draggedSlotIndex = slotIndex;
-            this.itemTooltip.hide();
             this.draggedItemImage
                 .setTexture(itemId)
                 .setPosition(pointer.x, pointer.y)
                 .setVisible(true);
-        });
+        }
+    }
 
-        this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-            if (this.draggedSlotIndex === null) {
-                return;
-            }
+    private stopDragging(pointer: Phaser.Input.Pointer): void {
+        if (this.draggedSlotIndex === null) {
+            return;
+        }
 
-            const targetSlotIndex = this.getSlotIndex(pointer.x, pointer.y);
+        const targetSlotIndex = this.getSlotIndex(pointer.x, pointer.y);
 
-            if (targetSlotIndex !== null) {
-                this.inventory.moveSlot(this.draggedSlotIndex, targetSlotIndex);
-                this.refresh();
-            }
+        if (targetSlotIndex !== null) {
+            this.inventory.moveSlot(this.draggedSlotIndex, targetSlotIndex);
+            this.refresh();
+        }
 
-            this.draggedSlotIndex = null;
-            this.draggedItemImage.setVisible(false);
-        });
+        this.draggedSlotIndex = null;
+        this.draggedItemImage.setVisible(false);
     }
 
     private getSlotIndex(x: number, y: number): number | null {

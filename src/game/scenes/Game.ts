@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { startingSeedIds, startingToolIds } from '../data/ItemData';
+import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
 import { FarmingSystem } from '../systems/FarmingSystem';
@@ -10,6 +11,7 @@ import { GameWorld } from '../world/GameWorld';
 
 export class Game extends Scene {
     private gameWorld: GameWorld;
+    private gameInput: GameInput;
     private inventory: InventoryService;
     private money: MoneyService;
     private inventoryUi: InventoryUi;
@@ -24,6 +26,7 @@ export class Game extends Scene {
 
     create(): void {
         this.gameWorld = new GameWorld(this);
+        this.gameInput = new GameInput(this);
         this.inventory = new InventoryService(16);
         this.money = new MoneyService(100);
         this.addStartingItems();
@@ -68,10 +71,11 @@ export class Game extends Scene {
     }
 
     update(): void {
-        this.gameWorld.player.update();
-        this.farmingSystem.update(this.input.activePointer);
-        this.inventoryUi.update(this.input.activePointer);
-        this.seedShopSystem.update();
+        this.gameInput.update();
+        this.gameWorld.player.update(this.gameInput);
+        this.farmingSystem.update(this.gameInput);
+        this.inventoryUi.update(this.gameInput);
+        this.seedShopSystem.update(this.gameInput);
     }
 
     private createUiCamera(): void {

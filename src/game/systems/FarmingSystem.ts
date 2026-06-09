@@ -1,4 +1,5 @@
 import { getCropTextureKey, getItemById, SeedItem } from '../data/ItemData';
+import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 
@@ -24,14 +25,15 @@ export class FarmingSystem {
         game.worldObjects.push(this.tileHighlight);
         game.uiCamera.ignore(this.tileHighlight);
 
-        game.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            if (!game.isPointerOverUi(pointer)) {
-                this.useSelectedItem(pointer);
-            }
-        });
     }
 
-    update(pointer: Phaser.Input.Pointer): void {
+    update(input: GameInput): void {
+        const pointer = input.pointer;
+
+        if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
+            this.useSelectedItem(pointer);
+        }
+
         const tile = this.getTile(pointer);
 
         this.tileHighlight.clear();
