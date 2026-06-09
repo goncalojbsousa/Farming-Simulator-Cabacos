@@ -3,10 +3,12 @@ import { startingSeedIds, startingToolIds } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
+import { TimeService } from '../services/TimeService';
 import { FarmingSystem } from '../systems/FarmingSystem';
 import { SeedShopSystem } from '../systems/SeedShopSystem';
 import { InventoryUi } from '../ui/InventoryUi';
 import { MoneyDisplay } from '../ui/MoneyDisplay';
+import { TimeDisplay } from '../ui/TimeDisplay';
 import { GameWorld } from '../world/GameWorld';
 
 export class Game extends Scene {
@@ -14,8 +16,10 @@ export class Game extends Scene {
     private gameInput: GameInput;
     private inventory: InventoryService;
     private money: MoneyService;
+    private gameTime: TimeService;
     private inventoryUi: InventoryUi;
     private moneyDisplay: MoneyDisplay;
+    private timeDisplay: TimeDisplay;
     private farmingSystem: FarmingSystem;
     private seedShopSystem: SeedShopSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
@@ -29,9 +33,11 @@ export class Game extends Scene {
         this.gameInput = new GameInput(this);
         this.inventory = new InventoryService(16);
         this.money = new MoneyService(100);
+        this.gameTime = new TimeService();
         this.addStartingItems();
 
         this.moneyDisplay = new MoneyDisplay(this, this.money);
+        this.timeDisplay = new TimeDisplay(this, this.gameTime);
         this.seedShopSystem = new SeedShopSystem(
             this,
             this.gameWorld.map,
@@ -70,10 +76,12 @@ export class Game extends Scene {
         });
     }
 
-    update(): void {
+    update(time: number): void {
         this.gameInput.update();
+        this.gameTime.update(time);
+        this.timeDisplay.refresh();
         this.gameWorld.player.update(this.gameInput);
-        this.farmingSystem.update(this.gameInput);
+        this.farmingSystem.update(this.gameInput, this.gameTime.day);
         this.inventoryUi.update(this.gameInput);
         this.seedShopSystem.update(this.gameInput);
     }
@@ -82,7 +90,8 @@ export class Game extends Scene {
         const uiObjects = [
             ...this.inventoryUi.getUiObjects(),
             ...this.seedShopSystem.getUiObjects(),
-            ...this.moneyDisplay.getUiObjects()
+            ...this.moneyDisplay.getUiObjects(),
+            ...this.timeDisplay.getUiObjects()
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
