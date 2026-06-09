@@ -109,6 +109,22 @@ export class InventoryService {
         return true;
     }
 
+    removeFromSlot(slotIndex: number, quantity: number): boolean {
+        const slot = this.getSlot(slotIndex);
+
+        if (slot === null || slot.itemId === null || slot.quantity < quantity) {
+            return false;
+        }
+
+        slot.quantity -= quantity;
+
+        if (slot.quantity === 0) {
+            this.clearSlot(slot);
+        }
+
+        return true;
+    }
+
     countItem(itemId: ItemId): number {
         return this.slots.reduce((total, slot) => {
             if (slot.itemId !== itemId) {
