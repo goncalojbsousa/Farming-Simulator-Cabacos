@@ -20,11 +20,7 @@ export class InventoryUi {
     ) {
         this.itemTooltip = new InventoryTooltip(scene);
         this.hotbar = new Hotbar(scene, inventory);
-        this.inventoryPanel = new InventoryPanel(
-            inventory,
-            scene,
-            () => this.hotbar.refresh()
-        );
+        this.inventoryPanel = new InventoryPanel(inventory, scene);
         this.draggedItemImage = scene.add.image(0, 0, 'inventorySlot')
             .setScale(3)
             .setAlpha(0.85)
@@ -37,12 +33,18 @@ export class InventoryUi {
     }
 
     update(pointer: Phaser.Input.Pointer): void {
+        if (this.draggedSlotIndex !== null) {
+            this.draggedItemImage.setPosition(pointer.x, pointer.y);
+            this.itemTooltip.hide();
+            return;
+        }
+
         const slotIndex = this.getSlotIndex(pointer.x, pointer.y);
         const itemId = slotIndex === null
             ? null
-            : this.inventory.getSlot(slotIndex).itemId;
+            : this.inventory.slots[slotIndex].itemId;
 
-        if (this.draggedSlotIndex !== null || !itemId) {
+        if (!itemId) {
             this.itemTooltip.hide();
             return;
         }
@@ -69,7 +71,7 @@ export class InventoryUi {
         return [
             ...this.hotbar.getUiObjects(),
             ...this.inventoryPanel.getUiObjects(),
-            this.itemTooltip.getGameObject(),
+            this.itemTooltip.container,
             this.draggedItemImage
         ];
     }
@@ -79,8 +81,8 @@ export class InventoryUi {
             const slotNumber = Number(event.key);
 
             if (slotNumber >= 1 && slotNumber <= 8) {
-                this.hotbar.selectSlot(slotNumber - 1);
-                this.inventoryPanel.refresh();
+                this.inventory.selectSlot(slotNumber - 1);
+                this.refresh();
             }
 
             if (event.key.toLowerCase() === 'i') {
@@ -93,11 +95,17 @@ export class InventoryUi {
     private setupMouse(): void {
         this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             const slotIndex = this.getSlotIndex(pointer.x, pointer.y);
-            const itemId = slotIndex === null
-                ? null
-                : this.inventory.getSlot(slotIndex).itemId;
 
-            if (slotIndex === null || !itemId) {
+            if (slotIndex === null) {
+                return;
+            }
+
+            this.inventory.selectSlot(slotIndex);
+            this.refresh();
+
+            const itemId = this.inventory.slots[slotIndex].itemId;
+
+            if (!itemId) {
                 return;
             }
 
@@ -107,12 +115,6 @@ export class InventoryUi {
                 .setTexture(itemId)
                 .setPosition(pointer.x, pointer.y)
                 .setVisible(true);
-        });
-
-        this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-            if (this.draggedSlotIndex !== null) {
-                this.draggedItemImage.setPosition(pointer.x, pointer.y);
-            }
         });
 
         this.scene.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {

@@ -54,9 +54,9 @@ export class FarmingSystem {
             return;
         }
 
-        const selectedSlot = this.game.inventory.getSlot(
-            this.game.inventory.getSelectedSlotIndex()
-        );
+        const selectedSlot = this.game.inventory.slots[
+            this.game.inventory.selectedSlotIndex
+        ];
 
         if (selectedSlot.itemId === 'shovel') {
             this.tillTile(tile);
@@ -78,7 +78,7 @@ export class FarmingSystem {
     }
 
     private plantSeed(tile: Phaser.Tilemaps.Tile, seed: SeedItem): void {
-        const selectedSlot = this.game.inventory.getSelectedSlotIndex();
+        const selectedSlot = this.game.inventory.selectedSlotIndex;
         this.game.inventory.removeOneFromSlot(selectedSlot);
 
         const crop = this.game.scene.add.image(
@@ -111,9 +111,9 @@ export class FarmingSystem {
     }
 
     private canUseSelectedItem(tile: Phaser.Tilemaps.Tile): boolean {
-        const itemId = this.game.inventory.getSlot(
-            this.game.inventory.getSelectedSlotIndex()
-        ).itemId;
+        const itemId = this.game.inventory.slots[
+            this.game.inventory.selectedSlotIndex
+        ].itemId;
         const key = `${tile.x},${tile.y}`;
 
         if (itemId === 'shovel') {
