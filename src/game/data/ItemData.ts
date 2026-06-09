@@ -2,7 +2,7 @@ import type { TranslationKey } from '../services/LanguageService';
 
 export type ItemId = string;
 export type CropId = string;
-export type CropStage = 1 | 2 | 3 | 4;
+export type CropStage = number;
 
 export type GameItem = {
     id: ItemId;
@@ -19,6 +19,7 @@ export type SeedItem = GameItem & {
     type: 'seed';
     cropId: CropId;
     buyPrice: number;
+    growthDays: number;
 };
 
 const tools = [
@@ -32,17 +33,17 @@ const tools = [
 
 // To add a crop, add one line here and its images to the assets folder.
 export const crops = [
-    { id: 'beetroot', seedNameKey: 'seedBeetroot', harvestNameKey: 'cropBeetroot', buyPrice: 8, sellPrice: 12 },
-    { id: 'cabbage', seedNameKey: 'seedCabbage', harvestNameKey: 'cropCabbage', buyPrice: 10, sellPrice: 15 },
-    { id: 'carrot', seedNameKey: 'seedCarrot', harvestNameKey: 'cropCarrot', buyPrice: 5, sellPrice: 8 },
-    { id: 'cauliflower', seedNameKey: 'seedCauliflower', harvestNameKey: 'cropCauliflower', buyPrice: 12, sellPrice: 18 },
-    { id: 'kale', seedNameKey: 'seedKale', harvestNameKey: 'cropKale', buyPrice: 7, sellPrice: 11 },
-    { id: 'parsnip', seedNameKey: 'seedParsnip', harvestNameKey: 'cropParsnip', buyPrice: 5, sellPrice: 8 },
-    { id: 'potato', seedNameKey: 'seedPotato', harvestNameKey: 'cropPotato', buyPrice: 6, sellPrice: 10 },
-    { id: 'pumpkin', seedNameKey: 'seedPumpkin', harvestNameKey: 'cropPumpkin', buyPrice: 15, sellPrice: 24 },
-    { id: 'radish', seedNameKey: 'seedRadish', harvestNameKey: 'cropRadish', buyPrice: 6, sellPrice: 10 },
-    { id: 'sunflower', seedNameKey: 'seedSunflower', harvestNameKey: 'cropSunflower', buyPrice: 10, sellPrice: 16 },
-    { id: 'wheat', seedNameKey: 'seedWheat', harvestNameKey: 'cropWheat', buyPrice: 4, sellPrice: 7 }
+    { id: 'beetroot', seedNameKey: 'seedBeetroot', harvestNameKey: 'cropBeetroot', buyPrice: 8, sellPrice: 12, growthDays: 6 },
+    { id: 'cabbage', seedNameKey: 'seedCabbage', harvestNameKey: 'cropCabbage', buyPrice: 10, sellPrice: 15, growthDays: 9 },
+    { id: 'carrot', seedNameKey: 'seedCarrot', harvestNameKey: 'cropCarrot', buyPrice: 5, sellPrice: 8, growthDays: 4 },
+    { id: 'cauliflower', seedNameKey: 'seedCauliflower', harvestNameKey: 'cropCauliflower', buyPrice: 12, sellPrice: 18, growthDays: 12 },
+    { id: 'kale', seedNameKey: 'seedKale', harvestNameKey: 'cropKale', buyPrice: 7, sellPrice: 11, growthDays: 6 },
+    { id: 'parsnip', seedNameKey: 'seedParsnip', harvestNameKey: 'cropParsnip', buyPrice: 5, sellPrice: 8, growthDays: 4 },
+    { id: 'potato', seedNameKey: 'seedPotato', harvestNameKey: 'cropPotato', buyPrice: 6, sellPrice: 10, growthDays: 6 },
+    { id: 'pumpkin', seedNameKey: 'seedPumpkin', harvestNameKey: 'cropPumpkin', buyPrice: 15, sellPrice: 24, growthDays: 13 },
+    { id: 'radish', seedNameKey: 'seedRadish', harvestNameKey: 'cropRadish', buyPrice: 6, sellPrice: 10, growthDays: 6 },
+    { id: 'sunflower', seedNameKey: 'seedSunflower', harvestNameKey: 'cropSunflower', buyPrice: 10, sellPrice: 16, growthDays: 8 },
+    { id: 'wheat', seedNameKey: 'seedWheat', harvestNameKey: 'cropWheat', buyPrice: 4, sellPrice: 7, growthDays: 4 }
 ] as const;
 
 const toolItems: GameItem[] = tools.map((tool) => ({
@@ -61,7 +62,8 @@ const cropItems: GameItem[] = crops.flatMap((crop) => [
         assetPath: `plantation/crops/${crop.id}_00.png`,
         cropId: crop.id,
         maxStackSize: 99,
-        buyPrice: crop.buyPrice
+        buyPrice: crop.buyPrice,
+        growthDays: crop.growthDays
     },
     {
         id: `${crop.id}Harvest`,

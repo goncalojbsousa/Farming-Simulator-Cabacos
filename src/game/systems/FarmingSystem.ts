@@ -1,4 +1,10 @@
-import { getCropTextureKey, getItemById, SeedItem } from '../data/ItemData';
+import {
+    CropId,
+    CropStage,
+    getCropTextureKey,
+    getItemById,
+    SeedItem
+} from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
@@ -15,9 +21,18 @@ type FarmingConfig = {
     refreshInventory: () => void;
 };
 
+type PlantedCrop = {
+    image: Phaser.GameObjects.Image;
+    cropId: CropId;
+    growthDays: number;
+    plantedDay: number;
+    stage: CropStage;
+};
+
 export class FarmingSystem {
     private tilledTiles = new Set<string>();
     private plantedTiles = new Set<string>();
+    private crops: PlantedCrop[] = [];
     private tileHighlight: Phaser.GameObjects.Graphics;
 
     constructor(private game: FarmingConfig) {
@@ -27,11 +42,13 @@ export class FarmingSystem {
 
     }
 
-    update(input: GameInput): void {
+    update(input: GameInput, currentDay: number): void {
         const pointer = input.pointer;
 
+        this.growCrops(currentDay);
+
         if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
-            this.useSelectedItem(pointer);
+            this.useSelectedItem(pointer, currentDay);
         }
 
         const tile = this.getTile(pointer);
@@ -49,7 +66,7 @@ export class FarmingSystem {
             .strokeRect(tile.pixelX, tile.pixelY, tile.width, tile.height);
     }
 
-    private useSelectedItem(pointer: Phaser.Input.Pointer): void {
+    private useSelectedItem(pointer: Phaser.Input.Pointer, currentDay: number): void {
         const tile = this.getTile(pointer);
 
         if (!tile || !this.canUseSelectedItem(tile)) {
@@ -66,7 +83,7 @@ export class FarmingSystem {
         }
 
         const seed = getItemById(selectedSlot.itemId!) as SeedItem;
-        this.plantSeed(tile, seed);
+        this.plantSeed(tile, seed, currentDay);
     }
 
     private tillTile(tile: Phaser.Tilemaps.Tile): void {
@@ -79,7 +96,7 @@ export class FarmingSystem {
         this.tilledTiles.add(`${tile.x},${tile.y}`);
     }
 
-    private plantSeed(tile: Phaser.Tilemaps.Tile, seed: SeedItem): void {
+    private plantSeed(tile: Phaser.Tilemaps.Tile, seed: SeedItem, currentDay: number): void {
         const selectedSlot = this.game.inventory.selectedSlotIndex;
         this.game.inventory.removeOneFromSlot(selectedSlot);
 
@@ -92,7 +109,29 @@ export class FarmingSystem {
         this.game.worldObjects.push(crop);
         this.game.uiCamera.ignore(crop);
         this.plantedTiles.add(`${tile.x},${tile.y}`);
+        this.crops.push({
+            image: crop,
+            cropId: seed.cropId,
+            growthDays: seed.growthDays,
+            plantedDay: currentDay,
+            stage: 1,
+        });
         this.game.refreshInventory();
+    }
+
+    private growCrops(currentDay: number): void {
+        for (const crop of this.crops) {
+            const daysGrowing = currentDay - crop.plantedDay;
+            const newStage = Math.min(
+                4,
+                Math.floor(daysGrowing * 3 / crop.growthDays) + 1
+            );
+
+            if (newStage !== crop.stage) {
+                crop.stage = newStage;
+                crop.image.setTexture(getCropTextureKey(crop.cropId, crop.stage));
+            }
+        }
     }
 
     private getTile(pointer: Phaser.Input.Pointer): Phaser.Tilemaps.Tile | null {
