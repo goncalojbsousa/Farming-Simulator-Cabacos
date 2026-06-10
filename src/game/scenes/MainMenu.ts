@@ -1,32 +1,56 @@
-import { Scene, GameObjects } from 'phaser';
+import { GameObjects, Scene } from 'phaser';
+import { translate } from '../services/LanguageService';
+import { createTextButton } from '../ui/TextButton';
 
-export class MainMenu extends Scene
-{
-    background: GameObjects.Image;
-    logo: GameObjects.Image;
-    title: GameObjects.Text;
+export class MainMenu extends Scene {
+    private background: GameObjects.Image;
+    private logo: GameObjects.Image;
 
-    constructor ()
-    {
+    constructor() {
         super('MainMenu');
     }
 
-    create ()
-    {
-        this.background = this.add.image(512, 384, 'background');
+    create() {
+        this.background = this.add.image(0, 0, 'mainMenuBackground').setOrigin(0.5);
+        this.logo = this.add.image(0, 0, 'mainMenuLogo').setOrigin(0.5);
 
-        this.logo = this.add.image(512, 300, 'logo');
-
-        this.title = this.add.text(512, 460, 'Main Menu', {
-            fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-            stroke: '#000000', strokeThickness: 8,
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.input.once('pointerdown', () => {
-
+        createTextButton(this, 0, 0, 280, 60, translate('startGame'), () => {
             this.scene.start('Game');
+        }).setName('startButton');
 
+        createTextButton(this, 0, 0, 280, 60, translate('settings'), () => {
+            this.scene.start('SettingsMenu');
+        }).setName('settingsButton');
+
+        this.layout();
+        this.scale.on('resize', this.layout, this);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', this.layout, this);
         });
+    }
+
+    private layout(): void {
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+
+        this.background.setPosition(centerX, centerY);
+        this.coverImage(this.background);
+
+        const logoScale = Math.min(this.scale.width * 0.42 / this.logo.width, 0.45);
+        this.logo
+            .setScale(logoScale)
+            .setPosition(centerX, centerY - 145);
+
+        this.children.getByName('startButton')?.setPosition(centerX, centerY + 100);
+        this.children.getByName('settingsButton')?.setPosition(centerX, centerY + 180);
+    }
+
+    private coverImage(image: GameObjects.Image): void {
+        const scale = Math.max(
+            this.scale.width / image.width,
+            this.scale.height / image.height
+        );
+
+        image.setScale(scale);
     }
 }
