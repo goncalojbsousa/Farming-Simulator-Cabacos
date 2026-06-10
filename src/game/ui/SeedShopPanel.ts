@@ -19,7 +19,7 @@ export class SeedShopPanel {
         this.menu = new MenuPanel(scene, {
             width: 560,
             height: 570,
-            title: 'Loja de Sementes',
+            title: translate('seedShopTitle'),
             depth: 1200
         });
 
@@ -85,17 +85,19 @@ export class SeedShopPanel {
 
     private buySeed(seed: SeedItem): void {
         if (!this.money.canAfford(seed.buyPrice)) {
-            this.purchaseMessage.setText('Dinheiro insuficiente');
+            this.purchaseMessage.setText(translate('notEnoughMoney'));
             return;
         }
 
         if (!this.inventory.addItem(seed.id, 1)) {
-            this.purchaseMessage.setText('Inventario cheio');
+            this.purchaseMessage.setText(translate('inventoryFull'));
             return;
         }
 
         this.money.spend(seed.buyPrice);
         this.onPurchase();
-        this.purchaseMessage.setText(`Compraste ${translate(seed.nameKey)}`);
+        this.purchaseMessage.setText(
+            `${translate('purchased')} ${translate(seed.nameKey)}`
+        );
     }
 }

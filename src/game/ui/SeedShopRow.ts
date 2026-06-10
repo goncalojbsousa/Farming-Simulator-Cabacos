@@ -35,7 +35,7 @@ export class SeedShopRow {
         const buttonBackground = scene.add.rectangle(188, 0, 88, 28, 0x2f5d2c)
             .setStrokeStyle(2, 0xffffff)
             .setInteractive({ useHandCursor: true });
-        const buttonLabel = scene.add.text(188, 0, 'Comprar', {
+        const buttonLabel = scene.add.text(188, 0, translate('buy'), {
             fontFamily: 'Arial',
             fontSize: 14,
             color: '#ffffff'

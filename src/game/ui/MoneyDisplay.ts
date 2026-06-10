@@ -1,4 +1,5 @@
 import { GameObjects, Scene } from 'phaser';
+import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 
 export class MoneyDisplay {
@@ -24,7 +25,7 @@ export class MoneyDisplay {
     }
 
     refresh(): void {
-        this.balanceText.setText(`Dinheiro: ${this.money.getBalance()}`);
+        this.balanceText.setText(`${translate('money')}: ${this.money.getBalance()}`);
     }
 
     getUiObjects(): GameObjects.GameObject[] {

@@ -1,6 +1,7 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { translate } from '../services/LanguageService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 type InteriorConfig = {
@@ -42,7 +43,7 @@ export class BuildingInteriorScene extends Scene {
         this.physics.add.collider(this.player.sprite, walls);
 
         this.exitZone = this.getInteractionZone(this.config.exitObjectName);
-        this.exitPrompt = this.createPrompt('E - Sair');
+        this.exitPrompt = this.createPrompt(translate('exitBuilding'));
 
         this.cameras.main.setZoom(2).setBackgroundColor('#15151f');
         this.centerCamera();
@@ -108,7 +109,7 @@ export class BuildingInteriorScene extends Scene {
         this.createUiCamera();
     }
 
-    protected layoutUi(): void {}
+    protected layoutUi(): void { }
 
     private createWalls(): Phaser.Physics.Arcade.StaticGroup {
         const walls = this.physics.add.staticGroup();

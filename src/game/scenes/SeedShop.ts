@@ -1,5 +1,6 @@
 import { Geom } from 'phaser';
 import { InventoryService } from '../services/InventoryService';
+import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { MoneyDisplay } from '../ui/MoneyDisplay';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
@@ -37,7 +38,7 @@ export class SeedShop extends BuildingInteriorScene {
         super.create();
 
         this.shopZone = this.getInteractionZone('seed_shop');
-        this.shopPrompt = this.createPrompt('E - Comprar sementes');
+        this.shopPrompt = this.createPrompt(translate('buySeeds'));
         this.moneyDisplay = new MoneyDisplay(this, this.money);
         this.shopPanel = new SeedShopPanel(
             this,

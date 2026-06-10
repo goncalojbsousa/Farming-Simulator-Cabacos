@@ -2,20 +2,21 @@ import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
+import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 type BuildingEntrance = {
     zone: Geom.Rectangle;
     scene: string;
-    message: string;
+    messageKey: TranslationKey;
 };
 
 const buildings = [
-    ['player_house_door', 'HouseInterior', 'E - Entrar em casa'],
-    ['player_crop_market_door', 'CropMarket', 'E - Entrar no mercado'],
-    ['player_seed_shop_door', 'SeedShop', 'E - Entrar na loja'],
-    ['player_town_hall_door', 'TownHall', 'E - Entrar na camara']
+    ['player_house_door', 'HouseInterior', 'enterHouse'],
+    ['player_crop_market_door', 'CropMarket', 'enterMarket'],
+    ['player_seed_shop_door', 'SeedShop', 'enterSeedShop'],
+    ['player_town_hall_door', 'TownHall', 'enterTownHall']
 ] as const;
 
 export class BuildingEntranceSystem {
@@ -31,7 +32,7 @@ export class BuildingEntranceSystem {
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
 
-        for (const [objectName, scene, message] of buildings) {
+        for (const [objectName, scene, messageKey] of buildings) {
             const object = objects.find((object) => object.name === objectName);
 
             if (object) {
@@ -43,7 +44,7 @@ export class BuildingEntranceSystem {
                         object.height ?? 0
                     ),
                     scene,
-                    message
+                    messageKey
                 });
             }
         }
@@ -58,7 +59,7 @@ export class BuildingEntranceSystem {
         const entrance = this.getCurrentEntrance();
 
         if (entrance) {
-            this.prompt.show(entrance.message);
+            this.prompt.show(translate(entrance.messageKey));
         } else {
             this.prompt.hide();
         }
