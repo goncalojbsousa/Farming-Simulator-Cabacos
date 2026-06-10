@@ -1,158 +1,168 @@
-# Phaser Vite TypeScript Template
+# Quinta Cabacos
 
-This is a Phaser project template that uses Vite for bundling. It supports hot-reloading for quick development workflow, includes TypeScript support and scripts to generate production-ready builds.
+<p align="center">
+  <img src="public/assets/logo_quinta_cabacos.png" alt="Logo Quinta Cabacos" width="560">
+</p>
 
-**[This Template is also available as a JavaScript version.](https://github.com/phaserjs/template-vite)**
+**Quinta Cabacos** é um jogo 2D em pixel art desenvolvido em **Phaser 3**, **TypeScript** e **Vite**. O projeto simula uma pequena quinta onde o jogador pode explorar o mapa, entrar em edifícios, gerir inventário, comprar sementes e cultivar plantações.
 
-### Versions
+O jogo foi desenvolvido como projeto académico, com foco numa implementação simples, legível e fácil de apresentar.
 
-This template has been updated for:
+## Imagens do Projeto
 
-- [Phaser 4](https://github.com/phaserjs/phaser)
-- [Vite 6.3.1](https://github.com/vitejs/vite)
-- [TypeScript 5.7.2](https://github.com/microsoft/TypeScript)
+### Menu Inicial
 
-![screenshot](screenshot.png)
+![Menu inicial](public/assets/main_menu_background.png)
 
-## Requirements
+### Mapa Principal
 
-[Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
+![Mapa principal](public/assets/readme_map_preview.png)
 
-## Available Commands
+### Logo
 
-| Command | Description |
-|---------|-------------|
-| `npm install` | Install project dependencies |
-| `npm run dev` | Launch a development web server |
-| `npm run build` | Create a production build in the `dist` folder |
-| `npm run dev-nolog` | Launch a development web server without sending anonymous data (see "About log.js" below) |
-| `npm run build-nolog` | Create a production build in the `dist` folder without sending anonymous data (see "About log.js" below) |
+![Logo Quinta Cabacos](public/assets/logo_quinta_cabacos.png)
 
-## Writing Code
+## Como Jogar
 
-After cloning the repo, run `npm install` from your project directory. Then, you can start the local development server by running `npm run dev`.
+O jogador começa no mapa principal da quinta. A partir daí pode deslocar-se pelo mundo, interagir com edifícios e usar ferramentas ou sementes através da hotbar.
 
-The local development server runs on `http://localhost:8080` by default. Please see the Vite documentation if you wish to change this, or add SSL support.
+Objetivo principal:
 
-Once the server is running you can edit any of the files in the `src` folder. Vite will automatically recompile your code and then reload the browser.
+- Explorar a quinta.
+- Entrar nos edifícios disponíveis.
+- Comprar sementes na loja.
+- Preparar terreno com a pá.
+- Plantar sementes.
+- Acompanhar o crescimento das culturas ao longo dos dias.
 
-## Template Project Structure
+## Controlos
 
-We have provided a default project structure to get you started. This is as follows:
+| Tecla / Ação | Função |
+|---|---|
+| `W`, `A`, `S`, `D` | Mover o jogador |
+| Setas direcionais | Mover o jogador |
+| `E` | Interagir / entrar / sair / abrir loja |
+| `I` | Abrir ou fechar o inventário |
+| `ESC` | Fechar menus/painéis quando aplicável |
+| `1` a `8` | Selecionar slot da hotbar |
+| Clique esquerdo | Usar item selecionado no terreno |
+| Arrastar com o rato | Mover itens entre slots do inventário/hotbar |
 
-## Template Project Structure
+## Features
 
-We have provided a default project structure to get you started:
+- Menu inicial personalizado com logo e arte própria.
+- Sistema de idiomas em português e inglês.
+- Mapa principal criado no **Tiled**.
+- Colisões configuradas através de layers do Tiled.
+- Sistema de interações com objetos do Tiled.
+- Entrada e saída de edifícios:
+  - Casa do jogador.
+  - Mercado de colheitas.
+  - Loja de sementes.
+  - Câmara municipal.
+- Interiores independentes para edifícios.
+- Jogador com animações de idle e movimento.
+- Inventário com hotbar.
+- Arrastar itens entre slots.
+- Sistema de dinheiro.
+- Loja de sementes com compra de vários tipos de sementes.
+- Sistema de tempo com dias e horas.
+- Sistema de cultivo:
+  - Preparar terreno com a pá.
+  - Plantar sementes.
+  - Crescimento das culturas ao longo dos dias.
+- Assets em pixel art integrados no projeto.
 
-| Path                         | Description                                                |
-|------------------------------|------------------------------------------------------------|
-| `index.html`                 | A basic HTML page to contain the game.                     |
-| `public/assets`              | Game sprites, audio, etc. Served directly at runtime.      |
-| `public/style.css`           | Global layout styles.                                      |
-| `src/main.ts`                | Application bootstrap.                                     |
-| `src/game`                   | Folder containing the game code.                           |
-| `src/game/main.ts`           | Game entry point: configures and starts the game.          |
-| `src/game/scenes`            | Folder with all Phaser game scenes.                        | 
+## Tecnologias Utilizadas
 
+- **Phaser 3**: motor principal do jogo.
+- **TypeScript**: linguagem usada no desenvolvimento.
+- **Vite**: servidor de desenvolvimento e build.
+- **Tiled**: criação dos mapas, colisões e interações.
+- **HTML/CSS**: estrutura base da página onde o jogo corre.
 
-## Handling Assets
+## Estrutura do Projeto
 
-Vite supports loading assets via JavaScript module `import` statements.
+| Pasta / Ficheiro | Descrição |
+|---|---|
+| `src/game/main.ts` | Configuração principal do Phaser |
+| `src/game/scenes` | Scenes do jogo, menus e interiores |
+| `src/game/objects` | Objetos principais, como o jogador |
+| `src/game/systems` | Sistemas de gameplay, como cultivo e entradas |
+| `src/game/ui` | Interface, inventário, hotbar e painéis |
+| `src/game/services` | Serviços de idioma, dinheiro, inventário e tempo |
+| `public/assets` | Imagens, sprites, tilesets e assets do jogo |
+| `public/assets/tilemap` | Mapas `.tmj`, tilesets e interiores |
 
-This template provides support for both embedding assets and also loading them from a static folder. To embed an asset, you can import it at the top of the JavaScript file you are using it in:
+## Instalação e Execução
 
-```js
-import logoImg from './assets/logo.png'
+Instalar dependências:
+
+```bash
+npm install
 ```
 
-To load static files such as audio files, videos, etc place them into the `public/assets` folder. Then you can use this path in the Loader calls within Phaser:
+Executar em modo desenvolvimento:
 
-```js
-preload ()
-{
-    //  This is an example of an imported bundled image.
-    //  Remember to import it at the top of this file
-    this.load.image('logo', logoImg);
-
-    //  This is an example of loading a static image
-    //  from the public/assets folder:
-    this.load.image('background', 'assets/bg.png');
-}
+```bash
+npm run dev
 ```
 
-When you issue the `npm run build` command, all static assets are automatically copied to the `dist/assets` folder.
+O jogo fica disponível em:
 
-## Deploying to Production
+```text
+http://localhost:8080
+```
 
-After you run the `npm run build` command, your code will be built into a single bundle and saved to the `dist` folder, along with any other assets your project imported, or stored in the public assets folder.
+Gerar build de produção:
 
-In order to deploy your game, you will need to upload *all* of the contents of the `dist` folder to a public facing web server.
+```bash
+npm run build
+```
 
-## Customizing the Template
-
-### Vite
-
-If you want to customize your build, such as adding plugin (i.e. for loading CSS or fonts), you can modify the `vite/config.*.mjs` file for cross-project changes, or you can modify and/or create new configuration files and target them in specific npm tasks inside of `package.json`. Please see the [Vite documentation](https://vitejs.dev/) for more information.
-
-## About log.js
-
-If you inspect our node scripts you will see there is a file called `log.js`. This file makes a single silent API call to a domain called `gryzor.co`. This domain is owned by Phaser Studio Inc. The domain name is a homage to one of our favorite retro games.
-
-We send the following 3 pieces of data to this API: The name of the template being used (vue, react, etc). If the build was 'dev' or 'prod' and finally the version of Phaser being used.
-
-At no point is any personal data collected or sent. We don't know about your project files, device, browser or anything else. Feel free to inspect the `log.js` file to confirm this.
-
-Why do we do this? Because being open source means we have no visible metrics about which of our templates are being used. We work hard to maintain a large and diverse set of templates for Phaser developers and this is our small anonymous way to determine if that work is actually paying off, or not. In short, it helps us ensure we're building the tools for you.
-
-However, if you don't want to send any data, you can use these commands instead:
-
-Dev:
+Também existem versões sem envio de logs do template Phaser:
 
 ```bash
 npm run dev-nolog
-```
-
-Build:
-
-```bash
 npm run build-nolog
 ```
 
-Or, to disable the log entirely, simply delete the file `log.js` and remove the call to it in the `scripts` section of `package.json`:
+## Conventional Commits
 
-Before:
+Neste projeto usamos a convenção **Conventional Commits** para manter o histórico Git mais organizado e fácil de perceber.
 
-```json
-"scripts": {
-    "dev": "node log.js dev & dev-template-script",
-    "build": "node log.js build & build-template-script"
-},
+Formato recomendado:
+
+```text
+tipo: descrição curta da alteração
 ```
 
-After:
+Exemplos:
 
-```json
-"scripts": {
-    "dev": "dev-template-script",
-    "build": "build-template-script"
-},
+```text
+feat: add seed shop interior
+fix: correct crop market image path
+docs: update project README
+style: adjust main menu logo position
+refactor: simplify building entrance system
 ```
 
-Either of these will stop `log.js` from running. If you do decide to do this, please could you at least join our Discord and tell us which template you're using! Or send us a quick email. Either will be super-helpful, thank you.
+Tipos mais usados:
 
-## Join the Phaser Community!
+| Tipo | Uso |
+|---|---|
+| `feat` | Nova funcionalidade |
+| `fix` | Correção de bug |
+| `docs` | Alterações de documentação |
+| `style` | Ajustes visuais ou formatação |
+| `refactor` | Reorganização de código sem mudar comportamento |
+| `chore` | Tarefas auxiliares do projeto |
 
-We love to see what developers like you create with Phaser! It really motivates us to keep improving. So please join our community and show-off your work 😄
+## Autores
 
-**Visit:** The [Phaser website](https://phaser.io) and follow on [Phaser Twitter](https://twitter.com/phaser_)<br />
-**Play:** Some of the amazing games [#madewithphaser](https://twitter.com/search?q=%23madewithphaser&src=typed_query&f=live)<br />
-**Learn:** [API Docs](https://newdocs.phaser.io), [Support Forum](https://phaser.discourse.group/) and [StackOverflow](https://stackoverflow.com/questions/tagged/phaser-framework)<br />
-**Discord:** Join us on [Discord](https://discord.gg/phaser)<br />
-**Code:** 2000+ [Examples](https://labs.phaser.io)<br />
-**Read:** The [Phaser World](https://phaser.io/community/newsletter) Newsletter<br />
+- Miguel Fonseca
+- Gonçalo Sousa
 
-Created by [Phaser Studio](mailto:support@phaser.io). Powered by coffee, anime, pixels and love.
+## Notas
 
-The Phaser logo and characters are &copy; 2011 - 2025 Phaser Studio Inc.
-
-All rights reserved.
+Este projeto partiu de um template Phaser com Vite e foi adaptado para o jogo **Quinta Cabacos**, incluindo mapas próprios, assets personalizados, interiores, inventário, loja e sistema de cultivo.

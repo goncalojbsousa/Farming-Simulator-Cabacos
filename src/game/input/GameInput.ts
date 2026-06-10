@@ -1,18 +1,20 @@
-export class GameInput {
-    readonly pointer: Phaser.Input.Pointer;
+import { Input, Scene, Types } from 'phaser';
 
-    private arrows: Phaser.Types.Input.Keyboard.CursorKeys;
-    private movementKeys: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
-    private inventoryKey: Phaser.Input.Keyboard.Key;
-    private interactKey: Phaser.Input.Keyboard.Key;
-    private escapeKey: Phaser.Input.Keyboard.Key;
-    private hotbarKeys: Phaser.Input.Keyboard.Key[];
+export class GameInput {
+    readonly pointer: Input.Pointer;
+
+    private arrows: Types.Input.Keyboard.CursorKeys;
+    private movementKeys: Record<'W' | 'A' | 'S' | 'D', Input.Keyboard.Key>;
+    private inventoryKey: Input.Keyboard.Key;
+    private interactKey: Input.Keyboard.Key;
+    private escapeKey: Input.Keyboard.Key;
+    private hotbarKeys: Input.Keyboard.Key[];
     private mouseWasDown = false;
 
     mousePressed = false;
     mouseReleased = false;
 
-    constructor(scene: Phaser.Scene) {
+    constructor(scene: Scene) {
         const keyboard = scene.input.keyboard!;
 
         this.pointer = scene.input.activePointer;
@@ -56,20 +58,20 @@ export class GameInput {
     }
 
     inventoryPressed(): boolean {
-        return Phaser.Input.Keyboard.JustDown(this.inventoryKey);
+        return Input.Keyboard.JustDown(this.inventoryKey);
     }
 
     interactPressed(): boolean {
-        return Phaser.Input.Keyboard.JustDown(this.interactKey);
+        return Input.Keyboard.JustDown(this.interactKey);
     }
 
     escapePressed(): boolean {
-        return Phaser.Input.Keyboard.JustDown(this.escapeKey);
+        return Input.Keyboard.JustDown(this.escapeKey);
     }
 
     getHotbarSlotPressed(): number | null {
         const slot = this.hotbarKeys.findIndex((key) =>
-            Phaser.Input.Keyboard.JustDown(key)
+            Input.Keyboard.JustDown(key)
         );
 
         return slot === -1 ? null : slot;

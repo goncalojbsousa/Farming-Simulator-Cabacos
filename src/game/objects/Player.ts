@@ -1,10 +1,11 @@
+import { Math as PhaserMath, Physics, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 
 export class Player {
-    sprite: Phaser.Physics.Arcade.Sprite;
+    sprite: Physics.Arcade.Sprite;
     readonly speed = 80;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    constructor(scene: Scene, x: number, y: number) {
         this.sprite = scene.physics.add.sprite(x, y, 'idle');
         this.sprite.setCollideWorldBounds(true);
         this.sprite.setBodySize(8, 8);
@@ -33,7 +34,7 @@ export class Player {
             Number(input.isRightDown()) - Number(input.isLeftDown());
         const verticalMovement =
             Number(input.isDownDown()) - Number(input.isUpDown());
-        const movement = new Phaser.Math.Vector2(
+        const movement = new PhaserMath.Vector2(
             horizontalMovement,
             verticalMovement
         ).normalize().scale(this.speed);
