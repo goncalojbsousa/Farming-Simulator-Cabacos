@@ -4,8 +4,8 @@ import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
+import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
-import { SeedShopSystem } from '../systems/SeedShopSystem';
 import { InventoryUi } from '../ui/InventoryUi';
 import { MoneyDisplay } from '../ui/MoneyDisplay';
 import { TimeDisplay } from '../ui/TimeDisplay';
@@ -21,7 +21,7 @@ export class Game extends Scene {
     private moneyDisplay: MoneyDisplay;
     private timeDisplay: TimeDisplay;
     private farmingSystem: FarmingSystem;
-    private seedShopSystem: SeedShopSystem;
+    private buildingEntrances: BuildingEntranceSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
 
     constructor() {
@@ -36,23 +36,15 @@ export class Game extends Scene {
         this.gameTime = new TimeService();
         this.addStartingItems();
 
+        this.inventoryUi = new InventoryUi(this, this.inventory, () => false);
         this.moneyDisplay = new MoneyDisplay(this, this.money);
         this.timeDisplay = new TimeDisplay(this, this.gameTime);
-        this.seedShopSystem = new SeedShopSystem(
+        this.buildingEntrances = new BuildingEntranceSystem(
             this,
             this.gameWorld.map,
             this.gameWorld.player,
             this.inventory,
-            this.money,
-            () => {
-                this.inventoryUi.refresh();
-                this.moneyDisplay.refresh();
-            }
-        );
-        this.inventoryUi = new InventoryUi(
-            this,
-            this.inventory,
-            () => this.seedShopSystem.isOpen()
+            this.money
         );
 
         this.createUiCamera();
@@ -65,14 +57,15 @@ export class Game extends Scene {
             farmLayer: this.gameWorld.farmLayer,
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverUi: (pointer) =>
-                this.inventoryUi.containsInteractiveElement(pointer.x, pointer.y)
-                || this.seedShopSystem.containsScreenPoint(pointer.x, pointer.y),
+                this.inventoryUi.containsInteractiveElement(pointer.x, pointer.y),
             refreshInventory: () => this.inventoryUi.refresh()
         });
 
         this.scale.on('resize', this.resizeGame, this);
+        this.events.on('wake', this.refreshUi, this);
         this.events.once('shutdown', () => {
             this.scale.off('resize', this.resizeGame, this);
+            this.events.off('wake', this.refreshUi, this);
         });
     }
 
@@ -83,15 +76,15 @@ export class Game extends Scene {
         this.gameWorld.player.update(this.gameInput);
         this.farmingSystem.update(this.gameInput, this.gameTime.day);
         this.inventoryUi.update(this.gameInput);
-        this.seedShopSystem.update(this.gameInput);
+        this.buildingEntrances.update(this.gameInput);
     }
 
     private createUiCamera(): void {
         const uiObjects = [
             ...this.inventoryUi.getUiObjects(),
-            ...this.seedShopSystem.getUiObjects(),
             ...this.moneyDisplay.getUiObjects(),
-            ...this.timeDisplay.getUiObjects()
+            ...this.timeDisplay.getUiObjects(),
+            ...this.buildingEntrances.getUiObjects()
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -113,6 +106,11 @@ export class Game extends Scene {
         this.gameWorld.resize();
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.inventoryUi.layout();
-        this.seedShopSystem.layout();
+        this.buildingEntrances.layout();
+    }
+
+    private refreshUi(): void {
+        this.inventoryUi.refresh();
+        this.moneyDisplay.refresh();
     }
 }

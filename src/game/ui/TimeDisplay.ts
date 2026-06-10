@@ -1,4 +1,5 @@
 import { GameObjects, Scene } from 'phaser';
+import { translate } from '../services/LanguageService';
 import { TimeService } from '../services/TimeService';
 
 export class TimeDisplay {
@@ -20,7 +21,7 @@ export class TimeDisplay {
         const hour = String(this.time.hour).padStart(2, '0');
         const minute = String(this.time.minute).padStart(2, '0');
 
-        this.text.setText(`Dia ${this.time.day}  ${hour}:${minute}`);
+        this.text.setText(`${translate('day')} ${this.time.day}  ${hour}:${minute}`);
     }
 
     getUiObjects(): GameObjects.GameObject[] {
