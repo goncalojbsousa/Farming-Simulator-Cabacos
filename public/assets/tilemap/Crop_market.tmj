@@ -4,7 +4,7 @@
  "layers":[
         {
          "id":6,
-         "image":"crop_market_sunnyside_style_384x288_wide.png",
+         "image":"crop_market_sem_fundo.png",
          "imageheight":288,
          "imagewidth":384,
          "name":"Camada de Imagens 1",

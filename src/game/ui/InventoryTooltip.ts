@@ -1,4 +1,4 @@
-import { GameObjects, Scene } from 'phaser';
+import { GameObjects, Math as PhaserMath, Scene } from 'phaser';
 
 export class InventoryTooltip {
     readonly container: GameObjects.Container;
@@ -30,8 +30,8 @@ export class InventoryTooltip {
         this.text.setText(text);
         this.background.width = this.text.width + 12;
         this.background.height = this.text.height + 8;
-        const tooltipX = Phaser.Math.Clamp(x + 10, 0, this.scene.scale.width - this.background.width);
-        const tooltipY = Phaser.Math.Clamp(
+        const tooltipX = PhaserMath.Clamp(x + 10, 0, this.scene.scale.width - this.background.width);
+        const tooltipY = PhaserMath.Clamp(
             y - this.background.height - 10,
             0,
             this.scene.scale.height - this.background.height
