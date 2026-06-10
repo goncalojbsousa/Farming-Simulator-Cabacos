@@ -10,17 +10,34 @@ O jogo foi desenvolvido como projeto académico, com foco numa implementação s
 
 ## Imagens do Projeto
 
-### Menu Inicial
-
-![Menu inicial](public/assets/main_menu_background.png)
-
 ### Mapa Principal
 
 ![Mapa principal](public/assets/readme_map_preview.png)
 
-### Logo
+### Interiores dos Edifícios
 
-![Logo Quinta Cabacos](public/assets/logo_quinta_cabacos.png)
+<table>
+  <tr>
+    <td align="center">
+      <strong>Casa do jogador</strong><br>
+      <img src="public/assets/tilemap/house_interior_sem_fundo.png" alt="Interior da casa do jogador" width="260">
+    </td>
+    <td align="center">
+      <strong>Mercado de colheitas</strong><br>
+      <img src="public/assets/tilemap/crop_market_sem_fundo.png" alt="Interior do mercado de colheitas" width="260">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Loja de sementes</strong><br>
+      <img src="public/assets/tilemap/seed_shop_sunnyside_style_384x288.png" alt="Interior da loja de sementes" width="260">
+    </td>
+    <td align="center">
+      <strong>Câmara municipal</strong><br>
+      <img src="public/assets/tilemap/town_hall_sem_fundo.png" alt="Interior da câmara municipal" width="260">
+    </td>
+  </tr>
+</table>
 
 ## Como Jogar
 
