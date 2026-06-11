@@ -13,6 +13,7 @@ import { InventoryService } from '../services/InventoryService';
 const tillEnergyCost = 2;
 const plantEnergyCost = 1;
 const harvestEnergyCost = 2;
+const tilledSoilDuration = 2;
 
 type FarmingConfig = {
     scene: Phaser.Scene;
@@ -41,8 +42,13 @@ type SelectedFarmTile = {
     layer: Phaser.Tilemaps.TilemapLayer;
 };
 
+type TilledSoil = {
+    image: Phaser.GameObjects.Image;
+    tilledDay: number;
+};
+
 export class FarmingSystem {
-    private tilledTiles = new Set<string>();
+    private tilledTiles = new Map<string, TilledSoil>();
     private plantedTiles = new Set<string>();
     private crops: PlantedCrop[] = [];
     private tileHighlight: Phaser.GameObjects.Graphics;
@@ -57,6 +63,7 @@ export class FarmingSystem {
     update(input: GameInput, currentDay: number): void {
         const pointer = input.pointer;
 
+        this.clearExpiredTilledTiles(currentDay);
         this.growCrops(currentDay);
 
         if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
@@ -95,7 +102,7 @@ export class FarmingSystem {
                 return;
             }
 
-            this.tillTile(selectedFarmTile);
+            this.tillTile(selectedFarmTile, currentDay);
             this.game.energy.spend(tillEnergyCost);
             this.game.refreshInventory();
             return;
@@ -118,15 +125,19 @@ export class FarmingSystem {
         this.plantSeed(selectedFarmTile, seed, currentDay);
     }
 
-    private tillTile(selectedFarmTile: SelectedFarmTile): void {
+    private tillTile(selectedFarmTile: SelectedFarmTile, currentDay: number): void {
         const tile = selectedFarmTile.tile;
+        const tileKey = this.getTileKey(selectedFarmTile);
         const soil = this.game.scene.add.image(tile.getCenterX(), tile.getCenterY(), 'soil')
             .setDisplaySize(tile.width, tile.height)
             .setDepth(9);
 
         this.game.worldObjects.push(soil);
         this.game.uiCamera.ignore(soil);
-        this.tilledTiles.add(this.getTileKey(selectedFarmTile));
+        this.tilledTiles.set(tileKey, {
+            image: soil,
+            tilledDay: currentDay
+        });
     }
 
     private plantSeed(
@@ -180,8 +191,30 @@ export class FarmingSystem {
         crop.image.destroy();
         this.crops.splice(cropIndex, 1);
         this.plantedTiles.delete(tileKey);
+        this.clearTilledTile(tileKey);
         this.game.energy.spend(harvestEnergyCost);
         this.game.refreshInventory();
+    }
+
+    private clearExpiredTilledTiles(currentDay: number): void {
+        for (const [tileKey, soil] of this.tilledTiles) {
+            const isEmpty = !this.plantedTiles.has(tileKey);
+
+            if (isEmpty && currentDay - soil.tilledDay >= tilledSoilDuration) {
+                this.clearTilledTile(tileKey);
+            }
+        }
+    }
+
+    private clearTilledTile(tileKey: string): void {
+        const soil = this.tilledTiles.get(tileKey);
+
+        if (!soil) {
+            return;
+        }
+
+        soil.image.destroy();
+        this.tilledTiles.delete(tileKey);
     }
 
     private growCrops(currentDay: number): void {
