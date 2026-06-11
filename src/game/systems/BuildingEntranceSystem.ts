@@ -19,6 +19,7 @@ const buildingDefinitions = [
     ['player_house_door', 'HouseInterior', 'enterHouse'],
     ['player_crop_market_door', 'CropMarket', 'enterMarket'],
     ['player_seed_shop_door', 'SeedShop', 'enterSeedShop'],
+    ['player_tool_shop_door', 'ToolShop', 'enterToolShop'],
     ['player_town_hall_door', 'TownHall', 'enterTownHall']
 ] as const;
 
