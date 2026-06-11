@@ -1,5 +1,7 @@
 const dayDuration = 60000;
 const startingHour = 6;
+const faintHour = 2;
+const morningHour = 7;
 const minutesPerDay = 24 * 60;
 
 export class TimeService {
@@ -33,12 +35,20 @@ export class TimeService {
         this.day++;
     }
 
+    isFaintTime(): boolean {
+        return this.hour === faintHour;
+    }
+
     startNextDay(): void {
         this.day++;
-        this.currentMinute = 7 * 60;
-        this.hour = 7;
+        this.setMorningTime();
+    }
+
+    setMorningTime(): void {
+        this.currentMinute = morningHour * 60;
+        this.hour = morningHour;
         this.minute = 0;
-        // The next update starts a fresh timer after the sleep transition.
+        // The next update starts a fresh timer after the morning transition.
         this.lastUpdateTime = null;
     }
 }

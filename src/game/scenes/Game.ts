@@ -7,7 +7,10 @@ import { TimeService } from '../services/TimeService';
 import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
 import { GameHud } from '../ui/GameHud';
+import { ScreenFade } from '../ui/ScreenFade';
 import { GameWorld } from '../world/GameWorld';
+
+const faintMoneyLossRate = 0.25;
 
 export class Game extends Scene {
     private gameWorld: GameWorld;
@@ -19,6 +22,8 @@ export class Game extends Scene {
     private farmingSystem: FarmingSystem;
     private buildingEntrances: BuildingEntranceSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
+    private screenFade: ScreenFade;
+    private faintTransitionActive = false;
 
     constructor() {
         super('Game');
@@ -45,10 +50,13 @@ export class Game extends Scene {
             this.gameWorld.player,
             this.inventory,
             this.money,
-            this.gameTime
+            this.gameTime,
+            () => this.faintPlayerInsideBuilding()
         );
 
         this.createUiCamera();
+        this.screenFade = new ScreenFade(this);
+        this.gameWorld.camera.ignore(this.screenFade.getGameObject());
         this.farmingSystem = new FarmingSystem({
             scene: this,
             worldCamera: this.gameWorld.camera,
@@ -63,14 +71,19 @@ export class Game extends Scene {
         });
 
         this.scale.on('resize', this.resizeGame, this);
-        this.events.on('wake', this.refreshUi, this);
+        this.events.on('wake', this.onWake, this);
         this.events.once('shutdown', () => {
             this.scale.off('resize', this.resizeGame, this);
-            this.events.off('wake', this.refreshUi, this);
+            this.events.off('wake', this.onWake, this);
         });
     }
 
     update(time: number): void {
+        if (this.faintTransitionActive) {
+            this.gameInput.update();
+            return;
+        }
+
         this.gameInput.update();
 
         if (this.gameInput.nextDayPressed()) {
@@ -78,6 +91,17 @@ export class Game extends Scene {
         }
 
         this.gameTime.update(time);
+
+        if (this.gameTime.isFaintTime()) {
+            this.faintTransitionActive = true;
+            this.gameWorld.player.sprite.setVelocity(0);
+            this.screenFade.play(
+                () => this.applyFaintConsequences(),
+                () => this.faintTransitionActive = false
+            );
+            return;
+        }
+
         this.gameWorld.player.update(this.gameInput);
         this.farmingSystem.update(this.gameInput, this.gameTime.day);
         this.hud.update(this.gameInput);
@@ -110,9 +134,31 @@ export class Game extends Scene {
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.hud.layout();
         this.buildingEntrances.layout();
+        this.screenFade.layout();
     }
 
-    private refreshUi(): void {
+    private onWake(): void {
+        this.hud.refresh();
+
+        if (this.faintTransitionActive) {
+            this.screenFade.fadeOut(() => this.faintTransitionActive = false);
+        }
+    }
+
+    private faintPlayerInsideBuilding(): void {
+        this.faintTransitionActive = true;
+        this.screenFade.showBlack();
+        this.applyFaintConsequences();
+    }
+
+    private applyFaintConsequences(): void {
+        const moneyLost = Math.floor(
+            this.money.getBalance() * faintMoneyLossRate
+        );
+
+        this.money.spend(moneyLost);
+        this.gameTime.setMorningTime();
+        this.gameWorld.movePlayerToSpawn();
         this.hud.refresh();
     }
 }

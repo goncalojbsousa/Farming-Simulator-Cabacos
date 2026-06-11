@@ -7,6 +7,7 @@ import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
 import { GameHud } from '../ui/GameHud';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
+import { ScreenFade } from '../ui/ScreenFade';
 
 type InteriorConfig = {
     sceneKey: string;
@@ -19,6 +20,7 @@ export type BuildingInteriorData = {
     inventory: InventoryService;
     money: MoneyService;
     gameTime: TimeService;
+    onPlayerFaint: () => void;
 };
 
 export class BuildingInteriorScene extends Scene {
@@ -30,10 +32,13 @@ export class BuildingInteriorScene extends Scene {
     protected money: MoneyService;
     protected gameTime: TimeService;
     protected hud: GameHud;
+    protected screenFade: ScreenFade;
+    protected faintTransitionActive = false;
 
     private exitZone: Geom.Rectangle;
     private exitPrompt: InteractionPrompt;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
+    private onPlayerFaint: () => void;
 
     constructor(private interiorConfig: InteriorConfig) {
         super(interiorConfig.sceneKey);
@@ -43,9 +48,11 @@ export class BuildingInteriorScene extends Scene {
         this.inventory = data.inventory;
         this.money = data.money;
         this.gameTime = data.gameTime;
+        this.onPlayerFaint = data.onPlayerFaint;
     }
 
     create(): void {
+        this.faintTransitionActive = false;
         this.map = this.make.tilemap({ key: this.interiorConfig.mapKey });
         this.worldObjects = [];
 
@@ -72,6 +79,8 @@ export class BuildingInteriorScene extends Scene {
             () => this.isGameplayInteractionBlocked()
         );
         this.registerUiObjects(this.hud.getUiObjects());
+        this.screenFade = new ScreenFade(this);
+        this.registerUiObjects([this.screenFade.getGameObject()]);
 
         this.cameras.main.setZoom(2).setBackgroundColor('#15151f');
         this.centerCamera();
@@ -84,8 +93,19 @@ export class BuildingInteriorScene extends Scene {
     }
 
     update(time: number): void {
+        if (this.faintTransitionActive) {
+            this.gameInput.update();
+            return;
+        }
+
         this.gameInput.update();
         this.gameTime.update(time);
+
+        if (this.gameTime.isFaintTime()) {
+            this.startFaintTransition();
+            return;
+        }
+
         this.player.update(this.gameInput);
         this.hud.update(this.gameInput);
 
@@ -165,6 +185,7 @@ export class BuildingInteriorScene extends Scene {
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.positionPrompt(this.exitPrompt);
         this.hud.layout();
+        this.screenFade.layout();
         this.layoutInteriorUi();
     }
 
@@ -187,5 +208,15 @@ export class BuildingInteriorScene extends Scene {
         );
 
         this.uiCamera.ignore(this.worldObjects);
+    }
+
+    private startFaintTransition(): void {
+        this.faintTransitionActive = true;
+        this.player.sprite.setVelocity(0);
+        this.screenFade.fadeIn(() => {
+            this.onPlayerFaint();
+            this.scene.stop();
+            this.scene.wake('Game');
+        });
     }
 }
