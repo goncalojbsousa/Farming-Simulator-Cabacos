@@ -32,4 +32,13 @@ export class TimeService {
     advanceDay(): void {
         this.day++;
     }
+
+    startNextDay(): void {
+        this.day++;
+        this.currentMinute = 7 * 60;
+        this.hour = 7;
+        this.minute = 0;
+        // The next update starts a fresh timer after the sleep transition.
+        this.lastUpdateTime = null;
+    }
 }

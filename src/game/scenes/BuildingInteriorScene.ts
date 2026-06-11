@@ -1,7 +1,11 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
+import { MoneyService } from '../services/MoneyService';
+import { TimeService } from '../services/TimeService';
+import { GameHud } from '../ui/GameHud';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 type InteriorConfig = {
@@ -11,26 +15,41 @@ type InteriorConfig = {
     exitObjectName: string;
 };
 
+export type BuildingInteriorData = {
+    inventory: InventoryService;
+    money: MoneyService;
+    gameTime: TimeService;
+};
+
 export class BuildingInteriorScene extends Scene {
     protected gameInput: GameInput;
     protected player: Player;
     protected map: Phaser.Tilemaps.Tilemap;
     protected worldObjects: Phaser.GameObjects.GameObject[] = [];
+    protected inventory: InventoryService;
+    protected money: MoneyService;
+    protected gameTime: TimeService;
+    protected hud: GameHud;
 
     private exitZone: Geom.Rectangle;
     private exitPrompt: InteractionPrompt;
-    private uiCamera?: Phaser.Cameras.Scene2D.Camera;
-    private uiObjects: Phaser.GameObjects.GameObject[] = [];
+    private uiCamera: Phaser.Cameras.Scene2D.Camera;
 
-    constructor(private config: InteriorConfig) {
-        super(config.sceneKey);
+    constructor(private interiorConfig: InteriorConfig) {
+        super(interiorConfig.sceneKey);
+    }
+
+    init(data: BuildingInteriorData): void {
+        this.inventory = data.inventory;
+        this.money = data.money;
+        this.gameTime = data.gameTime;
     }
 
     create(): void {
-        this.map = this.make.tilemap({ key: this.config.mapKey });
+        this.map = this.make.tilemap({ key: this.interiorConfig.mapKey });
         this.worldObjects = [];
 
-        const background = this.add.image(0, 0, this.config.imageKey).setOrigin(0);
+        const background = this.add.image(0, 0, this.interiorConfig.imageKey).setOrigin(0);
         this.worldObjects.push(background);
 
         this.physics.world.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -41,13 +60,21 @@ export class BuildingInteriorScene extends Scene {
 
         const walls = this.createWalls();
         this.physics.add.collider(this.player.sprite, walls);
+        this.createUiCamera();
 
-        this.exitZone = this.getInteractionZone(this.config.exitObjectName);
+        this.exitZone = this.getInteractionZone(this.interiorConfig.exitObjectName);
         this.exitPrompt = this.createPrompt(translate('exitBuilding'));
+        this.hud = new GameHud(
+            this,
+            this.inventory,
+            this.money,
+            this.gameTime,
+            () => this.isGameplayInteractionBlocked()
+        );
+        this.registerUiObjects(this.hud.getUiObjects());
 
         this.cameras.main.setZoom(2).setBackgroundColor('#15151f');
         this.centerCamera();
-        this.createUiCamera();
 
         this.gameInput = new GameInput(this);
         this.scale.on('resize', this.resizeScene, this);
@@ -56,11 +83,14 @@ export class BuildingInteriorScene extends Scene {
         });
     }
 
-    update(): void {
+    update(time: number): void {
         this.gameInput.update();
+        this.gameTime.update(time);
         this.player.update(this.gameInput);
+        this.hud.update(this.gameInput);
 
-        const canExit = this.isPlayerInside(this.exitZone) && !this.interactionIsBlocked();
+        const canExit = this.isPlayerInside(this.exitZone)
+            && !this.isGameplayInteractionBlocked();
         if (canExit) {
             this.exitPrompt.show();
         } else {
@@ -89,7 +119,7 @@ export class BuildingInteriorScene extends Scene {
         const prompt = new InteractionPrompt(this, message);
         prompt.setScrollFactor(0);
 
-        this.uiObjects.push(prompt.getGameObject());
+        this.cameras.main.ignore(prompt.getGameObject());
         this.positionPrompt(prompt);
         return prompt;
     }
@@ -100,16 +130,15 @@ export class BuildingInteriorScene extends Scene {
         return zone.contains(body.center.x, body.center.y);
     }
 
-    protected interactionIsBlocked(): boolean {
+    protected isGameplayInteractionBlocked(): boolean {
         return false;
     }
 
-    protected setupUi(uiObjects: Phaser.GameObjects.GameObject[]): void {
-        this.uiObjects.push(...uiObjects);
-        this.createUiCamera();
+    protected registerUiObjects(uiObjects: Phaser.GameObjects.GameObject[]): void {
+        this.cameras.main.ignore(uiObjects);
     }
 
-    protected layoutUi(): void { }
+    protected layoutInteriorUi(): void { }
 
     private createWalls(): Phaser.Physics.Arcade.StaticGroup {
         const walls = this.physics.add.staticGroup();
@@ -133,9 +162,10 @@ export class BuildingInteriorScene extends Scene {
 
     private resizeScene(): void {
         this.centerCamera();
-        this.uiCamera?.setViewport(0, 0, this.scale.width, this.scale.height);
+        this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.positionPrompt(this.exitPrompt);
-        this.layoutUi();
+        this.hud.layout();
+        this.layoutInteriorUi();
     }
 
     private centerCamera(): void {
@@ -145,11 +175,11 @@ export class BuildingInteriorScene extends Scene {
     }
 
     private positionPrompt(prompt: InteractionPrompt): void {
-        prompt.setPosition(this.scale.width / 2, this.scale.height - 80);
+        prompt.setPosition(this.scale.width / 2, this.scale.height - 120);
     }
 
     private createUiCamera(): void {
-        this.uiCamera ??= this.cameras.add(
+        this.uiCamera = this.cameras.add(
             0,
             0,
             this.scale.width,
@@ -157,6 +187,5 @@ export class BuildingInteriorScene extends Scene {
         );
 
         this.uiCamera.ignore(this.worldObjects);
-        this.cameras.main.ignore(this.uiObjects);
     }
 }

@@ -323,6 +323,18 @@
                  "width":0,
                  "x":221.333333333333,
                  "y":-66.6666666666667
+                }, 
+                {
+                 "height":62.7272727272727,
+                 "id":34,
+                 "name":"player_house_bed",
+                 "opacity":1,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":54.1818181818182,
+                 "x":34.1818181818182,
+                 "y":54.5454545454545
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -330,11 +342,11 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":6,
- "nextobjectid":28,
+ "nextlayerid":9,
+ "nextobjectid":35,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.12.1",
+ "tiledversion":"1.12.2",
  "tileheight":16,
  "tilesets":[],
  "tilewidth":16,
