@@ -43,6 +43,7 @@ export class GameHud {
 
     layout(): void {
         this.inventoryUi.layout();
+        this.energyDisplay.layout();
     }
 
     containsInteractiveElement(x: number, y: number): boolean {

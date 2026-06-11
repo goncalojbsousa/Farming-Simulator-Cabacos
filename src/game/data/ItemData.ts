@@ -22,13 +22,19 @@ export type SeedItem = GameItem & {
     stageGrowthDays: readonly number[];
 };
 
+export type ToolItem = GameItem & {
+    type: 'tool';
+    buyPrice: number;
+};
+
 const tools = [
-    { id: 'axe', nameKey: 'itemAxe' },
-    { id: 'hoe', nameKey: 'itemHoe' },
-    { id: 'rod', nameKey: 'itemRod' },
-    { id: 'sickle', nameKey: 'itemSickle' },
-    { id: 'shovel', nameKey: 'itemShovel' },
-    { id: 'sword', nameKey: 'itemSword' }
+    { id: 'axe', nameKey: 'itemAxe', assetPath: 'tools/axe.png', buyPrice: 45 },
+    { id: 'hoe', nameKey: 'itemHoe', assetPath: 'tools/hoe.png', buyPrice: 35 },
+    { id: 'rod', nameKey: 'itemRod', assetPath: 'tools/rod.png', buyPrice: 50 },
+    { id: 'sickle', nameKey: 'itemSickle', assetPath: 'tools/sickle.png', buyPrice: 30 },
+    { id: 'shovel', nameKey: 'itemShovel', assetPath: 'tools/shovel.png', buyPrice: 40 },
+    { id: 'sword', nameKey: 'itemSword', assetPath: 'tools/sword.png', buyPrice: 60 },
+    { id: 'wateringCan', nameKey: 'itemWateringCan', assetPath: 'tools/watering_can.png', buyPrice: 55 }
 ] as const;
 
 // To add a crop, add one line here and its images to the assets folder.
@@ -46,12 +52,13 @@ export const crops = [
     { id: 'wheat', seedNameKey: 'seedWheat', harvestNameKey: 'cropWheat', buyPrice: 4, sellPrice: 7, stageGrowthDays: [2, 2, 2] }
 ] as const;
 
-const toolItems: GameItem[] = tools.map((tool) => ({
+const toolItems: ToolItem[] = tools.map((tool) => ({
     id: tool.id,
     nameKey: tool.nameKey,
     type: 'tool',
-    assetPath: `tools/${tool.id}.png`,
-    maxStackSize: 1
+    assetPath: tool.assetPath,
+    maxStackSize: 1,
+    buyPrice: tool.buyPrice
 }));
 
 const cropItems: GameItem[] = crops.flatMap((crop) => [
@@ -84,6 +91,10 @@ export function getItemById(itemId: ItemId): GameItem {
 
 export function getSeedItems(): SeedItem[] {
     return gameItems.filter((item) => item.type === 'seed') as SeedItem[];
+}
+
+export function getToolShopItems(): ToolItem[] {
+    return gameItems.filter((item) => item.type === 'tool') as ToolItem[];
 }
 
 export function getCropTextureKey(cropId: CropId, stage: CropStage): string {

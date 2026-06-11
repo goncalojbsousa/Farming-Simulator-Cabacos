@@ -37,6 +37,12 @@ export class InventoryService {
         return true;
     }
 
+    hasItem(itemId: ItemId): boolean {
+        return this.slots.some((slot) =>
+            slot.itemId === itemId && slot.quantity > 0
+        );
+    }
+
     removeOneFromSlot(index: number): void {
         const slot = this.slots[index];
         slot.quantity--;

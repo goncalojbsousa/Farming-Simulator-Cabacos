@@ -6,6 +6,7 @@ import { HouseInterior } from './scenes/HouseInterior';
 import { MainMenu } from './scenes/MainMenu';
 import { SeedShop } from './scenes/SeedShop';
 import { TownHall } from './scenes/TownHall';
+import { ToolShop } from './scenes/ToolShop';
 import { AUTO, Game, Scale } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import { SettingsMenu } from './scenes/SettingsMenu';
@@ -44,6 +45,7 @@ const config: Phaser.Types.Core.GameConfig = {
         HouseInterior,
         CropMarket,
         SeedShop,
+        ToolShop,
         TownHall,
         GameOver
     ]
