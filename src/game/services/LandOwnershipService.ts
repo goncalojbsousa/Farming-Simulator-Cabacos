@@ -1,6 +1,6 @@
 import { TranslationKey } from './LanguageService';
 
-export type FarmId = 'farm' | 'farm2';
+export type FarmId = 'farm' | 'farm2' | 'farm3';
 
 export type FarmPurchaseOption = {
     farmId: FarmId;
@@ -13,6 +13,11 @@ export const farmPurchaseOptions: readonly FarmPurchaseOption[] = [
         farmId: 'farm2',
         nameKey: 'farm2Name',
         price: 50
+    },
+    {
+        farmId: 'farm3',
+        nameKey: 'farm3Name',
+        price: 150
     }
 ];
 

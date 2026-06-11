@@ -1,6 +1,10 @@
 import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
-import { FarmId, LandOwnershipService } from '../services/LandOwnershipService';
+import {
+    FarmId,
+    farmPurchaseOptions,
+    LandOwnershipService
+} from '../services/LandOwnershipService';
 
 export class GameWorld {
     readonly camera: Phaser.Cameras.Scene2D.Camera;
@@ -9,8 +13,8 @@ export class GameWorld {
     readonly farmLayersById = new Map<FarmId, Phaser.Tilemaps.TilemapLayer>();
     readonly worldObjects: Phaser.GameObjects.GameObject[] = [];
 
-    private farm2PurchaseSignLayer?: Phaser.Tilemaps.TilemapLayer;
-    private farm2CollisionCollider?: Phaser.Physics.Arcade.Collider;
+    private purchaseSignLayersByFarmId = new Map<FarmId, Phaser.Tilemaps.TilemapLayer>();
+    private collisionCollidersByFarmId = new Map<FarmId, Phaser.Physics.Arcade.Collider>();
 
     constructor(
         private scene: Scene,
@@ -42,12 +46,14 @@ export class GameWorld {
                 layer.setDepth(-(depthProperty as { value: number }).value);
             }
 
-            if (layerData.name === 'farm' || layerData.name === 'farm2') {
-                this.farmLayersById.set(layerData.name, layer);
+            const farmId = this.getFarmIdFromLayerName(layerData.name);
+            if (farmId) {
+                this.farmLayersById.set(farmId, layer);
             }
 
-            if (layerData.name === 'buy_farm2') {
-                this.farm2PurchaseSignLayer = layer;
+            const purchaseSignFarmId = this.getFarmIdFromPurchaseSignLayerName(layerData.name);
+            if (purchaseSignFarmId) {
+                this.purchaseSignLayersByFarmId.set(purchaseSignFarmId, layer);
             }
 
             this.worldObjects.push(layer);
@@ -62,21 +68,24 @@ export class GameWorld {
         collisionLayer.setCollisionByExclusion([-1]).setAlpha(0);
         this.worldObjects.push(collisionLayer);
 
-        const farm2CollisionLayer = this.createOptionalCollisionLayer(
-            'buy_farm2_collision',
-            tilesets
-        );
-
         this.player = new Player(scene, 672, 496);
         this.player.sprite.setDepth(10);
         this.worldObjects.push(this.player.sprite);
         scene.physics.add.collider(this.player.sprite, collisionLayer);
 
-        if (farm2CollisionLayer) {
-            this.farm2CollisionCollider = scene.physics.add.collider(
-                this.player.sprite,
-                farm2CollisionLayer
+        for (const farmOption of farmPurchaseOptions) {
+            const farmCollisionLayer = this.createOptionalCollisionLayer(
+                this.getPurchaseCollisionLayerName(farmOption.farmId),
+                tilesets
             );
+
+            if (farmCollisionLayer) {
+                const collider = scene.physics.add.collider(
+                    this.player.sprite,
+                    farmCollisionLayer
+                );
+                this.collisionCollidersByFarmId.set(farmOption.farmId, collider);
+            }
         }
 
         this.applyLandOwnership();
@@ -93,27 +102,33 @@ export class GameWorld {
     getAvailableFarmLayers(): Phaser.Tilemaps.TilemapLayer[] {
         const farmLayers: Phaser.Tilemaps.TilemapLayer[] = [];
         const mainFarmLayer = this.farmLayersById.get('farm');
-        const secondFarmLayer = this.farmLayersById.get('farm2');
 
         if (mainFarmLayer) {
             farmLayers.push(mainFarmLayer);
         }
 
-        if (secondFarmLayer && this.landOwnership.isFarmOwned('farm2')) {
-            farmLayers.push(secondFarmLayer);
+        for (const farmOption of farmPurchaseOptions) {
+            const farmLayer = this.farmLayersById.get(farmOption.farmId);
+
+            if (farmLayer && this.landOwnership.isFarmOwned(farmOption.farmId)) {
+                farmLayers.push(farmLayer);
+            }
         }
 
         return farmLayers;
     }
 
     applyLandOwnership(): void {
-        const isFarm2Owned = this.landOwnership.isFarmOwned('farm2');
+        for (const farmOption of farmPurchaseOptions) {
+            const isFarmOwned = this.landOwnership.isFarmOwned(farmOption.farmId);
+            const purchaseSignLayer = this.purchaseSignLayersByFarmId.get(farmOption.farmId);
+            purchaseSignLayer?.setVisible(!isFarmOwned);
 
-        this.farm2PurchaseSignLayer?.setVisible(!isFarm2Owned);
-
-        if (isFarm2Owned && this.farm2CollisionCollider) {
-            this.farm2CollisionCollider.destroy();
-            this.farm2CollisionCollider = undefined;
+            const collisionCollider = this.collisionCollidersByFarmId.get(farmOption.farmId);
+            if (isFarmOwned && collisionCollider) {
+                collisionCollider.destroy();
+                this.collisionCollidersByFarmId.delete(farmOption.farmId);
+            }
         }
     }
 
@@ -137,6 +152,33 @@ export class GameWorld {
     }
 
     private isCollisionLayer(layerName: string): boolean {
-        return layerName === 'Collision' || layerName === 'buy_farm2_collision';
+        return layerName === 'Collision'
+            || farmPurchaseOptions.some((farmOption) =>
+                layerName === this.getPurchaseCollisionLayerName(farmOption.farmId)
+            );
+    }
+
+    private getFarmIdFromLayerName(layerName: string): FarmId | undefined {
+        if (layerName === 'farm') {
+            return 'farm';
+        }
+
+        return farmPurchaseOptions.find((farmOption) =>
+            farmOption.farmId === layerName
+        )?.farmId;
+    }
+
+    private getFarmIdFromPurchaseSignLayerName(layerName: string): FarmId | undefined {
+        return farmPurchaseOptions.find((farmOption) =>
+            layerName === this.getPurchaseSignLayerName(farmOption.farmId)
+        )?.farmId;
+    }
+
+    private getPurchaseSignLayerName(farmId: FarmId): string {
+        return `buy_${farmId}`;
+    }
+
+    private getPurchaseCollisionLayerName(farmId: FarmId): string {
+        return `buy_${farmId}_collision`;
     }
 }
