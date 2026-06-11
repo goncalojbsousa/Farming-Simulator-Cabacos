@@ -1,15 +1,14 @@
 const dayDuration = 60000;
-const startingHour = 6;
 const faintHour = 2;
 const morningHour = 7;
 const minutesPerDay = 24 * 60;
 
 export class TimeService {
     private lastUpdateTime: number | null = null;
-    private currentMinute = startingHour * 60;
+    private currentMinute = morningHour * 60;
 
     day = 1;
-    hour = startingHour;
+    hour = morningHour;
     minute = 0;
 
     update(time: number): void {
