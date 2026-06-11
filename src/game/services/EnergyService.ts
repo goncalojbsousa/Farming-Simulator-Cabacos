@@ -8,6 +8,10 @@ export class EnergyService {
         return this.energy;
     }
 
+    getMaxEnergy(): number {
+        return maxEnergy;
+    }
+
     hasEnergy(amount: number): boolean {
         return this.energy >= amount;
     }
