@@ -30,7 +30,8 @@ export class BuildingEntranceSystem {
         private player: Player,
         private inventory: InventoryService,
         private money: MoneyService,
-        private gameTime: TimeService
+        private gameTime: TimeService,
+        private onPlayerFaint: () => void
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
 
@@ -71,7 +72,8 @@ export class BuildingEntranceSystem {
             this.scene.scene.launch(entrance.sceneKey, {
                 inventory: this.inventory,
                 money: this.money,
-                gameTime: this.gameTime
+                gameTime: this.gameTime,
+                onPlayerFaint: this.onPlayerFaint
             });
         }
     }

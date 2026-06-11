@@ -1,6 +1,9 @@
 import { Scene } from 'phaser';
 import { Player } from '../objects/Player';
 
+const playerSpawnX = 672;
+const playerSpawnY = 496;
+
 export class GameWorld {
     readonly camera: Phaser.Cameras.Scene2D.Camera;
     readonly map: Phaser.Tilemaps.Tilemap;
@@ -45,7 +48,7 @@ export class GameWorld {
         collisionLayer.setCollisionByExclusion([-1]).setAlpha(0);
         this.worldObjects.push(collisionLayer);
 
-        this.player = new Player(scene, 672, 496);
+        this.player = new Player(scene, playerSpawnX, playerSpawnY);
         this.player.sprite.setDepth(10);
         this.worldObjects.push(this.player.sprite);
         scene.physics.add.collider(this.player.sprite, collisionLayer);
@@ -57,5 +60,9 @@ export class GameWorld {
 
     resize(): void {
         this.camera.setViewport(0, 0, this.scene.scale.width, this.scene.scale.height);
+    }
+
+    movePlayerToSpawn(): void {
+        this.player.sprite.setPosition(playerSpawnX, playerSpawnY).setVelocity(0);
     }
 }
