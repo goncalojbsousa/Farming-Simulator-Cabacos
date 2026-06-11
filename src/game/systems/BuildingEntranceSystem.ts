@@ -3,6 +3,7 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
@@ -32,6 +33,7 @@ export class BuildingEntranceSystem {
         private inventory: InventoryService,
         private money: MoneyService,
         private gameTime: TimeService,
+        private landOwnership: LandOwnershipService,
         private energy: EnergyService,
         private onPlayerFaint: () => void
     ) {
@@ -75,6 +77,7 @@ export class BuildingEntranceSystem {
                 inventory: this.inventory,
                 money: this.money,
                 gameTime: this.gameTime,
+                landOwnership: this.landOwnership,
                 energy: this.energy,
                 onPlayerFaint: this.onPlayerFaint
             });

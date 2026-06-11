@@ -3,8 +3,16 @@ import { GameObjects, Scene } from 'phaser';
 type MenuPanelConfig = {
     width: number;
     height: number;
-    title: string;
+    title?: string;
     depth: number;
+    backgroundColor?: number;
+    backgroundAlpha?: number;
+    borderColor?: number;
+    borderWidth?: number;
+    titleColor?: string;
+    titleStrokeColor?: string;
+    titleStrokeThickness?: number;
+    titleFontSize?: number;
 };
 
 export class MenuPanel {
@@ -14,24 +22,35 @@ export class MenuPanel {
         private scene: Scene,
         private config: MenuPanelConfig
     ) {
+        const backgroundColor = config.backgroundColor ?? 0x1f2d24;
+        const backgroundAlpha = config.backgroundAlpha ?? 0.96;
+        const borderColor = config.borderColor ?? 0xe2a36f;
+        const borderWidth = config.borderWidth ?? 4;
+
         const background = scene.add.rectangle(
             0,
             0,
             config.width,
             config.height,
-            0x1f2d24,
-            0.96
-        ).setStrokeStyle(4, 0xe2a36f);
+            backgroundColor,
+            backgroundAlpha
+        ).setStrokeStyle(borderWidth, borderColor);
 
-        const title = scene.add.text(0, -config.height / 2 + 35, config.title, {
-            fontFamily: 'Arial Black',
-            fontSize: 24,
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4
-        }).setOrigin(0.5);
+        const menuObjects: GameObjects.GameObject[] = [background];
 
-        this.container = scene.add.container(0, 0, [background, title])
+        if (config.title) {
+            const title = scene.add.text(0, -config.height / 2 + 35, config.title, {
+                fontFamily: 'Arial Black',
+                fontSize: config.titleFontSize ?? 24,
+                color: config.titleColor ?? '#ffffff',
+                stroke: config.titleStrokeColor ?? '#000000',
+                strokeThickness: config.titleStrokeThickness ?? 4
+            }).setOrigin(0.5).setResolution(2);
+
+            menuObjects.push(title);
+        }
+
+        this.container = scene.add.container(0, 0, menuObjects)
             .setScrollFactor(0)
             .setDepth(config.depth);
     }
@@ -60,12 +79,12 @@ export class MenuPanel {
         return this.container.visible && this.container.getBounds().contains(x, y);
     }
 
-    center(scaleToFit = false): void {
+    center(scaleToFit = false, offsetY = 0): void {
         const { width, height } = this.scene.scale;
         const scale = scaleToFit
             ? Math.min(1, (width - 24) / this.config.width, (height - 24) / this.config.height)
             : 1;
 
-        this.container.setPosition(width / 2, height / 2).setScale(scale);
+        this.container.setPosition(width / 2, height / 2 + offsetY).setScale(scale);
     }
 }

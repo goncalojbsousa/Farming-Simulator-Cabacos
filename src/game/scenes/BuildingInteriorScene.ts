@@ -3,6 +3,7 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
@@ -21,6 +22,7 @@ export type BuildingInteriorData = {
     inventory: InventoryService;
     money: MoneyService;
     gameTime: TimeService;
+    landOwnership: LandOwnershipService;
     energy: EnergyService;
     onPlayerFaint: () => void;
 };
@@ -33,6 +35,7 @@ export class BuildingInteriorScene extends Scene {
     protected inventory: InventoryService;
     protected money: MoneyService;
     protected gameTime: TimeService;
+    protected landOwnership: LandOwnershipService;
     protected energy: EnergyService;
     protected hud: GameHud;
     protected screenFade: ScreenFade;
@@ -51,6 +54,7 @@ export class BuildingInteriorScene extends Scene {
         this.inventory = data.inventory;
         this.money = data.money;
         this.gameTime = data.gameTime;
+        this.landOwnership = data.landOwnership;
         this.energy = data.energy;
         this.onPlayerFaint = data.onPlayerFaint;
     }
@@ -129,8 +133,22 @@ export class BuildingInteriorScene extends Scene {
     }
 
     protected getInteractionZone(objectName: string): Geom.Rectangle {
-        const object = this.map.getObjectLayer('Interactions')!.objects
-            .find((object) => object.name?.trim() === objectName)!;
+        const zone = this.getOptionalInteractionZone(objectName);
+
+        if (!zone) {
+            throw new Error(`Interaction zone not found: ${objectName}`);
+        }
+
+        return zone;
+    }
+
+    protected getOptionalInteractionZone(objectName: string): Geom.Rectangle | undefined {
+        const object = this.map.getObjectLayer('Interactions')?.objects
+            .find((object) => object.name?.trim() === objectName);
+
+        if (!object) {
+            return undefined;
+        }
 
         return new Geom.Rectangle(
             object.x,
