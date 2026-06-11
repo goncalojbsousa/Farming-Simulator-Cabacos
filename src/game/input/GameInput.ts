@@ -8,6 +8,7 @@ export class GameInput {
     private inventoryKey: Input.Keyboard.Key;
     private interactKey: Input.Keyboard.Key;
     private escapeKey: Input.Keyboard.Key;
+    private nextDayKey: Input.Keyboard.Key;
     private hotbarKeys: Input.Keyboard.Key[];
     private mouseWasDown = false;
 
@@ -23,6 +24,7 @@ export class GameInput {
         this.inventoryKey = keyboard.addKey('I');
         this.interactKey = keyboard.addKey('E');
         this.escapeKey = keyboard.addKey('ESC');
+        this.nextDayKey = keyboard.addKey('N');
         this.hotbarKeys = [
             keyboard.addKey('ONE'),
             keyboard.addKey('TWO'),
@@ -67,6 +69,10 @@ export class GameInput {
 
     escapePressed(): boolean {
         return Input.Keyboard.JustDown(this.escapeKey);
+    }
+
+    nextDayPressed(): boolean {
+        return Input.Keyboard.JustDown(this.nextDayKey);
     }
 
     getHotbarSlotPressed(): number | null {
