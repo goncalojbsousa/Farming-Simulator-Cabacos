@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 import { startingSeedIds, startingToolIds } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
+import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
@@ -21,6 +22,7 @@ export class Game extends Scene {
     private inventory: InventoryService;
     private money: MoneyService;
     private gameTime: TimeService;
+    private energy: EnergyService;
     private hud: GameHud;
     private farmingSystem: FarmingSystem;
     private buildingEntrances: BuildingEntranceSystem;
@@ -39,6 +41,7 @@ export class Game extends Scene {
         this.inventory = new InventoryService(16);
         this.money = new MoneyService(100);
         this.gameTime = new TimeService();
+        this.energy = new EnergyService();
         this.addStartingItems();
         this.createNightOverlay();
 
@@ -47,6 +50,7 @@ export class Game extends Scene {
             this.inventory,
             this.money,
             this.gameTime,
+            this.energy,
             () => false
         );
         this.buildingEntrances = new BuildingEntranceSystem(
@@ -56,6 +60,7 @@ export class Game extends Scene {
             this.inventory,
             this.money,
             this.gameTime,
+            this.energy,
             () => this.faintPlayerInsideBuilding()
         );
 
@@ -68,6 +73,7 @@ export class Game extends Scene {
             uiCamera: this.uiCamera,
             player: this.gameWorld.player,
             inventory: this.inventory,
+            energy: this.energy,
             farmLayer: this.gameWorld.farmLayer,
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverUi: (pointer) =>
@@ -195,6 +201,7 @@ export class Game extends Scene {
         );
 
         this.money.spend(moneyLost);
+        this.energy.restoreAfterFaint();
         this.gameTime.setMorningTime();
         this.updateNightOverlay();
         this.gameWorld.movePlayerToSpawn();
