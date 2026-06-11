@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { startingSeedIds, startingToolIds } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
+import { LandOwnershipService } from '../services/LandOwnershipService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
 import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
@@ -15,6 +16,7 @@ export class Game extends Scene {
     private inventory: InventoryService;
     private money: MoneyService;
     private gameTime: TimeService;
+    private landOwnership: LandOwnershipService;
     private hud: GameHud;
     private farmingSystem: FarmingSystem;
     private buildingEntrances: BuildingEntranceSystem;
@@ -25,7 +27,8 @@ export class Game extends Scene {
     }
 
     create(): void {
-        this.gameWorld = new GameWorld(this);
+        this.landOwnership = new LandOwnershipService();
+        this.gameWorld = new GameWorld(this, this.landOwnership);
         this.gameInput = new GameInput(this);
         this.inventory = new InventoryService(16);
         this.money = new MoneyService(100);
@@ -45,7 +48,8 @@ export class Game extends Scene {
             this.gameWorld.player,
             this.inventory,
             this.money,
-            this.gameTime
+            this.gameTime,
+            this.landOwnership
         );
 
         this.createUiCamera();
@@ -55,7 +59,7 @@ export class Game extends Scene {
             uiCamera: this.uiCamera,
             player: this.gameWorld.player,
             inventory: this.inventory,
-            farmLayer: this.gameWorld.farmLayer,
+            getAvailableFarmLayers: () => this.gameWorld.getAvailableFarmLayers(),
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverUi: (pointer) =>
                 this.hud.containsInteractiveElement(pointer.x, pointer.y),
@@ -113,6 +117,7 @@ export class Game extends Scene {
     }
 
     private refreshUi(): void {
+        this.gameWorld.applyLandOwnership();
         this.hud.refresh();
     }
 }

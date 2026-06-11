@@ -2,6 +2,7 @@ import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
+import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
@@ -30,7 +31,8 @@ export class BuildingEntranceSystem {
         private player: Player,
         private inventory: InventoryService,
         private money: MoneyService,
-        private gameTime: TimeService
+        private gameTime: TimeService,
+        private landOwnership: LandOwnershipService
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
 
@@ -71,7 +73,8 @@ export class BuildingEntranceSystem {
             this.scene.scene.launch(entrance.sceneKey, {
                 inventory: this.inventory,
                 money: this.money,
-                gameTime: this.gameTime
+                gameTime: this.gameTime,
+                landOwnership: this.landOwnership
             });
         }
     }
