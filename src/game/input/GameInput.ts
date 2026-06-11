@@ -6,6 +6,7 @@ export class GameInput {
     private inventoryKey: Phaser.Input.Keyboard.Key;
     private interactKey: Phaser.Input.Keyboard.Key;
     private escapeKey: Phaser.Input.Keyboard.Key;
+    private nextDayKey: Phaser.Input.Keyboard.Key;
     private hotbarKeys: Phaser.Input.Keyboard.Key[];
     private mouseWasDown = false;
 
@@ -21,6 +22,7 @@ export class GameInput {
         this.inventoryKey = keyboard.addKey('I');
         this.interactKey = keyboard.addKey('E');
         this.escapeKey = keyboard.addKey('ESC');
+        this.nextDayKey = keyboard.addKey('N');
         this.hotbarKeys = [
             keyboard.addKey('ONE'),
             keyboard.addKey('TWO'),
@@ -65,6 +67,10 @@ export class GameInput {
 
     escapePressed(): boolean {
         return Phaser.Input.Keyboard.JustDown(this.escapeKey);
+    }
+
+    nextDayPressed(): boolean {
+        return Phaser.Input.Keyboard.JustDown(this.nextDayKey);
     }
 
     getHotbarSlotPressed(): number | null {

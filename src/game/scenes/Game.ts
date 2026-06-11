@@ -71,6 +71,11 @@ export class Game extends Scene {
 
     update(time: number): void {
         this.gameInput.update();
+
+        if (this.gameInput.nextDayPressed()) {
+            this.gameTime.advanceDay();
+        }
+
         this.gameTime.update(time);
         this.timeDisplay.refresh();
         this.gameWorld.player.update(this.gameInput);
