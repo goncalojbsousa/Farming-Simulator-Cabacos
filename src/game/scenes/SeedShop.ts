@@ -1,24 +1,13 @@
 import { Geom } from 'phaser';
-import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
-import { MoneyService } from '../services/MoneyService';
-import { MoneyDisplay } from '../ui/MoneyDisplay';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 import { SeedShopPanel } from '../ui/SeedShopPanel';
 import { BuildingInteriorScene } from './BuildingInteriorScene';
 
-type SeedShopData = {
-    inventory: InventoryService;
-    money: MoneyService;
-};
-
 export class SeedShop extends BuildingInteriorScene {
-    private inventory: InventoryService;
-    private money: MoneyService;
     private shopZone: Geom.Rectangle;
     private shopPrompt: InteractionPrompt;
     private shopPanel: SeedShopPanel;
-    private moneyDisplay: MoneyDisplay;
 
     constructor() {
         super({
@@ -29,41 +18,32 @@ export class SeedShop extends BuildingInteriorScene {
         });
     }
 
-    init(data: SeedShopData): void {
-        this.inventory = data.inventory;
-        this.money = data.money;
-    }
-
     create(): void {
         super.create();
 
         this.shopZone = this.getInteractionZone('seed_shop');
         this.shopPrompt = this.createPrompt(translate('buySeeds'));
-        this.moneyDisplay = new MoneyDisplay(this, this.money);
         this.shopPanel = new SeedShopPanel(
             this,
             this.inventory,
             this.money,
-            () => this.moneyDisplay.refresh()
+            () => this.hud.refresh()
         );
 
-        this.setupUi([
-            ...this.moneyDisplay.getUiObjects(),
-            ...this.shopPanel.getUiObjects()
-        ]);
+        this.registerUiObjects(this.shopPanel.getUiObjects());
     }
 
-    update(): void {
-        super.update();
+    update(time: number): void {
+        super.update(time);
 
-        const canShop = this.isPlayerInside(this.shopZone);
-        if (canShop && !this.shopPanel.isOpen()) {
+        const isPlayerInShopZone = this.isPlayerInside(this.shopZone);
+        if (isPlayerInShopZone && !this.shopPanel.isOpen()) {
             this.shopPrompt.show();
         } else {
             this.shopPrompt.hide();
         }
 
-        if (!canShop) {
+        if (!isPlayerInShopZone) {
             this.shopPanel.close();
         } else if (this.gameInput.interactPressed()) {
             this.shopPanel.toggle();
@@ -74,11 +54,11 @@ export class SeedShop extends BuildingInteriorScene {
         }
     }
 
-    protected interactionIsBlocked(): boolean {
+    protected isGameplayInteractionBlocked(): boolean {
         return this.shopPanel?.isOpen() ?? false;
     }
 
-    protected layoutUi(): void {
+    protected layoutInteriorUi(): void {
         this.shopPanel.layout();
     }
 }
