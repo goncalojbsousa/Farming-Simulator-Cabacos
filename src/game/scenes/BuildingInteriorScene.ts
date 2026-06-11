@@ -1,6 +1,7 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
@@ -20,6 +21,7 @@ export type BuildingInteriorData = {
     inventory: InventoryService;
     money: MoneyService;
     gameTime: TimeService;
+    energy: EnergyService;
     onPlayerFaint: () => void;
 };
 
@@ -31,6 +33,7 @@ export class BuildingInteriorScene extends Scene {
     protected inventory: InventoryService;
     protected money: MoneyService;
     protected gameTime: TimeService;
+    protected energy: EnergyService;
     protected hud: GameHud;
     protected screenFade: ScreenFade;
     protected faintTransitionActive = false;
@@ -48,6 +51,7 @@ export class BuildingInteriorScene extends Scene {
         this.inventory = data.inventory;
         this.money = data.money;
         this.gameTime = data.gameTime;
+        this.energy = data.energy;
         this.onPlayerFaint = data.onPlayerFaint;
     }
 
@@ -76,6 +80,7 @@ export class BuildingInteriorScene extends Scene {
             this.inventory,
             this.money,
             this.gameTime,
+            this.energy,
             () => this.isGameplayInteractionBlocked()
         );
         this.registerUiObjects(this.hud.getUiObjects());

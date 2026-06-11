@@ -1,6 +1,7 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
@@ -31,6 +32,7 @@ export class BuildingEntranceSystem {
         private inventory: InventoryService,
         private money: MoneyService,
         private gameTime: TimeService,
+        private energy: EnergyService,
         private onPlayerFaint: () => void
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
@@ -73,6 +75,7 @@ export class BuildingEntranceSystem {
                 inventory: this.inventory,
                 money: this.money,
                 gameTime: this.gameTime,
+                energy: this.energy,
                 onPlayerFaint: this.onPlayerFaint
             });
         }

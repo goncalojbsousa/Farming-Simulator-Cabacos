@@ -43,7 +43,11 @@ export class HouseInterior extends BuildingInteriorScene {
             this.sleepTransitionActive = true;
             this.bedPrompt.hide();
             this.screenFade.play(
-                () => this.gameTime.startNextDay(),
+                () => {
+                    this.gameTime.startNextDay();
+                    this.energy.restoreAfterSleep();
+                    this.hud.refresh();
+                },
                 () => this.sleepTransitionActive = false
             );
         }
