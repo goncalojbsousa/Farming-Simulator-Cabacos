@@ -11,6 +11,9 @@ import { ScreenFade } from '../ui/ScreenFade';
 import { GameWorld } from '../world/GameWorld';
 
 const faintMoneyLossRate = 0.25;
+const nightStartHour = 17;
+const fullyDarkHour = 22;
+const maxNightAlpha = 0.6;
 
 export class Game extends Scene {
     private gameWorld: GameWorld;
@@ -23,6 +26,7 @@ export class Game extends Scene {
     private buildingEntrances: BuildingEntranceSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private screenFade: ScreenFade;
+    private nightOverlay: Phaser.GameObjects.Rectangle;
     private faintTransitionActive = false;
 
     constructor() {
@@ -36,6 +40,7 @@ export class Game extends Scene {
         this.money = new MoneyService(100);
         this.gameTime = new TimeService();
         this.addStartingItems();
+        this.createNightOverlay();
 
         this.hud = new GameHud(
             this,
@@ -91,6 +96,7 @@ export class Game extends Scene {
         }
 
         this.gameTime.update(time);
+        this.updateNightOverlay();
 
         if (this.gameTime.isFaintTime()) {
             this.faintTransitionActive = true;
@@ -119,6 +125,36 @@ export class Game extends Scene {
         this.gameWorld.camera.ignore(uiObjects);
     }
 
+    private createNightOverlay(): void {
+        this.nightOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000)
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setDepth(100);
+        this.gameWorld.worldObjects.push(this.nightOverlay);
+        this.layoutNightOverlay();
+        this.updateNightOverlay();
+    }
+
+    private updateNightOverlay(): void {
+        const currentHour = this.gameTime.hour + this.gameTime.minute / 60;
+        let darkness = 0;
+
+        if (currentHour >= nightStartHour) {
+            darkness = Math.min(
+                (currentHour - nightStartHour) / (fullyDarkHour - nightStartHour),
+                1
+            );
+        } else if (currentHour < 2) {
+            darkness = 1;
+        }
+
+        this.nightOverlay.setAlpha(darkness * maxNightAlpha);
+    }
+
+    private layoutNightOverlay(): void {
+        this.nightOverlay.setSize(this.scale.width, this.scale.height);
+    }
+
     private addStartingItems(): void {
         for (const toolId of startingToolIds) {
             this.inventory.addItem(toolId, 1);
@@ -131,6 +167,7 @@ export class Game extends Scene {
 
     private resizeGame(): void {
         this.gameWorld.resize();
+        this.layoutNightOverlay();
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.hud.layout();
         this.buildingEntrances.layout();
@@ -139,6 +176,7 @@ export class Game extends Scene {
 
     private onWake(): void {
         this.hud.refresh();
+        this.updateNightOverlay();
 
         if (this.faintTransitionActive) {
             this.screenFade.fadeOut(() => this.faintTransitionActive = false);
@@ -158,6 +196,7 @@ export class Game extends Scene {
 
         this.money.spend(moneyLost);
         this.gameTime.setMorningTime();
+        this.updateNightOverlay();
         this.gameWorld.movePlayerToSpawn();
         this.hud.refresh();
     }
