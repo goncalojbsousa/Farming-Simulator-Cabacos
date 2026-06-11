@@ -1,4 +1,4 @@
-const dayDuration = 60000;
+const dayDuration = 130000;
 const faintHour = 2;
 const morningHour = 7;
 const minutesPerDay = 24 * 60;
