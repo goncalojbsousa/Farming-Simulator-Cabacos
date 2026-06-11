@@ -23,9 +23,10 @@ type FarmingConfig = {
 
 type PlantedCrop = {
     image: Phaser.GameObjects.Image;
+    tileKey: string;
     cropId: CropId;
-    growthDays: number;
-    plantedDay: number;
+    stageGrowthDays: readonly number[];
+    stageStartedDay: number;
     stage: CropStage;
 };
 
@@ -77,8 +78,13 @@ export class FarmingSystem {
             this.game.inventory.selectedSlotIndex
         ];
 
-        if (selectedSlot.itemId === 'shovel') {
+        if (selectedSlot.itemId === 'hoe') {
             this.tillTile(tile);
+            return;
+        }
+
+        if (selectedSlot.itemId === 'sickle') {
+            this.harvestCrop(tile);
             return;
         }
 
@@ -111,26 +117,54 @@ export class FarmingSystem {
         this.plantedTiles.add(`${tile.x},${tile.y}`);
         this.crops.push({
             image: crop,
+            tileKey: `${tile.x},${tile.y}`,
             cropId: seed.cropId,
-            growthDays: seed.growthDays,
-            plantedDay: currentDay,
+            stageGrowthDays: seed.stageGrowthDays,
+            stageStartedDay: currentDay,
             stage: 1,
         });
         this.game.refreshInventory();
     }
 
+    private harvestCrop(tile: Phaser.Tilemaps.Tile): void {
+        const tileKey = `${tile.x},${tile.y}`;
+        const cropIndex = this.crops.findIndex((crop) =>
+            crop.tileKey === tileKey && crop.stage === 4
+        );
+
+        if (cropIndex === -1) {
+            return;
+        }
+
+        const crop = this.crops[cropIndex];
+        const harvestItemId = `${crop.cropId}Harvest`;
+
+        if (!this.game.inventory.addItem(harvestItemId, 1)) {
+            return;
+        }
+
+        crop.image.destroy();
+        this.crops.splice(cropIndex, 1);
+        this.plantedTiles.delete(tileKey);
+        this.game.refreshInventory();
+    }
+
     private growCrops(currentDay: number): void {
         for (const crop of this.crops) {
-            const daysGrowing = currentDay - crop.plantedDay;
-            const newStage = Math.min(
-                4,
-                Math.floor(daysGrowing * 3 / crop.growthDays) + 1
-            );
-
-            if (newStage !== crop.stage) {
-                crop.stage = newStage;
-                crop.image.setTexture(getCropTextureKey(crop.cropId, crop.stage));
+            if (crop.stage === 4) {
+                continue;
             }
+
+            const daysInCurrentStage = currentDay - crop.stageStartedDay;
+            const daysNeeded = crop.stageGrowthDays[crop.stage - 1];
+
+            if (daysInCurrentStage < daysNeeded) {
+                continue;
+            }
+
+            crop.stage++;
+            crop.stageStartedDay = currentDay;
+            crop.image.setTexture(getCropTextureKey(crop.cropId, crop.stage));
         }
     }
 
@@ -157,8 +191,14 @@ export class FarmingSystem {
         ].itemId;
         const key = `${tile.x},${tile.y}`;
 
-        if (itemId === 'shovel') {
+        if (itemId === 'hoe') {
             return !this.tilledTiles.has(key);
+        }
+
+        if (itemId === 'sickle') {
+            return this.crops.some((crop) =>
+                crop.tileKey === key && crop.stage === 4
+            );
         }
 
         const item = itemId ? getItemById(itemId) : null;

@@ -19,31 +19,31 @@ export type SeedItem = GameItem & {
     type: 'seed';
     cropId: CropId;
     buyPrice: number;
-    growthDays: number;
+    stageGrowthDays: readonly number[];
 };
 
 const tools = [
     { id: 'axe', nameKey: 'itemAxe' },
-    { id: 'hammer', nameKey: 'itemHammer' },
-    { id: 'pickaxe', nameKey: 'itemPickaxe' },
+    { id: 'hoe', nameKey: 'itemHoe' },
     { id: 'rod', nameKey: 'itemRod' },
+    { id: 'sickle', nameKey: 'itemSickle' },
     { id: 'shovel', nameKey: 'itemShovel' },
     { id: 'sword', nameKey: 'itemSword' }
 ] as const;
 
 // To add a crop, add one line here and its images to the assets folder.
 export const crops = [
-    { id: 'beetroot', seedNameKey: 'seedBeetroot', harvestNameKey: 'cropBeetroot', buyPrice: 8, sellPrice: 12, growthDays: 6 },
-    { id: 'cabbage', seedNameKey: 'seedCabbage', harvestNameKey: 'cropCabbage', buyPrice: 10, sellPrice: 15, growthDays: 9 },
-    { id: 'carrot', seedNameKey: 'seedCarrot', harvestNameKey: 'cropCarrot', buyPrice: 5, sellPrice: 8, growthDays: 4 },
-    { id: 'cauliflower', seedNameKey: 'seedCauliflower', harvestNameKey: 'cropCauliflower', buyPrice: 12, sellPrice: 18, growthDays: 12 },
-    { id: 'kale', seedNameKey: 'seedKale', harvestNameKey: 'cropKale', buyPrice: 7, sellPrice: 11, growthDays: 6 },
-    { id: 'parsnip', seedNameKey: 'seedParsnip', harvestNameKey: 'cropParsnip', buyPrice: 5, sellPrice: 8, growthDays: 4 },
-    { id: 'potato', seedNameKey: 'seedPotato', harvestNameKey: 'cropPotato', buyPrice: 6, sellPrice: 10, growthDays: 6 },
-    { id: 'pumpkin', seedNameKey: 'seedPumpkin', harvestNameKey: 'cropPumpkin', buyPrice: 15, sellPrice: 24, growthDays: 13 },
-    { id: 'radish', seedNameKey: 'seedRadish', harvestNameKey: 'cropRadish', buyPrice: 6, sellPrice: 10, growthDays: 6 },
-    { id: 'sunflower', seedNameKey: 'seedSunflower', harvestNameKey: 'cropSunflower', buyPrice: 10, sellPrice: 16, growthDays: 8 },
-    { id: 'wheat', seedNameKey: 'seedWheat', harvestNameKey: 'cropWheat', buyPrice: 4, sellPrice: 7, growthDays: 4 }
+    { id: 'beetroot', seedNameKey: 'seedBeetroot', harvestNameKey: 'cropBeetroot', buyPrice: 8, sellPrice: 12, stageGrowthDays: [2, 2, 2] },
+    { id: 'cabbage', seedNameKey: 'seedCabbage', harvestNameKey: 'cropCabbage', buyPrice: 10, sellPrice: 15, stageGrowthDays: [3, 3, 3] },
+    { id: 'carrot', seedNameKey: 'seedCarrot', harvestNameKey: 'cropCarrot', buyPrice: 5, sellPrice: 8, stageGrowthDays: [2, 2, 2] },
+    { id: 'cauliflower', seedNameKey: 'seedCauliflower', harvestNameKey: 'cropCauliflower', buyPrice: 12, sellPrice: 18, stageGrowthDays: [4, 4, 4] },
+    { id: 'kale', seedNameKey: 'seedKale', harvestNameKey: 'cropKale', buyPrice: 7, sellPrice: 11, stageGrowthDays: [2, 2, 2] },
+    { id: 'parsnip', seedNameKey: 'seedParsnip', harvestNameKey: 'cropParsnip', buyPrice: 5, sellPrice: 8, stageGrowthDays: [2, 2, 2] },
+    { id: 'potato', seedNameKey: 'seedPotato', harvestNameKey: 'cropPotato', buyPrice: 6, sellPrice: 10, stageGrowthDays: [2, 2, 2] },
+    { id: 'pumpkin', seedNameKey: 'seedPumpkin', harvestNameKey: 'cropPumpkin', buyPrice: 15, sellPrice: 24, stageGrowthDays: [5, 4, 4] },
+    { id: 'radish', seedNameKey: 'seedRadish', harvestNameKey: 'cropRadish', buyPrice: 6, sellPrice: 10, stageGrowthDays: [2, 2, 2] },
+    { id: 'sunflower', seedNameKey: 'seedSunflower', harvestNameKey: 'cropSunflower', buyPrice: 10, sellPrice: 16, stageGrowthDays: [3, 3, 2] },
+    { id: 'wheat', seedNameKey: 'seedWheat', harvestNameKey: 'cropWheat', buyPrice: 4, sellPrice: 7, stageGrowthDays: [2, 2, 2] }
 ] as const;
 
 const toolItems: GameItem[] = tools.map((tool) => ({
@@ -63,7 +63,7 @@ const cropItems: GameItem[] = crops.flatMap((crop) => [
         cropId: crop.id,
         maxStackSize: 99,
         buyPrice: crop.buyPrice,
-        growthDays: crop.growthDays
+        stageGrowthDays: crop.stageGrowthDays
     },
     {
         id: `${crop.id}Harvest`,
@@ -94,5 +94,5 @@ export function getCropAssetPath(cropId: CropId, stage: CropStage): string {
     return `plantation/crops/${getCropTextureKey(cropId, stage)}.png`;
 }
 
-export const startingToolIds = ['axe', 'pickaxe', 'shovel', 'hammer', 'rod', 'sword'];
-export const startingSeedIds = ['carrotSeed', 'potatoSeed', 'wheatSeed', 'pumpkinSeed'];
+export const startingToolIds = ['sickle', 'hoe'];
+export const startingSeedIds = ['carrotSeed', 'pumpkinSeed'];
