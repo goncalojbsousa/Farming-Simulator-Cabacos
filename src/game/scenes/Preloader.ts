@@ -30,6 +30,8 @@ export class Preloader extends Scene {
     preload() {
         this.load.setPath('assets');
         this.load.image('logo', 'logo.png');
+        this.load.image('mainMenuBackground', 'main_menu_background.png');
+        this.load.image('mainMenuLogo', 'logo_quinta_cabacos.png');
         this.load.image('hotbarSelector', 'inventory/hotbar_selector.png');
         this.load.spritesheet('inventorySlot', 'inventory/inventorySlot.png', {
             frameWidth: 20,
@@ -51,9 +53,9 @@ export class Preloader extends Scene {
 
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');
         this.load.tilemapTiledJSON('houseInteriorMap', 'tilemap/Casa_player.tmj');
-        this.load.image('houseInteriorImage', 'tilemap/house_interior_sunnyside_style_384x288.png');
+        this.load.image('houseInteriorImage', 'tilemap/house_interior_sem_fundo.png');
         this.load.tilemapTiledJSON('cropMarketMap', 'tilemap/Crop_market.tmj');
-        this.load.image('cropMarketImage', 'tilemap/crop_market_sunnyside_style_384x288_wide.png');
+        this.load.image('cropMarketImage', 'tilemap/crop_market_sem_fundo.png');
         this.load.tilemapTiledJSON('seedShopMap', 'tilemap/Seed_shop.tmj');
         this.load.image('seedShopImage', 'tilemap/seed_shop_sunnyside_style_384x288.png');
         this.load.tilemapTiledJSON('townHallMap', 'tilemap/Town_hall.tmj');
