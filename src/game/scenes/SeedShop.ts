@@ -36,6 +36,10 @@ export class SeedShop extends BuildingInteriorScene {
     update(time: number): void {
         super.update(time);
 
+        if (this.faintTransitionActive) {
+            return;
+        }
+
         const isPlayerInShopZone = this.isPlayerInside(this.shopZone);
         if (isPlayerInShopZone && !this.shopPanel.isOpen()) {
             this.shopPrompt.show();

@@ -7,7 +7,12 @@ import {
 } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+
+const tillEnergyCost = 2;
+const plantEnergyCost = 1;
+const harvestEnergyCost = 2;
 
 type FarmingConfig = {
     scene: Phaser.Scene;
@@ -16,6 +21,7 @@ type FarmingConfig = {
     player: Player;
     inventory: InventoryService;
     getAvailableFarmLayers: () => Phaser.Tilemaps.TilemapLayer[];
+    energy: EnergyService;
     worldObjects: Phaser.GameObjects.GameObject[];
     isPointerOverUi: (pointer: Phaser.Input.Pointer) => boolean;
     refreshInventory: () => void;
@@ -85,12 +91,26 @@ export class FarmingSystem {
         ];
 
         if (selectedSlot.itemId === 'hoe') {
+            if (!this.game.energy.hasEnergy(tillEnergyCost)) {
+                return;
+            }
+
             this.tillTile(selectedFarmTile);
+            this.game.energy.spend(tillEnergyCost);
+            this.game.refreshInventory();
             return;
         }
 
         if (selectedSlot.itemId === 'sickle') {
+            if (!this.game.energy.hasEnergy(harvestEnergyCost)) {
+                return;
+            }
+
             this.harvestCrop(selectedFarmTile);
+            return;
+        }
+
+        if (!this.game.energy.hasEnergy(plantEnergyCost)) {
             return;
         }
 
@@ -136,6 +156,7 @@ export class FarmingSystem {
             stageStartedDay: currentDay,
             stage: 1,
         });
+        this.game.energy.spend(plantEnergyCost);
         this.game.refreshInventory();
     }
 
@@ -159,6 +180,7 @@ export class FarmingSystem {
         crop.image.destroy();
         this.crops.splice(cropIndex, 1);
         this.plantedTiles.delete(tileKey);
+        this.game.energy.spend(harvestEnergyCost);
         this.game.refreshInventory();
     }
 
