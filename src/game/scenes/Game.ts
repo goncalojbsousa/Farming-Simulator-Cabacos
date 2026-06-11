@@ -6,8 +6,10 @@ import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { MoneyService } from '../services/MoneyService';
 import { TimeService } from '../services/TimeService';
+import { WateringCanService } from '../services/WateringCanService';
 import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
+import { WateringCanSystem } from '../systems/WateringCanSystem';
 import { GameHud } from '../ui/GameHud';
 import { ScreenFade } from '../ui/ScreenFade';
 import { GameWorld } from '../world/GameWorld';
@@ -25,9 +27,11 @@ export class Game extends Scene {
     private gameTime: TimeService;
     private landOwnership: LandOwnershipService;
     private energy: EnergyService;
+    private wateringCan: WateringCanService;
     private hud: GameHud;
     private farmingSystem: FarmingSystem;
     private buildingEntrances: BuildingEntranceSystem;
+    private wateringCanSystem: WateringCanSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private screenFade: ScreenFade;
     private nightOverlay: Phaser.GameObjects.Rectangle;
@@ -45,6 +49,7 @@ export class Game extends Scene {
         this.money = new MoneyService(100);
         this.gameTime = new TimeService();
         this.energy = new EnergyService();
+        this.wateringCan = new WateringCanService();
         this.addStartingItems();
         this.createNightOverlay();
 
@@ -67,6 +72,13 @@ export class Game extends Scene {
             this.energy,
             () => this.faintPlayerInsideBuilding()
         );
+        this.wateringCanSystem = new WateringCanSystem({
+            scene: this,
+            map: this.gameWorld.map,
+            player: this.gameWorld.player,
+            inventory: this.inventory,
+            wateringCan: this.wateringCan
+        });
 
         this.createUiCamera();
         this.screenFade = new ScreenFade(this);
@@ -79,6 +91,7 @@ export class Game extends Scene {
             inventory: this.inventory,
             getAvailableFarmLayers: () => this.gameWorld.getAvailableFarmLayers(),
             energy: this.energy,
+            wateringCan: this.wateringCan,
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverUi: (pointer) =>
                 this.hud.containsInteractiveElement(pointer.x, pointer.y),
@@ -121,13 +134,15 @@ export class Game extends Scene {
         this.gameWorld.player.update(this.gameInput);
         this.farmingSystem.update(this.gameInput, this.gameTime.day);
         this.hud.update(this.gameInput);
+        this.wateringCanSystem.update(this.gameInput);
         this.buildingEntrances.update(this.gameInput);
     }
 
     private createUiCamera(): void {
         const uiObjects = [
             ...this.hud.getUiObjects(),
-            ...this.buildingEntrances.getUiObjects()
+            ...this.buildingEntrances.getUiObjects(),
+            ...this.wateringCanSystem.getUiObjects()
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -181,6 +196,7 @@ export class Game extends Scene {
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.hud.layout();
         this.buildingEntrances.layout();
+        this.wateringCanSystem.layout();
         this.screenFade.layout();
     }
 

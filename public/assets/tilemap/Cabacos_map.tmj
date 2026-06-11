@@ -1481,6 +1481,60 @@
                  "width":14.5,
                  "x":437.5,
                  "y":575.5
+                }, 
+                {
+                 "height":11.5,
+                 "id":260,
+                 "name":"well_2",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"fill_watering_can"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":31.5,
+                 "x":480.5,
+                 "y":489.5
+                }, 
+                {
+                 "height":9.5,
+                 "id":261,
+                 "name":"well_1",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"fill_watering_can"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":31,
+                 "x":848.5,
+                 "y":473
+                }, 
+                {
+                 "height":10,
+                 "id":262,
+                 "name":"well_3",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"fill_watering_can"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":319.5,
+                 "y":185
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1489,7 +1543,7 @@
          "y":0
         }],
  "nextlayerid":28,
- "nextobjectid":260,
+ "nextobjectid":263,
  "orientation":"orthogonal",
  "properties":[
         {

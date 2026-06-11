@@ -9,10 +9,12 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+import { WateringCanService } from '../services/WateringCanService';
 
 const tillEnergyCost = 2;
 const plantEnergyCost = 1;
 const harvestEnergyCost = 2;
+const waterEnergyCost = 1;
 const tilledSoilDuration = 2;
 
 type FarmingConfig = {
@@ -23,6 +25,7 @@ type FarmingConfig = {
     inventory: InventoryService;
     getAvailableFarmLayers: () => Phaser.Tilemaps.TilemapLayer[];
     energy: EnergyService;
+    wateringCan: WateringCanService;
     worldObjects: Phaser.GameObjects.GameObject[];
     isPointerOverUi: (pointer: Phaser.Input.Pointer) => boolean;
     refreshInventory: () => void;
@@ -30,11 +33,13 @@ type FarmingConfig = {
 
 type PlantedCrop = {
     image: Phaser.GameObjects.Image;
+    wateredIndicator: Phaser.GameObjects.Container;
     tileKey: string;
     cropId: CropId;
     stageGrowthDays: readonly number[];
-    stageStartedDay: number;
     stage: CropStage;
+    wateredDaysInCurrentStage: Set<number>;
+    lastWateredDay: number | null;
 };
 
 type SelectedFarmTile = {
@@ -65,6 +70,7 @@ export class FarmingSystem {
 
         this.clearExpiredTilledTiles(currentDay);
         this.growCrops(currentDay);
+        this.updateWateredIndicators(currentDay);
 
         if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
             this.useSelectedItem(pointer, currentDay);
@@ -74,7 +80,7 @@ export class FarmingSystem {
 
         this.tileHighlight.clear();
 
-        if (!selectedFarmTile || !this.canUseSelectedItem(selectedFarmTile)) {
+        if (!selectedFarmTile || !this.canUseSelectedItem(selectedFarmTile, currentDay)) {
             return;
         }
 
@@ -89,7 +95,7 @@ export class FarmingSystem {
     private useSelectedItem(pointer: Phaser.Input.Pointer, currentDay: number): void {
         const selectedFarmTile = this.getTile(pointer);
 
-        if (!selectedFarmTile || !this.canUseSelectedItem(selectedFarmTile)) {
+        if (!selectedFarmTile || !this.canUseSelectedItem(selectedFarmTile, currentDay)) {
             return;
         }
 
@@ -114,6 +120,15 @@ export class FarmingSystem {
             }
 
             this.harvestCrop(selectedFarmTile);
+            return;
+        }
+
+        if (selectedSlot.itemId === 'wateringCan') {
+            if (!this.game.energy.hasEnergy(waterEnergyCost)) {
+                return;
+            }
+
+            this.waterCrop(selectedFarmTile, currentDay);
             return;
         }
 
@@ -155,19 +170,45 @@ export class FarmingSystem {
             tile.getCenterY() - 4,
             getCropTextureKey(seed.cropId, 1)
         ).setDepth(9);
+        const wateredIndicator = this.createWateredIndicator(
+            tile.getCenterX(),
+            tile.getCenterY()
+        );
 
         this.game.worldObjects.push(crop);
+        this.game.worldObjects.push(wateredIndicator);
         this.game.uiCamera.ignore(crop);
+        this.game.uiCamera.ignore(wateredIndicator);
         this.plantedTiles.add(tileKey);
         this.crops.push({
             image: crop,
+            wateredIndicator,
             tileKey,
             cropId: seed.cropId,
             stageGrowthDays: seed.stageGrowthDays,
-            stageStartedDay: currentDay,
             stage: 1,
+            wateredDaysInCurrentStage: new Set(),
+            lastWateredDay: null
         });
         this.game.energy.spend(plantEnergyCost);
+        this.game.refreshInventory();
+    }
+
+    private waterCrop(selectedFarmTile: SelectedFarmTile, currentDay: number): void {
+        const crop = this.getCropOnTile(selectedFarmTile);
+
+        if (!crop || crop.lastWateredDay === currentDay) {
+            return;
+        }
+
+        if (!this.game.wateringCan.useWater()) {
+            return;
+        }
+
+        crop.wateredDaysInCurrentStage.add(currentDay);
+        crop.lastWateredDay = currentDay;
+        crop.wateredIndicator.setVisible(true);
+        this.game.energy.spend(waterEnergyCost);
         this.game.refreshInventory();
     }
 
@@ -189,6 +230,7 @@ export class FarmingSystem {
         }
 
         crop.image.destroy();
+        crop.wateredIndicator.destroy();
         this.crops.splice(cropIndex, 1);
         this.plantedTiles.delete(tileKey);
         this.clearTilledTile(tileKey);
@@ -223,17 +265,34 @@ export class FarmingSystem {
                 continue;
             }
 
-            const daysInCurrentStage = currentDay - crop.stageStartedDay;
-            const daysNeeded = crop.stageGrowthDays[crop.stage - 1];
+            const wateredDaysNeeded = crop.stageGrowthDays[crop.stage - 1];
 
-            if (daysInCurrentStage < daysNeeded) {
+            if (crop.wateredDaysInCurrentStage.size < wateredDaysNeeded) {
                 continue;
             }
 
             crop.stage++;
-            crop.stageStartedDay = currentDay;
+            crop.wateredDaysInCurrentStage.clear();
             crop.image.setTexture(getCropTextureKey(crop.cropId, crop.stage));
         }
+    }
+
+    private updateWateredIndicators(currentDay: number): void {
+        for (const crop of this.crops) {
+            crop.wateredIndicator.setVisible(crop.lastWateredDay === currentDay);
+        }
+    }
+
+    private createWateredIndicator(x: number, y: number): Phaser.GameObjects.Container {
+        const wetSoil = this.game.scene.add.ellipse(0, 8, 15, 6, 0x36bff2, 0.42);
+        const wetCenter = this.game.scene.add.ellipse(0, 8, 8, 3, 0x9beaff, 0.35);
+        const smallShine = this.game.scene.add.circle(4, 6, 1.3, 0xffffff, 0.6);
+
+        return this.game.scene.add.container(x, y, [
+            wetSoil,
+            wetCenter,
+            smallShine
+        ]).setDepth(8.8).setVisible(false);
     }
 
     private getTile(pointer: Phaser.Input.Pointer): SelectedFarmTile | null {
@@ -263,7 +322,7 @@ export class FarmingSystem {
         return null;
     }
 
-    private canUseSelectedItem(selectedFarmTile: SelectedFarmTile): boolean {
+    private canUseSelectedItem(selectedFarmTile: SelectedFarmTile, currentDay: number): boolean {
         const itemId = this.game.inventory.slots[
             this.game.inventory.selectedSlotIndex
         ].itemId;
@@ -279,10 +338,25 @@ export class FarmingSystem {
             );
         }
 
+        if (itemId === 'wateringCan') {
+            const crop = this.getCropOnTile(selectedFarmTile);
+
+            return this.game.wateringCan.getWater() > 0
+                && !!crop
+                && crop.stage < 4
+                && crop.lastWateredDay !== currentDay;
+        }
+
         const item = itemId ? getItemById(itemId) : null;
         return item?.type === 'seed'
             && this.tilledTiles.has(key)
             && !this.plantedTiles.has(key);
+    }
+
+    private getCropOnTile(selectedFarmTile: SelectedFarmTile): PlantedCrop | undefined {
+        const tileKey = this.getTileKey(selectedFarmTile);
+
+        return this.crops.find((crop) => crop.tileKey === tileKey);
     }
 
     private getTileKey(selectedFarmTile: SelectedFarmTile): string {
