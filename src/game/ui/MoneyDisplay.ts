@@ -40,12 +40,12 @@ export class MoneyDisplay {
             strokeThickness: 3
         }).setOrigin(0, 0.5).setResolution(2);
 
-        this.amountText = scene.add.text(textX, 10, '', {
+        this.amountText = scene.add.text(textX, 7, '', {
             fontFamily: 'Arial Black',
-            fontSize: 19,
+            fontSize: 16,
             color: '#fff8df',
             stroke: '#1a100b',
-            strokeThickness: 4
+            strokeThickness: 3
         }).setOrigin(0, 0.5).setResolution(2);
 
         this.container = scene.add.container(cardX, cardY, [

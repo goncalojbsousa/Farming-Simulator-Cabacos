@@ -1,6 +1,7 @@
 import { GameObjects, Scene } from 'phaser';
 import { SeedItem } from '../data/ItemData';
 import { translate } from '../services/LanguageService';
+import { createTextButton } from './TextButton';
 
 const rowWidth = 500;
 const rowHeight = 29;
@@ -19,16 +20,6 @@ const readableDarkTextStyle = {
     fontStyle: 'bold',
     color: '#1f140b'
 };
-
-const buyButtonTextStyle = {
-    fontFamily: 'Verdana, Arial, sans-serif',
-    fontSize: 13,
-    fontStyle: 'bold',
-    color: '#fff8df'
-};
-
-const buyButtonNormalColor = 0x2f6d38;
-const buyButtonHoverColor = 0x3f8a46;
 
 export class SeedShopRow {
     readonly container: GameObjects.Container;
@@ -75,18 +66,15 @@ export class SeedShopRow {
     }
 
     private createBuyButton(scene: Scene, onBuy: () => void): GameObjects.Container {
-        const buttonBackground = scene.add.rectangle(buyButtonX, 0, 80, 23, buyButtonNormalColor)
-            .setStrokeStyle(2, 0x17351b)
-            .setInteractive({ useHandCursor: true });
-        const buttonLabel = scene.add.text(buyButtonX, 0, translate('buy'), buyButtonTextStyle)
-            .setOrigin(0.5)
-            .setResolution(3);
-
-        buttonBackground.on('pointerover', () => buttonBackground.setFillStyle(buyButtonHoverColor));
-        buttonBackground.on('pointerout', () => buttonBackground.setFillStyle(buyButtonNormalColor));
-        buttonBackground.on('pointerdown', onBuy);
-
-        return scene.add.container(0, 0, [buttonBackground, buttonLabel]);
+        return createTextButton(
+            scene,
+            buyButtonX,
+            0,
+            80,
+            25,
+            translate('buy'),
+            onBuy
+        );
     }
 
     private createCoinIcon(scene: Scene, x: number, y: number): GameObjects.Container {

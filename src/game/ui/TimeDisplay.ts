@@ -41,12 +41,12 @@ export class TimeDisplay {
             strokeThickness: 4
         }).setOrigin(0, 0.5).setResolution(2);
 
-        this.clockText = scene.add.text(textX, 10, '', {
+        this.clockText = scene.add.text(textX, 7, '', {
             fontFamily: 'Arial Black',
-            fontSize: 19,
+            fontSize: 16,
             color: '#ffffff',
             stroke: '#101824',
-            strokeThickness: 4
+            strokeThickness: 3
         }).setOrigin(0, 0.5).setResolution(2);
 
         this.container = scene.add.container(cardX, cardY, [

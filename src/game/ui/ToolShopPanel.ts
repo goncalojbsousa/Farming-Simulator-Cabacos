@@ -18,7 +18,7 @@ export class ToolShopPanel {
     private purchaseMessage: GameObjects.Text;
 
     constructor(
-        private scene: Scene,
+        scene: Scene,
         private inventory: InventoryService,
         private money: MoneyService,
         private onPurchase: () => void
@@ -27,22 +27,9 @@ export class ToolShopPanel {
             width: panelWidth,
             height: panelHeight,
             depth: 1200,
-            backgroundColor: 0x5a3822,
-            backgroundAlpha: 1,
-            borderColor: 0x332015,
-            borderWidth: 4
+            title: translate('toolShopTitle'),
+            closeButton: true
         });
-
-        const title = scene.add.text(0, -178, translate('toolShopTitle'), {
-            fontFamily: 'Arial Black',
-            fontSize: 26,
-            color: '#fff4d7',
-            stroke: '#1a100b',
-            strokeThickness: 5
-        }).setOrigin(0.5).setResolution(2);
-
-        const background = scene.add.rectangle(0, 10, 538, 320, 0xffefc5, 0.98)
-            .setStrokeStyle(3, 0xd39a3c);
 
         this.purchaseMessage = scene.add.text(0, messageY, '', {
             fontFamily: 'Arial Black',
@@ -54,10 +41,7 @@ export class ToolShopPanel {
             wordWrap: { width: 500 }
         }).setOrigin(0.5).setResolution(2);
 
-        this.menu.addContent(background);
-        this.menu.addContent(title);
         this.menu.addContent(this.purchaseMessage);
-        this.menu.addContent(this.createCloseButton());
 
         getToolShopItems().forEach((tool, index) => {
             const row = new ToolShopRow(
@@ -93,25 +77,6 @@ export class ToolShopPanel {
 
     getUiObjects(): GameObjects.GameObject[] {
         return [this.menu.container];
-    }
-
-    private createCloseButton(): GameObjects.Container {
-        const background = this.scene.add.rectangle(262, -178, 32, 30, 0x8d3d30)
-            .setStrokeStyle(2, 0xffe3a3)
-            .setInteractive({ useHandCursor: true });
-        const label = this.scene.add.text(262, -179, 'X', {
-            fontFamily: 'Arial Black',
-            fontSize: 17,
-            color: '#ffffff',
-            stroke: '#1a100b',
-            strokeThickness: 2
-        }).setOrigin(0.5).setResolution(2);
-
-        background.on('pointerover', () => background.setFillStyle(0xb84d38));
-        background.on('pointerout', () => background.setFillStyle(0x8d3d30));
-        background.on('pointerdown', () => this.close());
-
-        return this.scene.add.container(0, 0, [background, label]);
     }
 
     private buyTool(tool: ToolItem): void {

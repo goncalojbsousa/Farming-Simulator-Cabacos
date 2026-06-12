@@ -1,6 +1,7 @@
 import { GameObjects, Scene } from 'phaser';
 import { ToolItem } from '../data/ItemData';
 import { translate } from '../services/LanguageService';
+import { createTextButton } from './TextButton';
 
 const rowWidth = 500;
 const rowHeight = 34;
@@ -47,20 +48,14 @@ export class ToolShopRow {
     }
 
     private createBuyButton(scene: Scene, onBuy: () => void): GameObjects.Container {
-        const background = scene.add.rectangle(buyButtonX, 0, 80, 24, 0x2f6d38)
-            .setStrokeStyle(2, 0x17351b)
-            .setInteractive({ useHandCursor: true });
-        const label = scene.add.text(buyButtonX, 0, translate('buy'), {
-            fontFamily: 'Verdana, Arial, sans-serif',
-            fontSize: 13,
-            fontStyle: 'bold',
-            color: '#fff8df'
-        }).setOrigin(0.5).setResolution(3);
-
-        background.on('pointerover', () => background.setFillStyle(0x3f8a46));
-        background.on('pointerout', () => background.setFillStyle(0x2f6d38));
-        background.on('pointerdown', onBuy);
-
-        return scene.add.container(0, 0, [background, label]);
+        return createTextButton(
+            scene,
+            buyButtonX,
+            0,
+            80,
+            26,
+            translate('buy'),
+            onBuy
+        );
     }
 }
