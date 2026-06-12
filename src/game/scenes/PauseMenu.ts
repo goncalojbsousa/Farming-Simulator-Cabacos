@@ -102,8 +102,8 @@ export class PauseMenu extends Scene {
 
         this.overlay.setSize(this.scale.width, this.scale.height);
         this.menu.center(true);
-        this.resumeButton.setPosition(centerX, centerY + 20);
-        this.settingsButton.setPosition(centerX, centerY + 100);
+        this.resumeButton.setPosition(centerX, centerY - 25);
+        this.settingsButton.setPosition(centerX, centerY + 55);
     }
 
 }
