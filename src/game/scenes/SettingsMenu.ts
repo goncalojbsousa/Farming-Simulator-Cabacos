@@ -9,12 +9,27 @@ import {
 } from '../services/LanguageService';
 import { createTextButton } from '../ui/TextButton';
 
+type SettingsMenuData = {
+    returnScene?: string;
+    returnData?: object;
+};
+
 export class SettingsMenu extends Scene {
+    private returnScene = 'MainMenu';
+    private returnData?: object;
+
     constructor() {
         super('SettingsMenu');
     }
 
+    init(data: SettingsMenuData): void {
+        this.returnScene = data.returnScene ?? 'MainMenu';
+        this.returnData = data.returnData;
+    }
+
     create() {
+        this.scene.bringToTop();
+
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
 
@@ -41,7 +56,7 @@ export class SettingsMenu extends Scene {
         this.createLanguageButtons();
 
         createTextButton(this, centerX, centerY + 205, 260, 56, translate('back'), () => {
-            this.scene.start('MainMenu');
+            this.scene.start(this.returnScene, this.returnData);
         });
     }
 
@@ -71,6 +86,9 @@ export class SettingsMenu extends Scene {
 
     private changeLanguage(language: GameLanguage): void {
         setCurrentLanguage(language);
-        this.scene.restart();
+        this.scene.restart({
+            returnScene: this.returnScene,
+            returnData: this.returnData
+        });
     }
 }

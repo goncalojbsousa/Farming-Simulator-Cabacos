@@ -10,6 +10,7 @@ import { TimeService } from '../services/TimeService';
 import { GameHud } from '../ui/GameHud';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 import { ScreenFade } from '../ui/ScreenFade';
+import { openPauseMenu } from './PauseMenu';
 
 type InteriorConfig = {
     sceneKey: string;
@@ -102,12 +103,16 @@ export class BuildingInteriorScene extends Scene {
     }
 
     update(time: number): void {
-        if (this.faintTransitionActive) {
-            this.gameInput.update();
+        this.gameInput.update();
+
+        if (this.gameInput.escapePressed()) {
+            openPauseMenu(this);
             return;
         }
 
-        this.gameInput.update();
+        if (this.faintTransitionActive) {
+            return;
+        }
         this.gameTime.update(time);
 
         if (this.gameTime.isFaintTime()) {
