@@ -1,5 +1,6 @@
 import { Geom } from 'phaser';
 import { translate } from '../services/LanguageService';
+import { playSound } from '../services/SoundService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 import { BuildingInteriorScene } from './BuildingInteriorScene';
 
@@ -42,6 +43,7 @@ export class HouseInterior extends BuildingInteriorScene {
         if (isPlayerNearBed && this.gameInput.interactPressed()) {
             this.sleepTransitionActive = true;
             this.bedPrompt.hide();
+            playSound(this, 'sleep');
             this.screenFade.play(
                 () => {
                     this.gameTime.startNextDay();

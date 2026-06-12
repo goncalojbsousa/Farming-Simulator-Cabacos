@@ -3,6 +3,7 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
+import { playSound } from '../services/SoundService';
 import { WateringCanService } from '../services/WateringCanService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
@@ -65,8 +66,15 @@ export class WateringCanSystem {
         }
 
         if (currentWell && input.interactPressed()) {
+            const wasFull = this.config.wateringCan.getWater()
+                === this.config.wateringCan.getMaxWater();
+
             this.config.wateringCan.fill();
             this.updateWaterText(true);
+
+            if (!wasFull) {
+                playSound(this.config.scene, 'getWater');
+            }
         }
     }
 

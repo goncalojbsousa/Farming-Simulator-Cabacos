@@ -1,4 +1,5 @@
 import { GameObjects, Scene } from 'phaser';
+import { playSound } from '../services/SoundService';
 
 type MenuPanelConfig = {
     width: number;
@@ -43,6 +44,10 @@ export class MenuPanel {
     }
 
     open(): void {
+        if (!this.container.visible) {
+            playSound(this.scene, 'openMenu');
+        }
+
         this.container.setVisible(true);
     }
 
@@ -51,6 +56,10 @@ export class MenuPanel {
     }
 
     toggle(): void {
+        if (!this.container.visible) {
+            playSound(this.scene, 'openMenu');
+        }
+
         this.container.setVisible(!this.container.visible);
     }
 
@@ -130,7 +139,10 @@ export class MenuPanel {
 
         background.on('pointerover', () => background.setFillStyle(0xb84d38));
         background.on('pointerout', () => background.setFillStyle(0x8d3d30));
-        background.on('pointerdown', () => this.close());
+        background.on('pointerdown', () => {
+            playSound(this.scene, 'select');
+            this.close();
+        });
 
         return this.scene.add.container(0, 0, [background, label]);
     }

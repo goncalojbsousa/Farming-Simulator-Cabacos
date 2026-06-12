@@ -73,7 +73,9 @@ export class SeedShopRow {
             80,
             25,
             translate('buy'),
-            onBuy
+            onBuy,
+            false,
+            false
         );
     }
 

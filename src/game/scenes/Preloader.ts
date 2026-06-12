@@ -65,6 +65,21 @@ export class Preloader extends Scene {
         this.load.image('ts_map', 'tilemap/ts_map.png');
         this.load.image('ts_forest', 'tilemap/ts_forest.png');
         this.load.image('soil', 'plantation/soil.png');
+        this.load.audio('buyLand', 'sounds/buyLand.mp3');
+        this.load.audio('doorOpen', 'sounds/doorOpen.mp3');
+        this.load.audio('fail', 'sounds/fail.mp3');
+        this.load.audio('faint', 'sounds/faint.mp3');
+        this.load.audio('getWater', 'sounds/getWater.mp3');
+        this.load.audio('grassyStep', 'sounds/grassyStep.mp3');
+        this.load.audio('hoe', 'sounds/hoe.mp3');
+        this.load.audio('openMenu', 'sounds/openMenu.mp3');
+        this.load.audio('plantSeed', 'sounds/plantSeed.mp3');
+        this.load.audio('purchaseClick', 'sounds/purchaseClick.mp3');
+        this.load.audio('select', 'sounds/select.mp3');
+        this.load.audio('sickle', 'sounds/sickle.mp3');
+        this.load.audio('sleep', 'sounds/sleep.mp3');
+        this.load.audio('toolSwap', 'sounds/toolSwap.mp3');
+        this.load.audio('waterPlants', 'sounds/waterPlants.mp3');
 
         this.load.spritesheet('idle', 'characters/player/idle/base_waiting_strip9.png', {
             frameWidth: 96,

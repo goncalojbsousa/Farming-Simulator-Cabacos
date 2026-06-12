@@ -1,6 +1,7 @@
 import { GameObjects, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { translate } from '../services/LanguageService';
+import { playSound } from '../services/SoundService';
 import { MenuPanel } from '../ui/MenuPanel';
 import { createTextButton } from '../ui/TextButton';
 
@@ -45,6 +46,7 @@ export class PauseMenu extends Scene {
             title: translate('pauseTitle'),
             depth: 1
         });
+        playSound(this, 'openMenu');
 
         this.resumeButton = createTextButton(
             this,

@@ -6,6 +6,7 @@ import {
 } from '../services/LandOwnershipService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
 import { MenuPanel } from './MenuPanel';
 
 type FarmRowView = {
@@ -139,16 +140,19 @@ export class FarmPurchasePanel {
     private buyFarm(farmOption: FarmPurchaseOption): void {
         if (this.landOwnership.isFarmOwned(farmOption.farmId)) {
             this.statusMessage.setText(translate('alreadyOwned'));
+            playSound(this.scene, 'fail');
             return;
         }
 
         if (!this.money.canAfford(farmOption.price)) {
             this.statusMessage.setText(translate('notEnoughMoney'));
+            playSound(this.scene, 'fail');
             return;
         }
 
         this.money.spend(farmOption.price);
         this.landOwnership.buyFarm(farmOption.farmId);
+        playSound(this.scene, 'buyLand');
         this.onPurchase();
         this.refreshRows();
         this.statusMessage.setText(

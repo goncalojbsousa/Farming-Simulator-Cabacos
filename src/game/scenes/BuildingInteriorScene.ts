@@ -6,6 +6,7 @@ import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { GameHud } from '../ui/GameHud';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
@@ -132,6 +133,7 @@ export class BuildingInteriorScene extends Scene {
         }
 
         if (canExit && this.gameInput.interactPressed()) {
+            playSound(this, 'doorOpen');
             this.scene.stop();
             this.scene.wake('Game');
         }
@@ -241,6 +243,7 @@ export class BuildingInteriorScene extends Scene {
     private startFaintTransition(): void {
         this.faintTransitionActive = true;
         this.player.sprite.setVelocity(0);
+        playSound(this, 'faint');
         this.screenFade.fadeIn(() => {
             this.onPlayerFaint();
             this.scene.stop();

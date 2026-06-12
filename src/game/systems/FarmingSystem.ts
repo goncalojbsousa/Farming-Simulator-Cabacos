@@ -9,6 +9,7 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+import { playSound } from '../services/SoundService';
 import { WateringCanService } from '../services/WateringCanService';
 
 const tillEnergyCost = 2;
@@ -105,6 +106,7 @@ export class FarmingSystem {
 
         if (selectedSlot.itemId === 'hoe') {
             if (!this.game.energy.hasEnergy(tillEnergyCost)) {
+                playSound(this.game.scene, 'fail');
                 return;
             }
 
@@ -116,6 +118,7 @@ export class FarmingSystem {
 
         if (selectedSlot.itemId === 'sickle') {
             if (!this.game.energy.hasEnergy(harvestEnergyCost)) {
+                playSound(this.game.scene, 'fail');
                 return;
             }
 
@@ -125,6 +128,7 @@ export class FarmingSystem {
 
         if (selectedSlot.itemId === 'wateringCan') {
             if (!this.game.energy.hasEnergy(waterEnergyCost)) {
+                playSound(this.game.scene, 'fail');
                 return;
             }
 
@@ -133,6 +137,7 @@ export class FarmingSystem {
         }
 
         if (!this.game.energy.hasEnergy(plantEnergyCost)) {
+            playSound(this.game.scene, 'fail');
             return;
         }
 
@@ -153,6 +158,7 @@ export class FarmingSystem {
             image: soil,
             tilledDay: currentDay
         });
+        playSound(this.game.scene, 'hoe');
     }
 
     private plantSeed(
@@ -192,6 +198,7 @@ export class FarmingSystem {
         });
         this.game.energy.spend(plantEnergyCost);
         this.game.refreshInventory();
+        playSound(this.game.scene, 'plantSeed');
     }
 
     private waterCrop(selectedFarmTile: SelectedFarmTile, currentDay: number): void {
@@ -210,6 +217,7 @@ export class FarmingSystem {
         crop.wateredIndicator.setVisible(true);
         this.game.energy.spend(waterEnergyCost);
         this.game.refreshInventory();
+        playSound(this.game.scene, 'waterPlants');
     }
 
     private harvestCrop(selectedFarmTile: SelectedFarmTile): void {
@@ -226,6 +234,7 @@ export class FarmingSystem {
         const harvestItemId = `${crop.cropId}Harvest`;
 
         if (!this.game.inventory.addItem(harvestItemId, 1)) {
+            playSound(this.game.scene, 'fail');
             return;
         }
 
@@ -236,6 +245,7 @@ export class FarmingSystem {
         this.clearTilledTile(tileKey);
         this.game.energy.spend(harvestEnergyCost);
         this.game.refreshInventory();
+        playSound(this.game.scene, 'sickle');
     }
 
     private clearExpiredTilledTiles(currentDay: number): void {

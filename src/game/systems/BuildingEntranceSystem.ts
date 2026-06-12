@@ -6,6 +6,7 @@ import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
@@ -73,6 +74,7 @@ export class BuildingEntranceSystem {
         }
 
         if (entrance && input.interactPressed()) {
+            playSound(this.scene, 'doorOpen');
             this.scene.scene.sleep('Game');
             this.scene.scene.launch(entrance.sceneKey, {
                 inventory: this.inventory,
