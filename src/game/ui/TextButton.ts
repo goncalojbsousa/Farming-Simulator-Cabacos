@@ -3,13 +3,13 @@ import { GameObjects, Scene } from 'phaser';
 type ButtonColors = {
     normal: number;
     hover: number;
-    selected?: number;
+    selected: number;
 };
 
 const defaultButtonColors: ButtonColors = {
-    normal: 0x2f5d2c,
-    hover: 0x3f7a39,
-    selected: 0xd6a84f
+    normal: 0x8a5a31,
+    hover: 0xb47a3f,
+    selected: 0xd39a3c
 };
 
 export function createTextButton(
@@ -23,24 +23,45 @@ export function createTextButton(
     isSelected = false
 ): GameObjects.Container {
     const colors = defaultButtonColors;
-    const fillColor = isSelected && colors.selected ? colors.selected : colors.normal;
+    const fillColor = isSelected ? colors.selected : colors.normal;
+    const fontSize = Math.min(24, Math.max(13, Math.floor(height * 0.42)));
 
-    const background = scene.add.rectangle(0, 0, width, height, fillColor)
-        .setStrokeStyle(2, 0xffffff)
+    const shadow = scene.add.rectangle(4, 5, width, height, 0x1a100b, 0.35);
+    const border = scene.add.rectangle(0, 0, width, height, 0x5a3822)
+        .setStrokeStyle(3, 0x332015);
+    const background = scene.add.rectangle(0, -2, width - 8, height - 8, fillColor)
+        .setStrokeStyle(2, 0xe3a35a)
         .setInteractive({ useHandCursor: true });
+    const highlight = scene.add.rectangle(
+        0,
+        -height / 2 + 7,
+        width - 18,
+        3,
+        0xffe3a3,
+        0.7
+    );
 
-    const text = scene.add.text(0, 0, label, {
-        fontFamily: 'Arial',
-        fontSize: 24,
-        color: '#ffffff',
+    const text = scene.add.text(0, -2, label, {
+        fontFamily: 'Arial Black',
+        fontSize,
+        color: '#fff4d7',
+        stroke: '#1a100b',
+        strokeThickness: Math.max(2, Math.floor(fontSize / 7)),
         align: 'center'
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setResolution(2);
 
-    const button = scene.add.container(x, y, [background, text]);
+    const button = scene.add.container(x, y, [
+        shadow,
+        border,
+        background,
+        highlight,
+        text
+    ]);
 
-    // Keep the hover state on the rectangle so the text remains stable.
     background.on('pointerover', () => {
-        background.setFillStyle(colors.hover);
+        if (!isSelected) {
+            background.setFillStyle(colors.hover);
+        }
     });
 
     background.on('pointerout', () => {
