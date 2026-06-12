@@ -6,6 +6,7 @@ import {
 } from '../services/LandOwnershipService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { MenuPanel } from './MenuPanel';
 
 type FarmRowView = {
     farmOption: FarmPurchaseOption;
@@ -15,9 +16,7 @@ type FarmRowView = {
 };
 
 export class FarmPurchasePanel {
-    private rootContainer: GameObjects.Container;
-    private panelContainer: GameObjects.Container;
-    private overlay: GameObjects.Rectangle;
+    private menu: MenuPanel;
     private statusMessage: GameObjects.Text;
     private farmRows: FarmRowView[] = [];
 
@@ -27,20 +26,13 @@ export class FarmPurchasePanel {
         private landOwnership: LandOwnershipService,
         private onPurchase: () => void
     ) {
-        this.overlay = scene.add.rectangle(0, 0, 1, 1, 0x000000, 0.45)
-            .setOrigin(0)
-            .setInteractive();
-
-        this.panelContainer = scene.add.container(0, 0);
-        this.rootContainer = scene.add.container(0, 0, [
-            this.overlay,
-            this.panelContainer
-        ])
-            .setScrollFactor(0)
-            .setDepth(1200);
-
-        this.createPanelFrame();
-        this.createTitle();
+        this.menu = new MenuPanel(scene, {
+            width: 560,
+            height: 360,
+            title: translate('farmPurchaseTitle'),
+            depth: 1200,
+            closeButton: true
+        });
 
         this.statusMessage = scene.add.text(0, 135, '', {
             fontFamily: 'Arial',
@@ -50,11 +42,10 @@ export class FarmPurchasePanel {
             wordWrap: { width: 430 }
         }).setOrigin(0.5);
 
-        this.panelContainer.add(this.statusMessage);
-        this.panelContainer.add(this.createCloseButton());
+        this.menu.addContent(this.statusMessage);
 
         farmPurchaseOptions.forEach((farmOption, index) => {
-            this.panelContainer.add(this.createFarmRow(farmOption, -40 + index * 82));
+            this.menu.addContent(this.createFarmRow(farmOption, -40 + index * 82));
         });
 
         this.layout();
@@ -64,82 +55,23 @@ export class FarmPurchasePanel {
     toggle(): void {
         this.statusMessage.setText('');
         this.refreshRows();
-        this.rootContainer.setVisible(!this.rootContainer.visible);
+        this.menu.toggle();
     }
 
     close(): void {
-        this.rootContainer.setVisible(false);
+        this.menu.close();
     }
 
     isOpen(): boolean {
-        return this.rootContainer.visible;
+        return this.menu.isOpen();
     }
 
     layout(): void {
-        const { width, height } = this.scene.scale;
-        const panelWidth = 560;
-        const panelHeight = 360;
-        const panelScale = Math.min(1, (width - 24) / panelWidth, (height - 24) / panelHeight);
-
-        this.overlay.setDisplaySize(width, height);
-        this.panelContainer
-            .setPosition(width / 2, height / 2)
-            .setScale(panelScale);
+        this.menu.center(true);
     }
 
     getUiObjects(): GameObjects.GameObject[] {
-        return [this.rootContainer];
-    }
-
-    private createPanelFrame(): void {
-        const panelShadow = this.scene.add.rectangle(8, 10, 560, 360, 0x000000, 0.28);
-        const woodFrame = this.scene.add.rectangle(0, 0, 560, 360, 0x6b4428)
-            .setStrokeStyle(4, 0x332015);
-        const innerPanel = this.scene.add.rectangle(0, 8, 512, 300, 0x1f3328, 0.98)
-            .setStrokeStyle(3, 0xe3a35a);
-        const topWoodTrim = this.scene.add.rectangle(0, -148, 520, 28, 0x8a5a31)
-            .setStrokeStyle(2, 0x4a2e1d);
-        const bottomWoodTrim = this.scene.add.rectangle(0, 154, 520, 28, 0x8a5a31)
-            .setStrokeStyle(2, 0x4a2e1d);
-
-        this.panelContainer.add([
-            panelShadow,
-            woodFrame,
-            innerPanel,
-            topWoodTrim,
-            bottomWoodTrim
-        ]);
-    }
-
-    private createTitle(): void {
-        const titleBackground = this.scene.add.rectangle(0, -126, 350, 48, 0x5a3822)
-            .setStrokeStyle(3, 0xe3a35a);
-        const title = this.scene.add.text(0, -126, translate('farmPurchaseTitle'), {
-            fontFamily: 'Arial Black',
-            fontSize: 24,
-            color: '#fff4d7',
-            stroke: '#1a100b',
-            strokeThickness: 4
-        }).setOrigin(0.5);
-
-        this.panelContainer.add([titleBackground, title]);
-    }
-
-    private createCloseButton(): GameObjects.Container {
-        const background = this.scene.add.rectangle(240, -144, 34, 30, 0x6b2f26)
-            .setStrokeStyle(2, 0xffe3a3)
-            .setInteractive({ useHandCursor: true });
-        const label = this.scene.add.text(240, -145, 'X', {
-            fontFamily: 'Arial Black',
-            fontSize: 18,
-            color: '#ffffff'
-        }).setOrigin(0.5);
-
-        background.on('pointerover', () => background.setFillStyle(0x8d3d30));
-        background.on('pointerout', () => background.setFillStyle(0x6b2f26));
-        background.on('pointerdown', () => this.close());
-
-        return this.scene.add.container(0, 0, [background, label]);
+        return [this.menu.container];
     }
 
     private createFarmRow(
@@ -163,14 +95,16 @@ export class FarmPurchasePanel {
         }).setOrigin(0, 0.5);
 
         const buttonBackground = this.scene.add.rectangle(166, 0, 118, 34, 0x2f6d38)
-            .setStrokeStyle(2, 0xfff1c9)
+            .setStrokeStyle(3, 0x332015)
             .setInteractive({ useHandCursor: true });
 
         const buttonLabel = this.scene.add.text(166, 0, translate('buy'), {
             fontFamily: 'Arial Black',
             fontSize: 15,
-            color: '#ffffff'
-        }).setOrigin(0.5);
+            color: '#fff4d7',
+            stroke: '#1a100b',
+            strokeThickness: 2
+        }).setOrigin(0.5).setResolution(2);
 
         const row: FarmRowView = {
             farmOption,
@@ -181,7 +115,7 @@ export class FarmPurchasePanel {
 
         buttonBackground.on('pointerover', () => {
             if (!this.landOwnership.isFarmOwned(farmOption.farmId)) {
-                buttonBackground.setFillStyle(0x3f7a39);
+                buttonBackground.setFillStyle(0xb47a3f);
             }
         });
 
@@ -232,7 +166,9 @@ export class FarmPurchasePanel {
         const isOwned = this.landOwnership.isFarmOwned(row.farmOption.farmId);
         row.priceText.setText(`${row.farmOption.price}$`);
         row.buttonLabel.setText(isOwned ? translate('owned') : translate('buy'));
-        row.buttonBackground.setFillStyle(isOwned ? 0x58615b : 0x2f6d38);
+        row.buttonBackground
+            .setFillStyle(isOwned ? 0x6b6258 : 0x8a5a31)
+            .setStrokeStyle(2, isOwned ? 0x4a4038 : 0xe3a35a);
     }
 
     private createFarmIcon(x: number, y: number): GameObjects.Container {
