@@ -1,4 +1,5 @@
 import { GameObjects, Scene } from 'phaser';
+import { playSound } from '../services/SoundService';
 
 type ButtonColors = {
     normal: number;
@@ -20,7 +21,8 @@ export function createTextButton(
     height: number,
     label: string,
     onClick: () => void,
-    isSelected = false
+    isSelected = false,
+    playClickSound = true
 ): GameObjects.Container {
     const colors = defaultButtonColors;
     const fillColor = isSelected ? colors.selected : colors.normal;
@@ -68,7 +70,13 @@ export function createTextButton(
         background.setFillStyle(fillColor);
     });
 
-    background.on('pointerdown', onClick);
+    background.on('pointerdown', () => {
+        if (playClickSound) {
+            playSound(scene, 'select');
+        }
+
+        onClick();
+    });
 
     return button;
 }

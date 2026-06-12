@@ -5,6 +5,7 @@ import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { WateringCanService } from '../services/WateringCanService';
 import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
@@ -129,6 +130,7 @@ export class Game extends Scene {
         if (this.gameTime.isFaintTime()) {
             this.faintTransitionActive = true;
             this.gameWorld.player.sprite.setVelocity(0);
+            playSound(this, 'faint');
             this.screenFade.play(
                 () => this.applyFaintConsequences(),
                 () => this.faintTransitionActive = false

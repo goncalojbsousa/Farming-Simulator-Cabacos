@@ -3,6 +3,7 @@ import { getToolShopItems, ToolItem } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
 import { MenuPanel } from './MenuPanel';
 import { ToolShopRow } from './ToolShopRow';
 
@@ -18,7 +19,7 @@ export class ToolShopPanel {
     private purchaseMessage: GameObjects.Text;
 
     constructor(
-        scene: Scene,
+        private scene: Scene,
         private inventory: InventoryService,
         private money: MoneyService,
         private onPurchase: () => void
@@ -82,20 +83,24 @@ export class ToolShopPanel {
     private buyTool(tool: ToolItem): void {
         if (this.inventory.hasItem(tool.id)) {
             this.purchaseMessage.setText(translate('itemAlreadyOwned'));
+            playSound(this.scene, 'fail');
             return;
         }
 
         if (!this.money.canAfford(tool.buyPrice)) {
             this.purchaseMessage.setText(translate('notEnoughMoney'));
+            playSound(this.scene, 'fail');
             return;
         }
 
         if (!this.inventory.addItem(tool.id, 1)) {
             this.purchaseMessage.setText(translate('inventoryFull'));
+            playSound(this.scene, 'fail');
             return;
         }
 
         this.money.spend(tool.buyPrice);
+        playSound(this.scene, 'purchaseClick');
         this.onPurchase();
         this.purchaseMessage.setText(
             `${translate('purchased')} ${translate(tool.nameKey)}`

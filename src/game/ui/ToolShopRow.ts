@@ -55,7 +55,9 @@ export class ToolShopRow {
             80,
             26,
             translate('buy'),
-            onBuy
+            onBuy,
+            false,
+            false
         );
     }
 }

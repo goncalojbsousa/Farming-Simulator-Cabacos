@@ -7,6 +7,7 @@ import {
     setCurrentLanguage,
     translate
 } from '../services/LanguageService';
+import { playSound } from '../services/SoundService';
 import { MenuPanel } from '../ui/MenuPanel';
 import { createTextButton } from '../ui/TextButton';
 
@@ -53,6 +54,7 @@ export class SettingsMenu extends Scene {
             title: translate('settingsTitle'),
             depth: 1
         });
+        playSound(this, 'openMenu');
 
         this.languageLabel = this.add.text(0, 0, translate('language'), {
             fontFamily: 'Arial Black',

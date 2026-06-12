@@ -3,6 +3,7 @@ import { getItemById } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
+import { playSound } from '../services/SoundService';
 import { Hotbar } from './Hotbar';
 import { InventoryPanel } from './InventoryPanel';
 import { InventoryTooltip } from './InventoryTooltip';
@@ -15,7 +16,7 @@ export class InventoryUi {
     private draggedItemImage: Phaser.GameObjects.Image;
 
     constructor(
-        scene: Scene,
+        private scene: Scene,
         private inventory: InventoryService,
         private isInteractionBlocked: () => boolean
     ) {
@@ -37,6 +38,11 @@ export class InventoryUi {
 
         if (hotbarSlot !== null) {
             this.inventory.selectSlot(hotbarSlot);
+
+            if (this.inventory.slots[hotbarSlot].itemId) {
+                playSound(this.scene, 'toolSwap');
+            }
+
             this.refresh();
         }
 
@@ -109,6 +115,7 @@ export class InventoryUi {
         const itemId = this.inventory.slots[slotIndex].itemId;
 
         if (itemId) {
+            playSound(this.scene, 'toolSwap');
             this.draggedSlotIndex = slotIndex;
             this.draggedItemImage
                 .setTexture(itemId)
