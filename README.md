@@ -60,7 +60,7 @@ Objetivo principal:
 | Setas direcionais | Mover o jogador |
 | `E` | Interagir / entrar / sair / abrir loja |
 | `I` | Abrir ou fechar o inventário |
-| `ESC` | Fechar menus/painéis quando aplicável |
+| `ESC` | Pausar ou continuar o jogo |
 | `1` a `8` | Selecionar slot da hotbar |
 | Clique esquerdo | Usar item selecionado no terreno |
 | Arrastar com o rato | Mover itens entre slots do inventário/hotbar |

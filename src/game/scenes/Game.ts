@@ -13,6 +13,7 @@ import { WateringCanSystem } from '../systems/WateringCanSystem';
 import { GameHud } from '../ui/GameHud';
 import { ScreenFade } from '../ui/ScreenFade';
 import { GameWorld } from '../world/GameWorld';
+import { openPauseMenu } from './PauseMenu';
 
 const faintMoneyLossRate = 0.25;
 const nightStartHour = 17;
@@ -107,12 +108,16 @@ export class Game extends Scene {
     }
 
     update(time: number): void {
-        if (this.faintTransitionActive) {
-            this.gameInput.update();
+        this.gameInput.update();
+
+        if (this.gameInput.escapePressed()) {
+            openPauseMenu(this);
             return;
         }
 
-        this.gameInput.update();
+        if (this.faintTransitionActive) {
+            return;
+        }
 
         if (this.gameInput.nextDayPressed()) {
             this.gameTime.advanceDay();
