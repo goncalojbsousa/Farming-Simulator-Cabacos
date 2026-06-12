@@ -5,7 +5,7 @@ import { translate } from '../services/LanguageService';
 const barWidth = 360;
 const barHeight = 16;
 const barBottomOffset = 116;
-const fillPadding = 5;
+const fillPadding = 1;
 
 export class EnergyDisplay {
     private container: GameObjects.Container;
