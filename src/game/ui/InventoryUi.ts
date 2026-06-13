@@ -115,10 +115,12 @@ export class InventoryUi {
         const itemId = this.inventory.slots[slotIndex].itemId;
 
         if (itemId) {
+            const item = getItemById(itemId);
+
             playSound(this.scene, 'toolSwap');
             this.draggedSlotIndex = slotIndex;
             this.draggedItemImage
-                .setTexture(itemId)
+                .setTexture(item.textureKey, item.textureFrame)
                 .setPosition(pointer.x, pointer.y)
                 .setVisible(true);
         }

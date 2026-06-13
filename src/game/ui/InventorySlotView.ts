@@ -46,7 +46,7 @@ export class InventorySlotView {
 
         const slotItem = getItemById(slot.itemId);
 
-        this.itemImage.setTexture(slotItem.id);
+        this.itemImage.setTexture(slotItem.textureKey, slotItem.textureFrame);
         this.itemImage.setVisible(true);
         this.quantityText.setText(String(slot.quantity));
         this.quantityText.setVisible(slot.quantity > 1);
