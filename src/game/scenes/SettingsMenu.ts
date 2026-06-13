@@ -59,7 +59,9 @@ export class SettingsMenu extends Scene {
         this.languageLabel = this.add.text(0, 0, translate('language'), {
             fontFamily: 'Arial Black',
             fontSize: 22,
-            color: '#5a3822',
+            color: '#fff4d7',
+            stroke: '#1a100b',
+            strokeThickness: 4,
             align: 'center'
         }).setOrigin(0.5).setResolution(2).setDepth(2);
 

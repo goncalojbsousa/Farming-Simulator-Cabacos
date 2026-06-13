@@ -27,6 +27,16 @@ export class Preloader extends Scene {
         this.load.image('logo', 'logo.png');
         this.load.image('mainMenuBackground', 'main_menu_background.png');
         this.load.image('mainMenuLogo', 'logo_quinta_cabacos.png');
+        this.load.image('menuBrownDarker', '9slice_menu_brown_darker.png');
+        this.load.image('button', 'button.png');
+        this.load.image('coin', 'coin.png');
+        this.load.image('land', 'land.png');
+        this.load.image('light', 'light.png');
+        this.load.image('sun', 'sun.png');
+        this.load.spritesheet('energyBar', 'energyBar.png', {
+            frameWidth: 15,
+            frameHeight: 7
+        });
         this.load.image('hotbarSelector', 'inventory/hotbar_selector.png');
         this.load.spritesheet('inventorySlot', 'inventory/inventorySlot.png', {
             frameWidth: 20,
@@ -88,6 +98,7 @@ export class Preloader extends Scene {
     }
 
     create() {
+        this.textures.get('button').add('trimmed', 0, 12, 0, 24, 13);
         this.scene.start('MainMenu');
     }
 }
