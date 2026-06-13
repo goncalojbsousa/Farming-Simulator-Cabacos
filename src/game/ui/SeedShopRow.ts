@@ -38,7 +38,12 @@ export class SeedShopRow {
 
         const iconBackground = scene.add.rectangle(seedIconX, 0, 27, 27, 0xf0bd57, 0.98)
             .setStrokeStyle(2, 0x6b4428);
-        const seedIcon = scene.add.image(seedIconX, 0, seed.id).setDisplaySize(22, 22);
+        const seedIcon = scene.add.image(
+            seedIconX,
+            0,
+            seed.textureKey,
+            seed.textureFrame
+        ).setDisplaySize(22, 22);
         const seedName = scene.add.text(seedNameX, 0, translate(seed.nameKey), readableDarkTextStyle)
             .setOrigin(0, 0.5)
             .setResolution(3);

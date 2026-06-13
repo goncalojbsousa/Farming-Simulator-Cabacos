@@ -1,10 +1,5 @@
 import { Scene } from 'phaser';
-import {
-    cropStages,
-    gameItems,
-    getCropAssetPath,
-    getCropTextureKey
-} from '../data/ItemData';
+import { crops, gameItems } from '../data/ItemData';
 
 export class Preloader extends Scene {
     constructor() {
@@ -39,16 +34,16 @@ export class Preloader extends Scene {
         });
 
         for (const item of gameItems) {
-            this.load.image(item.id, item.assetPath);
-
-            if (item.type === 'seed') {
-                for (const stage of cropStages) {
-                    this.load.image(
-                        getCropTextureKey(item.cropId!, stage),
-                        getCropAssetPath(item.cropId!, stage)
-                    );
-                }
+            if (item.type === 'tool') {
+                this.load.image(item.textureKey, item.assetPath);
             }
+        }
+
+        for (const crop of crops) {
+            this.load.spritesheet(crop.id, `plantation/crops/${crop.id}.png`, {
+                frameWidth: crop.frameWidth,
+                frameHeight: crop.frameHeight
+            });
         }
 
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');

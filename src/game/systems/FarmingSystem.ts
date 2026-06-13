@@ -1,7 +1,6 @@
 import {
     CropId,
     CropStage,
-    getCropTextureKey,
     getItemById,
     SeedItem
 } from '../data/ItemData';
@@ -174,7 +173,8 @@ export class FarmingSystem {
         const crop = this.game.scene.add.image(
             tile.getCenterX(),
             tile.getCenterY() - 4,
-            getCropTextureKey(seed.cropId, 1)
+            seed.cropId,
+            1
         ).setDepth(9);
         const wateredIndicator = this.createWateredIndicator(
             tile.getCenterX(),
@@ -283,7 +283,7 @@ export class FarmingSystem {
 
             crop.stage++;
             crop.wateredDaysInCurrentStage.clear();
-            crop.image.setTexture(getCropTextureKey(crop.cropId, crop.stage));
+            crop.image.setFrame(crop.stage);
         }
     }
 
