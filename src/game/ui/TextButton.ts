@@ -41,7 +41,7 @@ export function createTextButton(
     const button = scene.add.container(x, y, [background, text])
         .setSize(width, buttonHeight)
         .setInteractive(
-            new Geom.Rectangle(-width / 2, -buttonHeight / 2, width, buttonHeight),
+            new Geom.Rectangle(0, 0, width, buttonHeight),
             Geom.Rectangle.Contains
         );
 
