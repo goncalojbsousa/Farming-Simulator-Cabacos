@@ -1,7 +1,7 @@
 # Quinta Cabacos
 
 <p align="center">
-  <img src="public/assets/logo_quinta_cabacos.png" alt="Logo Quinta Cabacos" width="560">
+  <img src="public/assets/mainmenu/logo_quinta_cabacos.png" alt="Logo Quinta Cabacos" width="560">
 </p>
 
 **Quinta Cabacos** é um jogo 2D em pixel art desenvolvido em **Phaser 3**, **TypeScript** e **Vite**. O projeto simula uma pequena quinta onde o jogador pode explorar o mapa, entrar em edifícios, gerir inventário, comprar sementes e cultivar plantações.
@@ -12,7 +12,7 @@ O jogo foi desenvolvido como projeto académico, com foco numa implementação s
 
 ### Mapa Principal
 
-![Mapa principal](public/assets/readme_map_preview.png)
+![Mapa principal](public/assets/docs/readme_map_preview.png)
 
 ### Interiores dos Edifícios
 
@@ -109,7 +109,10 @@ Objetivo principal:
 | `src/game/ui` | Interface, inventário, hotbar e painéis |
 | `src/game/services` | Serviços de idioma, dinheiro, inventário e tempo |
 | `public/assets` | Imagens, sprites, tilesets e assets do jogo |
+| `public/assets/mainmenu` | Logo e arte do menu inicial |
+| `public/assets/farming` | Indicadores e elementos visuais de cultivo |
 | `public/assets/tilemap` | Mapas `.tmj`, tilesets e interiores |
+| `public/assets/ui` | Componentes comuns, HUD e elementos das lojas |
 
 ## Instalação e Execução
 

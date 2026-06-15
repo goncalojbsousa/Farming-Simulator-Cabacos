@@ -175,30 +175,11 @@ export class FarmPurchasePanel {
             .setStrokeStyle(2, isOwned ? 0x4a4038 : 0xe3a35a);
     }
 
-    private createFarmIcon(x: number, y: number): GameObjects.Container {
-        const soil = this.scene.add.rectangle(x, y + 5, 34, 24, 0x8a5a31)
-            .setStrokeStyle(2, 0x4a2e1d);
-        const fieldLineOne = this.scene.add.rectangle(x, y + 3, 26, 3, 0xd49b5c);
-        const fieldLineTwo = this.scene.add.rectangle(x, y + 10, 22, 3, 0xd49b5c);
-        const sproutStem = this.scene.add.rectangle(x, y - 8, 3, 14, 0x4f8d3b);
-        const sproutLeft = this.scene.add.ellipse(x - 6, y - 11, 12, 7, 0x6abf4b);
-        const sproutRight = this.scene.add.ellipse(x + 6, y - 11, 12, 7, 0x6abf4b);
-
-        return this.scene.add.container(0, 0, [
-            soil,
-            fieldLineOne,
-            fieldLineTwo,
-            sproutStem,
-            sproutLeft,
-            sproutRight
-        ]);
+    private createFarmIcon(x: number, y: number): GameObjects.Image {
+        return this.scene.add.image(x, y, 'land').setScale(2);
     }
 
-    private createCoinIcon(x: number, y: number): GameObjects.Container {
-        const coin = this.scene.add.circle(x, y, 10, 0xd6a84f)
-            .setStrokeStyle(2, 0xffe7a3);
-        const shine = this.scene.add.circle(x - 3, y - 3, 2, 0xfff1c9);
-
-        return this.scene.add.container(0, 0, [coin, shine]);
+    private createCoinIcon(x: number, y: number): GameObjects.Image {
+        return this.scene.add.image(x, y, 'coin').setScale(1.5);
     }
 }

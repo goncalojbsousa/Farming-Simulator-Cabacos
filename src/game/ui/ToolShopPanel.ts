@@ -5,7 +5,7 @@ import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { playSound } from '../services/SoundService';
 import { MenuPanel } from './MenuPanel';
-import { ToolShopRow } from './ToolShopRow';
+import { ShopRow } from './ShopRow';
 
 const panelWidth = 600;
 const panelHeight = 430;
@@ -45,7 +45,7 @@ export class ToolShopPanel {
         this.menu.addContent(this.purchaseMessage);
 
         getToolShopItems().forEach((tool, index) => {
-            const row = new ToolShopRow(
+            const row = new ShopRow(
                 scene,
                 tool,
                 firstRowY + index * rowSpacing,

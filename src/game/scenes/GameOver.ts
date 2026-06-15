@@ -15,7 +15,7 @@ export class GameOver extends Scene {
         this.camera = this.cameras.main
         this.camera.setBackgroundColor(0xff0000);
 
-        this.add.image(centerX, centerY, 'background')
+        this.add.image(centerX, centerY, 'mainMenuBackground')
             .setDisplaySize(this.scale.width, this.scale.height)
             .setAlpha(0.5);
 

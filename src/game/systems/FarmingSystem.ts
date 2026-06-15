@@ -34,6 +34,7 @@ type FarmingConfig = {
 type PlantedCrop = {
     image: Phaser.GameObjects.Image;
     wateredIndicator: Phaser.GameObjects.Container;
+    statusIndicator: Phaser.GameObjects.Image;
     tileKey: string;
     cropId: CropId;
     stageGrowthDays: readonly number[];
@@ -69,8 +70,8 @@ export class FarmingSystem {
         const pointer = input.pointer;
 
         this.clearExpiredTilledTiles(currentDay);
-        this.growCrops(currentDay);
-        this.updateWateredIndicators(currentDay);
+        this.growCrops();
+        this.updateCropIndicators(currentDay);
 
         if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
             this.useSelectedItem(pointer, currentDay);
@@ -141,7 +142,7 @@ export class FarmingSystem {
         }
 
         const seed = getItemById(selectedSlot.itemId!) as SeedItem;
-        this.plantSeed(selectedFarmTile, seed, currentDay);
+        this.plantSeed(selectedFarmTile, seed);
     }
 
     private tillTile(selectedFarmTile: SelectedFarmTile, currentDay: number): void {
@@ -162,8 +163,7 @@ export class FarmingSystem {
 
     private plantSeed(
         selectedFarmTile: SelectedFarmTile,
-        seed: SeedItem,
-        currentDay: number
+        seed: SeedItem
     ): void {
         const tile = selectedFarmTile.tile;
         const tileKey = this.getTileKey(selectedFarmTile);
@@ -180,15 +180,22 @@ export class FarmingSystem {
             tile.getCenterX(),
             tile.getCenterY()
         );
+        const statusIndicator = this.createStatusIndicator(
+            tile.getCenterX(),
+            tile.getCenterY()
+        );
 
         this.game.worldObjects.push(crop);
         this.game.worldObjects.push(wateredIndicator);
+        this.game.worldObjects.push(statusIndicator);
         this.game.uiCamera.ignore(crop);
         this.game.uiCamera.ignore(wateredIndicator);
+        this.game.uiCamera.ignore(statusIndicator);
         this.plantedTiles.add(tileKey);
         this.crops.push({
             image: crop,
             wateredIndicator,
+            statusIndicator,
             tileKey,
             cropId: seed.cropId,
             stageGrowthDays: seed.stageGrowthDays,
@@ -215,6 +222,7 @@ export class FarmingSystem {
         crop.wateredDaysInCurrentStage.add(currentDay);
         crop.lastWateredDay = currentDay;
         crop.wateredIndicator.setVisible(true);
+        crop.statusIndicator.setVisible(false);
         this.game.energy.spend(waterEnergyCost);
         this.game.refreshInventory();
         playSound(this.game.scene, 'waterPlants');
@@ -240,6 +248,7 @@ export class FarmingSystem {
 
         crop.image.destroy();
         crop.wateredIndicator.destroy();
+        crop.statusIndicator.destroy();
         this.crops.splice(cropIndex, 1);
         this.plantedTiles.delete(tileKey);
         this.clearTilledTile(tileKey);
@@ -269,7 +278,7 @@ export class FarmingSystem {
         this.tilledTiles.delete(tileKey);
     }
 
-    private growCrops(currentDay: number): void {
+    private growCrops(): void {
         for (const crop of this.crops) {
             if (crop.stage === 4) {
                 continue;
@@ -287,9 +296,20 @@ export class FarmingSystem {
         }
     }
 
-    private updateWateredIndicators(currentDay: number): void {
+    private updateCropIndicators(currentDay: number): void {
         for (const crop of this.crops) {
             crop.wateredIndicator.setVisible(crop.lastWateredDay === currentDay);
+
+            if (crop.stage === 4) {
+                crop.statusIndicator
+                    .setTexture('cropReadyToCollect')
+                    .setVisible(true);
+                continue;
+            }
+
+            crop.statusIndicator
+                .setTexture('cropNeedsWater')
+                .setVisible(crop.lastWateredDay !== currentDay);
         }
     }
 
@@ -303,6 +323,11 @@ export class FarmingSystem {
             wetCenter,
             smallShine
         ]).setDepth(8.8).setVisible(false);
+    }
+
+    private createStatusIndicator(x: number, y: number): Phaser.GameObjects.Image {
+        return this.game.scene.add.image(x + 5, y - 9, 'cropNeedsWater')
+            .setDepth(9.5);
     }
 
     private getTile(pointer: Phaser.Input.Pointer): SelectedFarmTile | null {

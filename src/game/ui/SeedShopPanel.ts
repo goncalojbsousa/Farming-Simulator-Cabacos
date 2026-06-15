@@ -5,13 +5,13 @@ import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { playSound } from '../services/SoundService';
 import { MenuPanel } from './MenuPanel';
-import { SeedShopRow } from './SeedShopRow';
+import { ShopRow } from './ShopRow';
 
 const panelWidth = 600;
 const panelHeight = 500;
 const panelCenterOffsetY = -56;
-const firstSeedRowY = -138;
-const seedRowSpacing = 31;
+const firstSeedRowY = -158;
+const seedRowSpacing = 35;
 const purchaseMessageY = 218;
 
 export class SeedShopPanel {
@@ -45,7 +45,7 @@ export class SeedShopPanel {
         this.menu.addContent(this.purchaseMessage);
 
         getSeedItems().forEach((seed, index) => {
-            const seedRow = new SeedShopRow(
+            const seedRow = new ShopRow(
                 scene,
                 seed,
                 firstSeedRowY + index * seedRowSpacing,
