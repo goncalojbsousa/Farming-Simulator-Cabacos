@@ -5,6 +5,11 @@ const languageStorageKey = 'farming-simulator-cabacos-language';
 
 const translations = {
     en: {
+        cropMarketTitle: 'Crop Market',
+        sell: 'Sell',
+        sold: 'Sold',
+        noCropToSell: 'You do not have this crop',
+        sellCrops: 'E - Sell crops',
         gameTitle: 'Cabacos Farm',
         startGame: 'Start Game',
         settings: 'Settings',
@@ -76,6 +81,11 @@ const translations = {
         cropWheat: 'Wheat'
     },
     pt: {
+        cropMarketTitle: 'Mercado de Colheitas',
+        sell: 'Vender',
+        sold: 'Vendeste',
+        noCropToSell: 'Nao tens esta colheita',
+        sellCrops: 'E - Vender colheitas',
         gameTitle: 'Quinta Cabacos',
         startGame: 'Começar Jogo',
         settings: 'Definições',

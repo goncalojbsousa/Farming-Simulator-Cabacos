@@ -16,6 +16,7 @@ const plantEnergyCost = 1;
 const harvestEnergyCost = 2;
 const waterEnergyCost = 1;
 const tilledSoilDuration = 2;
+const farmingStateKey = 'farmingState';
 
 type FarmingConfig = {
     scene: Phaser.Scene;
@@ -33,7 +34,6 @@ type FarmingConfig = {
 
 type PlantedCrop = {
     image: Phaser.GameObjects.Image;
-    wateredIndicator: Phaser.GameObjects.Container;
     statusIndicator: Phaser.GameObjects.Image;
     tileKey: string;
     cropId: CropId;
@@ -53,6 +53,29 @@ type TilledSoil = {
     tilledDay: number;
 };
 
+type SavedTilledSoil = {
+    layerName: string;
+    tileX: number;
+    tileY: number;
+    tilledDay: number;
+};
+
+type SavedCrop = {
+    layerName: string;
+    tileX: number;
+    tileY: number;
+    cropId: CropId;
+    stageGrowthDays: readonly number[];
+    stage: CropStage;
+    wateredDaysInCurrentStage: number[];
+    lastWateredDay: number | null;
+};
+
+type SavedFarmingState = {
+    tilledSoils: SavedTilledSoil[];
+    crops: SavedCrop[];
+};
+
 export class FarmingSystem {
     private tilledTiles = new Map<string, TilledSoil>();
     private plantedTiles = new Set<string>();
@@ -63,6 +86,7 @@ export class FarmingSystem {
         this.tileHighlight = game.scene.add.graphics().setDepth(9);
         game.worldObjects.push(this.tileHighlight);
         game.uiCamera.ignore(this.tileHighlight);
+        this.loadSavedState();
 
     }
 
@@ -148,9 +172,7 @@ export class FarmingSystem {
     private tillTile(selectedFarmTile: SelectedFarmTile, currentDay: number): void {
         const tile = selectedFarmTile.tile;
         const tileKey = this.getTileKey(selectedFarmTile);
-        const soil = this.game.scene.add.image(tile.getCenterX(), tile.getCenterY(), 'soil')
-            .setDisplaySize(tile.width, tile.height)
-            .setDepth(9);
+        const soil = this.createSoilImage(tile);
 
         this.game.worldObjects.push(soil);
         this.game.uiCamera.ignore(soil);
@@ -158,6 +180,7 @@ export class FarmingSystem {
             image: soil,
             tilledDay: currentDay
         });
+        this.saveState();
         playSound(this.game.scene, 'hoe');
     }
 
@@ -176,25 +199,18 @@ export class FarmingSystem {
             seed.cropId,
             1
         ).setDepth(9);
-        const wateredIndicator = this.createWateredIndicator(
-            tile.getCenterX(),
-            tile.getCenterY()
-        );
         const statusIndicator = this.createStatusIndicator(
             tile.getCenterX(),
             tile.getCenterY()
         );
 
         this.game.worldObjects.push(crop);
-        this.game.worldObjects.push(wateredIndicator);
         this.game.worldObjects.push(statusIndicator);
         this.game.uiCamera.ignore(crop);
-        this.game.uiCamera.ignore(wateredIndicator);
         this.game.uiCamera.ignore(statusIndicator);
         this.plantedTiles.add(tileKey);
         this.crops.push({
             image: crop,
-            wateredIndicator,
             statusIndicator,
             tileKey,
             cropId: seed.cropId,
@@ -205,6 +221,7 @@ export class FarmingSystem {
         });
         this.game.energy.spend(plantEnergyCost);
         this.game.refreshInventory();
+        this.saveState();
         playSound(this.game.scene, 'plantSeed');
     }
 
@@ -221,10 +238,10 @@ export class FarmingSystem {
 
         crop.wateredDaysInCurrentStage.add(currentDay);
         crop.lastWateredDay = currentDay;
-        crop.wateredIndicator.setVisible(true);
         crop.statusIndicator.setVisible(false);
         this.game.energy.spend(waterEnergyCost);
         this.game.refreshInventory();
+        this.saveState();
         playSound(this.game.scene, 'waterPlants');
     }
 
@@ -247,13 +264,13 @@ export class FarmingSystem {
         }
 
         crop.image.destroy();
-        crop.wateredIndicator.destroy();
         crop.statusIndicator.destroy();
         this.crops.splice(cropIndex, 1);
         this.plantedTiles.delete(tileKey);
         this.clearTilledTile(tileKey);
         this.game.energy.spend(harvestEnergyCost);
         this.game.refreshInventory();
+        this.saveState();
         playSound(this.game.scene, 'sickle');
     }
 
@@ -263,6 +280,7 @@ export class FarmingSystem {
 
             if (isEmpty && currentDay - soil.tilledDay >= tilledSoilDuration) {
                 this.clearTilledTile(tileKey);
+                this.saveState();
             }
         }
     }
@@ -293,13 +311,12 @@ export class FarmingSystem {
             crop.stage++;
             crop.wateredDaysInCurrentStage.clear();
             crop.image.setFrame(crop.stage);
+            this.saveState();
         }
     }
 
     private updateCropIndicators(currentDay: number): void {
         for (const crop of this.crops) {
-            crop.wateredIndicator.setVisible(crop.lastWateredDay === currentDay);
-
             if (crop.stage === 4) {
                 crop.statusIndicator
                     .setTexture('cropReadyToCollect')
@@ -313,21 +330,136 @@ export class FarmingSystem {
         }
     }
 
-    private createWateredIndicator(x: number, y: number): Phaser.GameObjects.Container {
-        const wetSoil = this.game.scene.add.ellipse(0, 8, 15, 6, 0x36bff2, 0.42);
-        const wetCenter = this.game.scene.add.ellipse(0, 8, 8, 3, 0x9beaff, 0.35);
-        const smallShine = this.game.scene.add.circle(4, 6, 1.3, 0xffffff, 0.6);
-
-        return this.game.scene.add.container(x, y, [
-            wetSoil,
-            wetCenter,
-            smallShine
-        ]).setDepth(8.8).setVisible(false);
-    }
-
     private createStatusIndicator(x: number, y: number): Phaser.GameObjects.Image {
         return this.game.scene.add.image(x + 5, y - 9, 'cropNeedsWater')
             .setDepth(9.5);
+    }
+
+    private createSoilImage(tile: Phaser.Tilemaps.Tile): Phaser.GameObjects.Image {
+        return this.game.scene.add.image(tile.getCenterX(), tile.getCenterY(), 'soil')
+            .setDisplaySize(tile.width, tile.height)
+            .setDepth(9);
+    }
+
+    private saveState(): void {
+        const tilledSoils: SavedTilledSoil[] = [];
+        const crops: SavedCrop[] = [];
+
+        for (const [tileKey, soil] of this.tilledTiles) {
+            const tilePosition = this.getTilePositionFromKey(tileKey);
+
+            tilledSoils.push({
+                ...tilePosition,
+                tilledDay: soil.tilledDay
+            });
+        }
+
+        for (const crop of this.crops) {
+            const tilePosition = this.getTilePositionFromKey(crop.tileKey);
+
+            crops.push({
+                ...tilePosition,
+                cropId: crop.cropId,
+                stageGrowthDays: crop.stageGrowthDays,
+                stage: crop.stage,
+                wateredDaysInCurrentStage: [...crop.wateredDaysInCurrentStage],
+                lastWateredDay: crop.lastWateredDay
+            });
+        }
+
+        this.game.scene.registry.set(farmingStateKey, {
+            tilledSoils,
+            crops
+        } satisfies SavedFarmingState);
+    }
+
+    private loadSavedState(): void {
+        const savedState = this.game.scene.registry.get(farmingStateKey) as SavedFarmingState | undefined;
+
+        if (!savedState) {
+            return;
+        }
+
+        for (const savedSoil of savedState.tilledSoils) {
+            const selectedFarmTile = this.getSavedTile(savedSoil);
+
+            if (!selectedFarmTile) {
+                continue;
+            }
+
+            const tileKey = this.getTileKey(selectedFarmTile);
+            const soil = this.createSoilImage(selectedFarmTile.tile);
+
+            this.game.worldObjects.push(soil);
+            this.game.uiCamera.ignore(soil);
+            this.tilledTiles.set(tileKey, {
+                image: soil,
+                tilledDay: savedSoil.tilledDay
+            });
+        }
+
+        for (const savedCrop of savedState.crops) {
+            const selectedFarmTile = this.getSavedTile(savedCrop);
+
+            if (!selectedFarmTile) {
+                continue;
+            }
+
+            const tile = selectedFarmTile.tile;
+            const tileKey = this.getTileKey(selectedFarmTile);
+            const crop = this.game.scene.add.image(
+                tile.getCenterX(),
+                tile.getCenterY() - 4,
+                savedCrop.cropId,
+                savedCrop.stage
+            ).setDepth(9);
+            const statusIndicator = this.createStatusIndicator(
+                tile.getCenterX(),
+                tile.getCenterY()
+            );
+
+            this.game.worldObjects.push(crop);
+            this.game.worldObjects.push(statusIndicator);
+            this.game.uiCamera.ignore(crop);
+            this.game.uiCamera.ignore(statusIndicator);
+            this.plantedTiles.add(tileKey);
+            this.crops.push({
+                image: crop,
+                statusIndicator,
+                tileKey,
+                cropId: savedCrop.cropId,
+                stageGrowthDays: savedCrop.stageGrowthDays,
+                stage: savedCrop.stage,
+                wateredDaysInCurrentStage: new Set(savedCrop.wateredDaysInCurrentStage),
+                lastWateredDay: savedCrop.lastWateredDay
+            });
+        }
+    }
+
+    private getSavedTile(savedTile: SavedTilledSoil | SavedCrop): SelectedFarmTile | null {
+        const layer = this.game.getAvailableFarmLayers()
+            .find((layer) => layer.layer.name === savedTile.layerName);
+        const tile = layer?.getTileAt(savedTile.tileX, savedTile.tileY);
+
+        if (!layer || !tile) {
+            return null;
+        }
+
+        return {
+            tile,
+            layer
+        };
+    }
+
+    private getTilePositionFromKey(tileKey: string): Omit<SavedTilledSoil, 'tilledDay'> {
+        const [layerName, position] = tileKey.split(':');
+        const [tileX, tileY] = position.split(',').map(Number);
+
+        return {
+            layerName,
+            tileX,
+            tileY
+        };
     }
 
     private getTile(pointer: Phaser.Input.Pointer): SelectedFarmTile | null {

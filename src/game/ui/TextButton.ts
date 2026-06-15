@@ -1,4 +1,4 @@
-import { GameObjects, Scene } from 'phaser';
+import { GameObjects, Geom, Scene } from 'phaser';
 import { playSound } from '../services/SoundService';
 import { createPixelNineSlice } from './PixelNineSlice';
 
@@ -23,8 +23,7 @@ export function createTextButton(
         3,
         2,
         'trimmed'
-    )
-        .setInteractive({ useHandCursor: true });
+    );
 
     if (isSelected) {
         background.setTint(0xffd06a);
@@ -39,21 +38,26 @@ export function createTextButton(
         align: 'center'
     }).setOrigin(0.5).setResolution(2);
 
-    const button = scene.add.container(x, y, [background, text]);
+    const button = scene.add.container(x, y, [background, text])
+        .setSize(width, buttonHeight)
+        .setInteractive(
+            new Geom.Rectangle(-width / 2, -buttonHeight / 2, width, buttonHeight),
+            Geom.Rectangle.Contains
+        );
 
-    background.on('pointerover', () => {
+    button.on('pointerover', () => {
         if (!isSelected) {
             background.setTint(0xffd09a);
         }
     });
 
-    background.on('pointerout', () => {
+    button.on('pointerout', () => {
         if (!isSelected) {
             background.clearTint();
         }
     });
 
-    background.on('pointerdown', () => {
+    button.on('pointerdown', () => {
         if (playClickSound) {
             playSound(scene, 'select');
         }

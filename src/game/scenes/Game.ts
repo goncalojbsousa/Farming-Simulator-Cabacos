@@ -216,6 +216,10 @@ export class Game extends Scene {
         }
     }
 
+    refreshSharedHud(): void {
+        this.refreshUi();
+    }
+
     private faintPlayerInsideBuilding(): void {
         this.faintTransitionActive = true;
         this.screenFade.showBlack();
