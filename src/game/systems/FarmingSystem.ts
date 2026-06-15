@@ -28,7 +28,7 @@ type FarmingConfig = {
     energy: EnergyService;
     wateringCan: WateringCanService;
     worldObjects: Phaser.GameObjects.GameObject[];
-    isPointerOverUi: (pointer: Phaser.Input.Pointer) => boolean;
+    isPointerOverInventory: (pointer: Phaser.Input.Pointer) => boolean;
     refreshInventory: () => void;
 };
 
@@ -97,7 +97,7 @@ export class FarmingSystem {
         this.growCrops();
         this.updateCropIndicators(currentDay);
 
-        if (input.mousePressed && !this.game.isPointerOverUi(pointer)) {
+        if (input.mousePressed && !this.game.isPointerOverInventory(pointer)) {
             this.useSelectedItem(pointer, currentDay);
         }
 
