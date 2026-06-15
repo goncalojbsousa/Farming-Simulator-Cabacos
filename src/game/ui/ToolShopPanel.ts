@@ -93,7 +93,7 @@ export class ToolShopPanel {
             return;
         }
 
-        if (!this.inventory.addItem(tool.id, 1)) {
+        if (!this.inventory.addItem(tool.id, 1, true)) {
             this.purchaseMessage.setText(translate('inventoryFull'));
             playSound(this.scene, 'fail');
             return;

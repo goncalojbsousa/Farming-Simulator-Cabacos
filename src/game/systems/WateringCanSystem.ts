@@ -1,14 +1,13 @@
 import { GameObjects, Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
-import { InventoryService } from '../services/InventoryService';
+import { hotbarSlotCount, InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { playSound } from '../services/SoundService';
 import { WateringCanService } from '../services/WateringCanService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 const fillWateringCanAction = 'fill_watering_can';
-const visibleHotbarSlots = 8;
 const hotbarSlotSize = 20;
 const hotbarSlotScale = 3;
 const hotbarSlotGap = 6;
@@ -97,7 +96,7 @@ export class WateringCanSystem {
         const objects = this.config.map.getObjectLayer('Interactions')?.objects ?? [];
 
         this.wellZones = objects
-            .filter((object) => object.properties?.some((property) =>
+            .filter((object) => object.properties?.some((property: { name?: string; value?: unknown }) =>
                 property.name === 'action' && property.value === fillWateringCanAction
             ))
             .map((object) => new Geom.Rectangle(
@@ -134,8 +133,8 @@ export class WateringCanSystem {
         }
 
         const scaledSlotSize = hotbarSlotSize * hotbarSlotScale;
-        const totalWidth = visibleHotbarSlots * scaledSlotSize
-            + (visibleHotbarSlots - 1) * hotbarSlotGap;
+        const totalWidth = hotbarSlotCount * scaledSlotSize
+            + (hotbarSlotCount - 1) * hotbarSlotGap;
         const startX = this.config.scene.scale.width / 2
             - totalWidth / 2
             + scaledSlotSize / 2;
@@ -149,7 +148,7 @@ export class WateringCanSystem {
 
     private getWateringCanHotbarSlot(): number | null {
         const slotIndex = this.config.inventory.slots
-            .slice(0, visibleHotbarSlots)
+            .slice(0, hotbarSlotCount)
             .findIndex((slot) => slot.itemId === 'wateringCan');
 
         return slotIndex === -1 ? null : slotIndex;

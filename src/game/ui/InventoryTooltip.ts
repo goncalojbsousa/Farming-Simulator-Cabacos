@@ -1,5 +1,6 @@
 import { GameObjects, Math as PhaserMath, Scene } from 'phaser';
 
+// Small label shown when the pointer is over an item.
 export class InventoryTooltip {
     readonly container: GameObjects.Container;
     private background: GameObjects.Rectangle;
@@ -30,7 +31,11 @@ export class InventoryTooltip {
         this.text.setText(text);
         this.background.width = this.text.width + 12;
         this.background.height = this.text.height + 8;
-        const tooltipX = PhaserMath.Clamp(x + 10, 0, this.scene.scale.width - this.background.width);
+        const tooltipX = PhaserMath.Clamp(
+            x + 10,
+            0,
+            this.scene.scale.width - this.background.width
+        );
         const tooltipY = PhaserMath.Clamp(
             y - this.background.height - 10,
             0,

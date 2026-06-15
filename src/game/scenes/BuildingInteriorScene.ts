@@ -89,7 +89,7 @@ export class BuildingInteriorScene extends Scene {
             this.energy,
             () => this.isGameplayInteractionBlocked()
         );
-        this.registerUiObjects(this.hud.getUiObjects());
+        this.registerUiObjects(this.hud.uiObjects);
         this.screenFade = new ScreenFade(this);
         this.registerUiObjects([this.screenFade.getGameObject()]);
 

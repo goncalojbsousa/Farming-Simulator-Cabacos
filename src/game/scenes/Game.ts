@@ -47,7 +47,7 @@ export class Game extends Scene {
         this.landOwnership = new LandOwnershipService();
         this.gameWorld = new GameWorld(this, this.landOwnership);
         this.gameInput = new GameInput(this);
-        this.inventory = new InventoryService(16);
+        this.inventory = new InventoryService();
         this.money = new MoneyService(100);
         this.gameTime = new TimeService();
         this.energy = new EnergyService();
@@ -95,8 +95,8 @@ export class Game extends Scene {
             energy: this.energy,
             wateringCan: this.wateringCan,
             worldObjects: this.gameWorld.worldObjects,
-            isPointerOverUi: (pointer) =>
-                this.hud.containsInteractiveElement(pointer.x, pointer.y),
+            isPointerOverInventory: (pointer) =>
+                this.hud.isPointerOverInventory(pointer.x, pointer.y),
             refreshInventory: () => this.hud.refresh()
         });
 
@@ -147,7 +147,7 @@ export class Game extends Scene {
 
     private createUiCamera(): void {
         const uiObjects = [
-            ...this.hud.getUiObjects(),
+            ...this.hud.uiObjects,
             ...this.buildingEntrances.getUiObjects(),
             ...this.wateringCanSystem.getUiObjects()
         ];
@@ -189,11 +189,11 @@ export class Game extends Scene {
 
     private addStartingItems(): void {
         for (const toolId of startingToolIds) {
-            this.inventory.addItem(toolId, 1);
+            this.inventory.addItem(toolId, 1, true);
         }
 
         for (const seedId of startingSeedIds) {
-            this.inventory.addItem(seedId, 5);
+            this.inventory.addItem(seedId, 5, true);
         }
     }
 
