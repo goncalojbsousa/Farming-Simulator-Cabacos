@@ -10,7 +10,23 @@ export class Preloader extends Scene {
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
 
-        this.add.image(centerX, centerY, 'background').setDisplaySize(this.scale.width, this.scale.height);
+        const background = this.add.image(centerX, centerY, 'mainMenuBackground');
+        const layoutBackground = () => {
+            const scale = Math.max(
+                this.scale.width / background.width,
+                this.scale.height / background.height
+            );
+
+            background
+                .setPosition(this.scale.width / 2, this.scale.height / 2)
+                .setScale(scale);
+        };
+
+        layoutBackground();
+        this.scale.on('resize', layoutBackground);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', layoutBackground);
+        });
 
         this.add.rectangle(centerX, centerY, 468, 32).setStrokeStyle(1, 0xffffff);
 
@@ -24,16 +40,18 @@ export class Preloader extends Scene {
 
     preload() {
         this.load.setPath('assets');
-        this.load.image('logo', 'logo.png');
-        this.load.image('mainMenuBackground', 'main_menu_background.png');
-        this.load.image('mainMenuLogo', 'logo_quinta_cabacos.png');
-        this.load.image('menuBrownDarker', '9slice_menu_brown_darker.png');
-        this.load.image('button', 'button.png');
-        this.load.image('coin', 'coin.png');
-        this.load.image('land', 'land.png');
-        this.load.image('light', 'light.png');
-        this.load.image('sun', 'sun.png');
-        this.load.spritesheet('energyBar', 'energyBar.png', {
+        this.load.image('mainMenuLogo', 'mainmenu/logo_quinta_cabacos.png');
+        this.load.image('menuBrownDarker', 'ui/common/9slice_menu_brown_darker.png');
+        this.load.image('menuWhite', 'ui/common/9slice_menu_white.png');
+        this.load.image('button', 'ui/common/button.png');
+        this.load.image('coin', 'ui/hud/coin.png');
+        this.load.image('shopIconBackground', 'ui/shop/icon_bg.png');
+        this.load.image('cropNeedsWater', 'farming/indicators/crop_need_water.png');
+        this.load.image('cropReadyToCollect', 'farming/indicators/ready_to_collect.png');
+        this.load.image('land', 'ui/hud/land.png');
+        this.load.image('light', 'ui/hud/light.png');
+        this.load.image('sun', 'ui/hud/sun.png');
+        this.load.spritesheet('energyBar', 'ui/hud/energyBar.png', {
             frameWidth: 15,
             frameHeight: 7
         });
