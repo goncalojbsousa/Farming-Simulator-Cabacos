@@ -5,12 +5,19 @@ export type InventorySlot = {
     quantity: number;
 };
 
+export const hotbarSlotCount = 8;
+export const inventorySlotCount = 16;
+
+// Stores the inventory data. The first slots belong to the hotbar and the
+// remaining slots belong to the inventory panel.
 export class InventoryService {
     readonly slots: InventorySlot[];
     selectedSlotIndex = 0;
 
-    constructor(numberOfSlots: number) {
-        this.slots = Array.from({ length: numberOfSlots }, () => ({
+    constructor() {
+        this.slots = Array.from({
+            length: hotbarSlotCount + inventorySlotCount
+        }, () => ({
             itemId: null,
             quantity: 0
         }));
@@ -20,13 +27,23 @@ export class InventoryService {
         this.selectedSlotIndex = index;
     }
 
-    addItem(itemId: ItemId, quantity: number): boolean {
+    addItem(itemId: ItemId, quantity: number, hotbarFirst = false): boolean {
         const maxStack = getItemById(itemId).maxStackSize;
+
+        // Add to an existing stack before looking for an empty slot.
         let slot = this.slots.find((slot) =>
             slot.itemId === itemId && slot.quantity + quantity <= maxStack
         );
 
-        slot ??= this.slots.find((slot) => slot.itemId === null);
+        const preferredSlots = hotbarFirst
+            ? this.slots.slice(0, hotbarSlotCount)
+            : this.slots.slice(hotbarSlotCount);
+        const fallbackSlots = hotbarFirst
+            ? this.slots.slice(hotbarSlotCount)
+            : this.slots.slice(0, hotbarSlotCount);
+
+        slot ??= preferredSlots.find((slot) => slot.itemId === null);
+        slot ??= fallbackSlots.find((slot) => slot.itemId === null);
 
         if (!slot) {
             return false;
@@ -71,11 +88,12 @@ export class InventoryService {
                 from.itemId = null;
             }
         } else {
-            const savedSlot = { ...from };
-            this.slots[fromIndex] = { ...to };
-            this.slots[toIndex] = savedSlot;
+            [this.slots[fromIndex], this.slots[toIndex]] = [to, from];
         }
 
-        this.selectedSlotIndex = toIndex;
+        // Only hotbar slots can be selected for use in the game world.
+        if (toIndex < hotbarSlotCount) {
+            this.selectedSlotIndex = toIndex;
+        }
     }
 }

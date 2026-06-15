@@ -10,6 +10,8 @@ import { MoneyDisplay } from './MoneyDisplay';
 import { TimeDisplay } from './TimeDisplay';
 
 export class GameHud {
+    readonly uiObjects: Phaser.GameObjects.GameObject[];
+
     private inventoryUi: InventoryUi;
     private moneyDisplay: MoneyDisplay;
     private timeDisplay: TimeDisplay;
@@ -27,6 +29,12 @@ export class GameHud {
         this.moneyDisplay = new MoneyDisplay(scene, money);
         this.timeDisplay = new TimeDisplay(scene, gameTime);
         this.energyDisplay = new EnergyDisplay(scene, energy);
+        this.uiObjects = [
+            ...this.inventoryUi.uiObjects,
+            ...this.moneyDisplay.getUiObjects(),
+            ...this.timeDisplay.getUiObjects(),
+            ...this.energyDisplay.getUiObjects()
+        ];
     }
 
     update(input: GameInput): void {
@@ -46,16 +54,7 @@ export class GameHud {
         this.energyDisplay.layout();
     }
 
-    containsInteractiveElement(x: number, y: number): boolean {
-        return this.inventoryUi.containsInteractiveElement(x, y);
-    }
-
-    getUiObjects(): Phaser.GameObjects.GameObject[] {
-        return [
-            ...this.inventoryUi.getUiObjects(),
-            ...this.moneyDisplay.getUiObjects(),
-            ...this.timeDisplay.getUiObjects(),
-            ...this.energyDisplay.getUiObjects()
-        ];
+    isPointerOverInventory(x: number, y: number): boolean {
+        return this.inventoryUi.isPointerOverSlot(x, y);
     }
 }
