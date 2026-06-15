@@ -12,6 +12,7 @@ export type SoundKey =
     | 'plantSeed'
     | 'purchaseClick'
     | 'select'
+    | 'sell'
     | 'sickle'
     | 'sleep'
     | 'toolSwap'

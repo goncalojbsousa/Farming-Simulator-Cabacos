@@ -33,7 +33,8 @@ export class ShopRow {
         scene: Scene,
         item: PurchasableItem,
         rowY: number,
-        onBuy: () => void
+        onBuy: () => void,
+        buttonText = translate('buy')
     ) {
         const rowBackground = createPixelNineSlice(scene, 'menuWhite', rowWidth, rowHeight);
         const iconBackground = scene.add.image(iconX, 0, 'shopIconBackground');
@@ -56,7 +57,7 @@ export class ShopRow {
             0,
             80,
             26,
-            translate('buy'),
+            buttonText,
             onBuy,
             false,
             false

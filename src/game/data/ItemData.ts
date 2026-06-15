@@ -29,6 +29,11 @@ export type ToolItem = GameItem & {
     buyPrice: number;
 };
 
+export type HarvestItem = GameItem & {
+    type: 'resource';
+    sellPrice: number;
+};
+
 const tools = [
     { id: 'axe', nameKey: 'itemAxe', assetPath: 'tools/axe.png', buyPrice: 45 },
     { id: 'hoe', nameKey: 'itemHoe', assetPath: 'tools/hoe.png', buyPrice: 35 },
@@ -101,6 +106,10 @@ export function getSeedItems(): SeedItem[] {
 
 export function getToolShopItems(): ToolItem[] {
     return gameItems.filter((item) => item.type === 'tool') as ToolItem[];
+}
+
+export function getHarvestItems(): HarvestItem[] {
+    return gameItems.filter((item) => item.type === 'resource') as HarvestItem[];
 }
 
 export const startingToolIds = ['sickle', 'hoe'];

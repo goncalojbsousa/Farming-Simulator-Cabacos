@@ -29,6 +29,15 @@ export class GameHud {
         this.moneyDisplay = new MoneyDisplay(scene, money);
         this.timeDisplay = new TimeDisplay(scene, gameTime);
         this.energyDisplay = new EnergyDisplay(scene, energy);
+
+        const stopInventoryRefresh = inventory.onChange(() => this.inventoryUi.refresh());
+        const stopMoneyRefresh = money.onChange(() => this.moneyDisplay.refresh());
+
+        scene.events.once('shutdown', () => {
+            stopInventoryRefresh();
+            stopMoneyRefresh();
+        });
+
         this.uiObjects = [
             ...this.inventoryUi.uiObjects,
             ...this.moneyDisplay.getUiObjects(),

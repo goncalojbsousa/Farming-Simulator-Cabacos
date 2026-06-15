@@ -13,6 +13,7 @@ export const inventorySlotCount = 16;
 export class InventoryService {
     readonly slots: InventorySlot[];
     selectedSlotIndex = 0;
+    private changeCallbacks: (() => void)[] = [];
 
     constructor() {
         this.slots = Array.from({
@@ -25,6 +26,7 @@ export class InventoryService {
 
     selectSlot(index: number): void {
         this.selectedSlotIndex = index;
+        this.notifyChange();
     }
 
     addItem(itemId: ItemId, quantity: number, hotbarFirst = false): boolean {
@@ -51,6 +53,7 @@ export class InventoryService {
 
         slot.itemId = itemId;
         slot.quantity += quantity;
+        this.notifyChange();
         return true;
     }
 
@@ -60,6 +63,29 @@ export class InventoryService {
         );
     }
 
+    removeOneItem(itemId: ItemId, preferredSlotIndex?: number): boolean {
+        let slot = preferredSlotIndex === undefined
+            ? undefined
+            : this.slots[preferredSlotIndex];
+
+        if (slot?.itemId !== itemId) {
+            slot = this.slots.find((slot) => slot.itemId === itemId);
+        }
+
+        if (!slot) {
+            return false;
+        }
+
+        slot.quantity--;
+
+        if (slot.quantity === 0) {
+            slot.itemId = null;
+        }
+
+        this.notifyChange();
+        return true;
+    }
+
     removeOneFromSlot(index: number): void {
         const slot = this.slots[index];
         slot.quantity--;
@@ -67,6 +93,8 @@ export class InventoryService {
         if (slot.quantity === 0) {
             slot.itemId = null;
         }
+
+        this.notifyChange();
     }
 
     moveSlot(fromIndex: number, toIndex: number): void {
@@ -94,6 +122,24 @@ export class InventoryService {
         // Only hotbar slots can be selected for use in the game world.
         if (toIndex < hotbarSlotCount) {
             this.selectedSlotIndex = toIndex;
+        }
+
+        this.notifyChange();
+    }
+
+    onChange(callback: () => void): () => void {
+        this.changeCallbacks.push(callback);
+
+        return () => {
+            this.changeCallbacks = this.changeCallbacks.filter((savedCallback) =>
+                savedCallback !== callback
+            );
+        };
+    }
+
+    private notifyChange(): void {
+        for (const callback of this.changeCallbacks) {
+            callback();
         }
     }
 }

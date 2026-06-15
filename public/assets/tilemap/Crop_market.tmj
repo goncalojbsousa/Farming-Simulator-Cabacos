@@ -348,6 +348,24 @@
                  "width":37.3333333333333,
                  "x":172,
                  "y":256
+                }, 
+                {
+                 "height":22,
+                 "id":27,
+                 "name":"crop_market",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"action",
+                         "type":"string",
+                         "value":"open_crop_market"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":100,
+                 "x":128,
+                 "y":84.6666666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -356,7 +374,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":27,
+ "nextobjectid":29,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.1",

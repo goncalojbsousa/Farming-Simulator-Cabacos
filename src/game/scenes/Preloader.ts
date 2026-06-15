@@ -99,6 +99,7 @@ export class Preloader extends Scene {
         this.load.audio('plantSeed', 'sounds/plantSeed.mp3');
         this.load.audio('purchaseClick', 'sounds/purchaseClick.mp3');
         this.load.audio('select', 'sounds/select.mp3');
+        this.load.audio('sell', 'sounds/sell.mp3');
         this.load.audio('sickle', 'sounds/sickle.mp3');
         this.load.audio('sleep', 'sounds/sleep.mp3');
         this.load.audio('toolSwap', 'sounds/toolSwap.mp3');
