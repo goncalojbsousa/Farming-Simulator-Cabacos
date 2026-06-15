@@ -1,16 +1,6 @@
-import { GameObjects, Scene } from 'phaser';
-
-type ButtonColors = {
-    normal: number;
-    hover: number;
-    selected?: number;
-};
-
-const defaultButtonColors: ButtonColors = {
-    normal: 0x2f5d2c,
-    hover: 0x3f7a39,
-    selected: 0xd6a84f
-};
+import { GameObjects, Geom, Scene } from 'phaser';
+import { playSound } from '../services/SoundService';
+import { createPixelNineSlice } from './PixelNineSlice';
 
 export function createTextButton(
     scene: Scene,
@@ -20,34 +10,60 @@ export function createTextButton(
     height: number,
     label: string,
     onClick: () => void,
-    isSelected = false
+    isSelected = false,
+    playClickSound = true
 ): GameObjects.Container {
-    const colors = defaultButtonColors;
-    const fillColor = isSelected && colors.selected ? colors.selected : colors.normal;
+    const buttonHeight = Math.min(height, 39);
+    const fontSize = Math.min(22, Math.max(13, Math.floor(buttonHeight * 0.5)));
+    const background = createPixelNineSlice(
+        scene,
+        'button',
+        width,
+        buttonHeight,
+        3,
+        2,
+        'trimmed'
+    );
 
-    const background = scene.add.rectangle(0, 0, width, height, fillColor)
-        .setStrokeStyle(2, 0xffffff)
-        .setInteractive({ useHandCursor: true });
+    if (isSelected) {
+        background.setTint(0xffd06a);
+    }
 
-    const text = scene.add.text(0, 0, label, {
-        fontFamily: 'Arial',
-        fontSize: 24,
-        color: '#ffffff',
+    const text = scene.add.text(0, -2, label, {
+        fontFamily: 'Arial Black',
+        fontSize,
+        color: '#fff4d7',
+        stroke: '#1a100b',
+        strokeThickness: Math.max(2, Math.floor(fontSize / 7)),
         align: 'center'
-    }).setOrigin(0.5);
+    }).setOrigin(0.5).setResolution(2);
 
-    const button = scene.add.container(x, y, [background, text]);
+    const button = scene.add.container(x, y, [background, text])
+        .setSize(width, buttonHeight)
+        .setInteractive(
+            new Geom.Rectangle(0, 0, width, buttonHeight),
+            Geom.Rectangle.Contains
+        );
 
-    // Keep the hover state on the rectangle so the text remains stable.
-    background.on('pointerover', () => {
-        background.setFillStyle(colors.hover);
+    button.on('pointerover', () => {
+        if (!isSelected) {
+            background.setTint(0xffd09a);
+        }
     });
 
-    background.on('pointerout', () => {
-        background.setFillStyle(fillColor);
+    button.on('pointerout', () => {
+        if (!isSelected) {
+            background.clearTint();
+        }
     });
 
-    background.on('pointerdown', onClick);
+    button.on('pointerdown', () => {
+        if (playClickSound) {
+            playSound(scene, 'select');
+        }
+
+        onClick();
+    });
 
     return button;
 }

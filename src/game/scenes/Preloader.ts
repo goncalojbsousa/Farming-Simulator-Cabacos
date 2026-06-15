@@ -1,10 +1,5 @@
 import { Scene } from 'phaser';
-import {
-    cropStages,
-    gameItems,
-    getCropAssetPath,
-    getCropTextureKey
-} from '../data/ItemData';
+import { crops, gameItems } from '../data/ItemData';
 
 export class Preloader extends Scene {
     constructor() {
@@ -15,7 +10,23 @@ export class Preloader extends Scene {
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
 
-        this.add.image(centerX, centerY, 'background').setDisplaySize(this.scale.width, this.scale.height);
+        const background = this.add.image(centerX, centerY, 'mainMenuBackground');
+        const layoutBackground = () => {
+            const scale = Math.max(
+                this.scale.width / background.width,
+                this.scale.height / background.height
+            );
+
+            background
+                .setPosition(this.scale.width / 2, this.scale.height / 2)
+                .setScale(scale);
+        };
+
+        layoutBackground();
+        this.scale.on('resize', layoutBackground);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', layoutBackground);
+        });
 
         this.add.rectangle(centerX, centerY, 468, 32).setStrokeStyle(1, 0xffffff);
 
@@ -29,9 +40,21 @@ export class Preloader extends Scene {
 
     preload() {
         this.load.setPath('assets');
-        this.load.image('logo', 'logo.png');
-        this.load.image('mainMenuBackground', 'main_menu_background.png');
-        this.load.image('mainMenuLogo', 'logo_quinta_cabacos.png');
+        this.load.image('mainMenuLogo', 'mainmenu/logo_quinta_cabacos.png');
+        this.load.image('menuBrownDarker', 'ui/common/9slice_menu_brown_darker.png');
+        this.load.image('menuWhite', 'ui/common/9slice_menu_white.png');
+        this.load.image('button', 'ui/common/button.png');
+        this.load.image('coin', 'ui/hud/coin.png');
+        this.load.image('shopIconBackground', 'ui/shop/icon_bg.png');
+        this.load.image('cropNeedsWater', 'farming/indicators/crop_need_water.png');
+        this.load.image('cropReadyToCollect', 'farming/indicators/ready_to_collect.png');
+        this.load.image('land', 'ui/hud/land.png');
+        this.load.image('light', 'ui/hud/light.png');
+        this.load.image('sun', 'ui/hud/sun.png');
+        this.load.spritesheet('energyBar', 'ui/hud/energyBar.png', {
+            frameWidth: 15,
+            frameHeight: 7
+        });
         this.load.image('hotbarSelector', 'inventory/hotbar_selector.png');
         this.load.spritesheet('inventorySlot', 'inventory/inventorySlot.png', {
             frameWidth: 20,
@@ -39,16 +62,16 @@ export class Preloader extends Scene {
         });
 
         for (const item of gameItems) {
-            this.load.image(item.id, item.assetPath);
-
-            if (item.type === 'seed') {
-                for (const stage of cropStages) {
-                    this.load.image(
-                        getCropTextureKey(item.cropId!, stage),
-                        getCropAssetPath(item.cropId!, stage)
-                    );
-                }
+            if (item.type === 'tool') {
+                this.load.image(item.textureKey, item.assetPath);
             }
+        }
+
+        for (const crop of crops) {
+            this.load.spritesheet(crop.id, `plantation/crops/${crop.id}.png`, {
+                frameWidth: crop.frameWidth,
+                frameHeight: crop.frameHeight
+            });
         }
 
         this.load.tilemapTiledJSON('tilemap', 'tilemap/Cabacos_map.tmj');
@@ -58,11 +81,29 @@ export class Preloader extends Scene {
         this.load.image('cropMarketImage', 'tilemap/crop_market_sem_fundo.png');
         this.load.tilemapTiledJSON('seedShopMap', 'tilemap/Seed_shop.tmj');
         this.load.image('seedShopImage', 'tilemap/seed_shop_sunnyside_style_384x288.png');
+        this.load.tilemapTiledJSON('toolShopMap', 'tilemap/tool_shop.tmj');
+        this.load.image('toolShopImage', 'tilemap/tool_shop_sunnyside_style_384x288.png');
         this.load.tilemapTiledJSON('townHallMap', 'tilemap/Town_hall.tmj');
         this.load.image('townHallImage', 'tilemap/town_hall_sunnyside_style_384x288.png');
         this.load.image('ts_map', 'tilemap/ts_map.png');
         this.load.image('ts_forest', 'tilemap/ts_forest.png');
         this.load.image('soil', 'plantation/soil.png');
+        this.load.audio('buyLand', 'sounds/buyLand.mp3');
+        this.load.audio('doorOpen', 'sounds/doorOpen.mp3');
+        this.load.audio('fail', 'sounds/fail.mp3');
+        this.load.audio('faint', 'sounds/faint.mp3');
+        this.load.audio('getWater', 'sounds/getWater.mp3');
+        this.load.audio('grassyStep', 'sounds/grassyStep.mp3');
+        this.load.audio('hoe', 'sounds/hoe.mp3');
+        this.load.audio('openMenu', 'sounds/openMenu.mp3');
+        this.load.audio('plantSeed', 'sounds/plantSeed.mp3');
+        this.load.audio('purchaseClick', 'sounds/purchaseClick.mp3');
+        this.load.audio('select', 'sounds/select.mp3');
+        this.load.audio('sell', 'sounds/sell.mp3');
+        this.load.audio('sickle', 'sounds/sickle.mp3');
+        this.load.audio('sleep', 'sounds/sleep.mp3');
+        this.load.audio('toolSwap', 'sounds/toolSwap.mp3');
+        this.load.audio('waterPlants', 'sounds/waterPlants.mp3');
 
         this.load.spritesheet('idle', 'characters/player/idle/base_waiting_strip9.png', {
             frameWidth: 96,
@@ -76,6 +117,7 @@ export class Preloader extends Scene {
     }
 
     create() {
+        this.textures.get('button').add('trimmed', 0, 12, 0, 24, 13);
         this.scene.start('MainMenu');
     }
 }

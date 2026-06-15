@@ -3,8 +3,16 @@ import { getSeedItems, SeedItem } from '../data/ItemData';
 import { InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
 import { MenuPanel } from './MenuPanel';
-import { SeedShopRow } from './SeedShopRow';
+import { ShopRow } from './ShopRow';
+
+const panelWidth = 600;
+const panelHeight = 500;
+const panelCenterOffsetY = -56;
+const firstSeedRowY = -158;
+const seedRowSpacing = 35;
+const purchaseMessageY = 218;
 
 export class SeedShopPanel {
     private menu: MenuPanel;
@@ -17,26 +25,30 @@ export class SeedShopPanel {
         private onPurchase: () => void
     ) {
         this.menu = new MenuPanel(scene, {
-            width: 560,
-            height: 570,
+            width: panelWidth,
+            height: panelHeight,
+            depth: 1200,
             title: translate('seedShopTitle'),
-            depth: 1200
+            closeButton: true
         });
 
-        this.purchaseMessage = scene.add.text(0, 255, '', {
-            fontFamily: 'Arial',
-            fontSize: 16,
-            color: '#ffe7a3'
-        }).setOrigin(0.5);
+        this.purchaseMessage = scene.add.text(0, purchaseMessageY, '', {
+            fontFamily: 'Arial Black',
+            fontSize: 14,
+            color: '#fff4d7',
+            stroke: '#1a100b',
+            strokeThickness: 4,
+            align: 'center',
+            wordWrap: { width: 500 }
+        }).setOrigin(0.5).setResolution(2);
 
         this.menu.addContent(this.purchaseMessage);
-        this.menu.addContent(this.createCloseButton());
 
         getSeedItems().forEach((seed, index) => {
-            const seedRow = new SeedShopRow(
+            const seedRow = new ShopRow(
                 scene,
                 seed,
-                -190 + index * 40,
+                firstSeedRowY + index * seedRowSpacing,
                 () => this.buySeed(seed)
             );
 
@@ -65,36 +77,28 @@ export class SeedShopPanel {
     }
 
     layout(): void {
-        this.menu.center(true);
+        this.menu.center(true, panelCenterOffsetY);
     }
 
     getUiObjects(): GameObjects.GameObject[] {
         return [this.menu.container];
     }
 
-    private createCloseButton(): GameObjects.Text {
-        return this.scene.add.text(250, -255, 'X', {
-            fontFamily: 'Arial Black',
-            fontSize: 20,
-            color: '#ffffff'
-        })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.close());
-    }
-
     private buySeed(seed: SeedItem): void {
         if (!this.money.canAfford(seed.buyPrice)) {
             this.purchaseMessage.setText(translate('notEnoughMoney'));
+            playSound(this.scene, 'fail');
             return;
         }
 
-        if (!this.inventory.addItem(seed.id, 1)) {
+        if (!this.inventory.addItem(seed.id, 1, true)) {
             this.purchaseMessage.setText(translate('inventoryFull'));
+            playSound(this.scene, 'fail');
             return;
         }
 
         this.money.spend(seed.buyPrice);
+        playSound(this.scene, 'purchaseClick');
         this.onPurchase();
         this.purchaseMessage.setText(
             `${translate('purchased')} ${translate(seed.nameKey)}`

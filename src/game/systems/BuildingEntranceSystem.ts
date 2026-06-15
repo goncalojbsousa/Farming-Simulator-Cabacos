@@ -1,21 +1,26 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
+import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { playSound } from '../services/SoundService';
+import { TimeService } from '../services/TimeService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 type BuildingEntrance = {
     zone: Geom.Rectangle;
-    scene: string;
+    sceneKey: string;
     messageKey: TranslationKey;
 };
 
-const buildings = [
+const buildingDefinitions = [
     ['player_house_door', 'HouseInterior', 'enterHouse'],
     ['player_crop_market_door', 'CropMarket', 'enterMarket'],
     ['player_seed_shop_door', 'SeedShop', 'enterSeedShop'],
+    ['player_tool_shop_door', 'ToolShop', 'enterToolShop'],
     ['player_town_hall_door', 'TownHall', 'enterTownHall']
 ] as const;
 
@@ -28,11 +33,15 @@ export class BuildingEntranceSystem {
         map: Phaser.Tilemaps.Tilemap,
         private player: Player,
         private inventory: InventoryService,
-        private money: MoneyService
+        private money: MoneyService,
+        private gameTime: TimeService,
+        private landOwnership: LandOwnershipService,
+        private energy: EnergyService,
+        private onPlayerFaint: () => void
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
 
-        for (const [objectName, scene, messageKey] of buildings) {
+        for (const [objectName, sceneKey, messageKey] of buildingDefinitions) {
             const object = objects.find((object) => object.name === objectName);
 
             if (object) {
@@ -43,7 +52,7 @@ export class BuildingEntranceSystem {
                         object.width ?? 0,
                         object.height ?? 0
                     ),
-                    scene,
+                    sceneKey,
                     messageKey
                 });
             }
@@ -65,10 +74,15 @@ export class BuildingEntranceSystem {
         }
 
         if (entrance && input.interactPressed()) {
+            playSound(this.scene, 'doorOpen');
             this.scene.scene.sleep('Game');
-            this.scene.scene.launch(entrance.scene, {
+            this.scene.scene.launch(entrance.sceneKey, {
                 inventory: this.inventory,
-                money: this.money
+                money: this.money,
+                gameTime: this.gameTime,
+                landOwnership: this.landOwnership,
+                energy: this.energy,
+                onPlayerFaint: this.onPlayerFaint
             });
         }
     }

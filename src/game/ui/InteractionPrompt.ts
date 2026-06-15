@@ -1,19 +1,21 @@
 import { GameObjects, Scene } from 'phaser';
+import { createPixelNineSlice } from './PixelNineSlice';
 
 export class InteractionPrompt {
     private container: GameObjects.Container;
-    private background: GameObjects.Rectangle;
+    private background: GameObjects.NineSlice;
     private text: GameObjects.Text;
 
     constructor(scene: Scene, message = '') {
-        this.background = scene.add.rectangle(0, 0, 20, 40, 0x1f2d24, 0.9)
-            .setStrokeStyle(2, 0xe2a36f);
+        this.background = createPixelNineSlice(scene, 'menuBrownDarker', 20, 48);
 
         this.text = scene.add.text(0, 0, message, {
             fontFamily: 'Arial Black',
-            fontSize: 16,
-            color: '#ffffff'
-        }).setOrigin(0.5);
+            fontSize: 18,
+            color: '#fff4d7',
+            stroke: '#1a100b',
+            strokeThickness: 4
+        }).setOrigin(0.5).setResolution(2);
 
         this.container = scene.add.container(0, 0, [
             this.background,
@@ -25,7 +27,9 @@ export class InteractionPrompt {
 
     setText(message: string): void {
         this.text.setText(message);
-        this.background.setSize(this.text.width + 32, 40);
+        const width = Math.max(260, this.text.width + 44);
+
+        this.background.setSize(width / 3, 16);
     }
 
     setPosition(x: number, y: number): void {

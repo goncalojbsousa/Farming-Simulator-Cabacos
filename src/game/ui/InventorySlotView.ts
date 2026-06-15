@@ -14,9 +14,14 @@ export class InventorySlotView {
         scale: number
     ) {
         this.container = scene.add.container(0, 0).setScrollFactor(0);
-        this.slotImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale);
-        this.selectorImage = scene.add.image(0, 0, 'hotbarSelector').setScale(scale).setVisible(false);
-        this.itemImage = scene.add.image(0, 0, 'inventorySlot', 0).setScale(scale).setVisible(false);
+        this.slotImage = scene.add.image(0, 0, 'inventorySlot', 0)
+            .setScale(scale);
+        this.selectorImage = scene.add.image(0, 0, 'hotbarSelector')
+            .setScale(scale)
+            .setVisible(false);
+        this.itemImage = scene.add.image(0, 0, 'inventorySlot', 0)
+            .setScale(scale)
+            .setVisible(false);
         this.quantityText = scene.add.text(8 * scale, 8 * scale, '', {
             fontFamily: 'Arial',
             fontSize: `${8 * scale}px`,
@@ -28,7 +33,12 @@ export class InventorySlotView {
 
         this.slotImage.setInteractive({ useHandCursor: true });
 
-        this.container.add([this.slotImage, this.itemImage, this.selectorImage, this.quantityText]);
+        this.container.add([
+            this.slotImage,
+            this.itemImage,
+            this.selectorImage,
+            this.quantityText
+        ]);
     }
 
     containsPoint(x: number, y: number): boolean {
@@ -46,7 +56,7 @@ export class InventorySlotView {
 
         const slotItem = getItemById(slot.itemId);
 
-        this.itemImage.setTexture(slotItem.id);
+        this.itemImage.setTexture(slotItem.textureKey, slotItem.textureFrame);
         this.itemImage.setVisible(true);
         this.quantityText.setText(String(slot.quantity));
         this.quantityText.setVisible(slot.quantity > 1);

@@ -1,34 +1,56 @@
 import { GameObjects, Scene } from 'phaser';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { createPixelNineSlice } from './PixelNineSlice';
+
+const cardX = 122;
+const cardY = 35;
+const frameWidth = 214;
+const frameHeight = 48;
+const iconX = -78;
+const textX = -51;
 
 export class MoneyDisplay {
-    private background: GameObjects.Rectangle;
-    private balanceText: GameObjects.Text;
+    private container: GameObjects.Container;
+    private amountText: GameObjects.Text;
 
     constructor(scene: Scene, private money: MoneyService) {
-        this.background = scene.add.rectangle(16, 16, 158, 36, 0x1f2d24, 0.85)
-            .setOrigin(0)
-            .setStrokeStyle(2, 0xe2a36f)
-            .setScrollFactor(0)
-            .setDepth(950);
+        const panel = createPixelNineSlice(scene, 'menuBrownDarker', frameWidth, frameHeight);
+        const coin = scene.add.image(iconX, 0, 'coin').setScale(2);
 
-        this.balanceText = scene.add.text(28, 23, '', {
+        const labelText = scene.add.text(textX, -10, translate('money'), {
+            fontFamily: 'Arial Black',
+            fontSize: 11,
+            color: '#ffe7a3',
+            stroke: '#1a100b',
+            strokeThickness: 3
+        }).setOrigin(0, 0.5).setResolution(2);
+
+        this.amountText = scene.add.text(textX, 7, '', {
             fontFamily: 'Arial Black',
             fontSize: 16,
-            color: '#ffffff',
-            stroke: '#000000',
+            color: '#fff8df',
+            stroke: '#1a100b',
             strokeThickness: 3
-        }).setScrollFactor(0).setDepth(951);
+        }).setOrigin(0, 0.5).setResolution(2);
+
+        this.container = scene.add.container(cardX, cardY, [
+            panel,
+            coin,
+            labelText,
+            this.amountText
+        ])
+            .setScrollFactor(0)
+            .setDepth(950);
 
         this.refresh();
     }
 
     refresh(): void {
-        this.balanceText.setText(`${translate('money')}: ${this.money.getBalance()}`);
+        this.amountText.setText(`${this.money.getBalance()} $`);
     }
 
     getUiObjects(): GameObjects.GameObject[] {
-        return [this.background, this.balanceText];
+        return [this.container];
     }
 }

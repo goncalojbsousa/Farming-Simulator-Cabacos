@@ -5,6 +5,8 @@ import { createTextButton } from '../ui/TextButton';
 export class MainMenu extends Scene {
     private background: GameObjects.Image;
     private logo: GameObjects.Image;
+    private startButton: GameObjects.Container;
+    private settingsButton: GameObjects.Container;
 
     constructor() {
         super('MainMenu');
@@ -14,11 +16,11 @@ export class MainMenu extends Scene {
         this.background = this.add.image(0, 0, 'mainMenuBackground').setOrigin(0.5);
         this.logo = this.add.image(0, 0, 'mainMenuLogo').setOrigin(0.5);
 
-        createTextButton(this, 0, 0, 280, 60, translate('startGame'), () => {
+        this.startButton = createTextButton(this, 0, 0, 280, 60, translate('startGame'), () => {
             this.scene.start('Game');
         }).setName('startButton');
 
-        createTextButton(this, 0, 0, 280, 60, translate('settings'), () => {
+        this.settingsButton = createTextButton(this, 0, 0, 280, 60, translate('settings'), () => {
             this.scene.start('SettingsMenu');
         }).setName('settingsButton');
 
@@ -41,8 +43,8 @@ export class MainMenu extends Scene {
             .setScale(logoScale)
             .setPosition(centerX, centerY - 145);
 
-        this.children.getByName('startButton')?.setPosition(centerX, centerY + 100);
-        this.children.getByName('settingsButton')?.setPosition(centerX, centerY + 180);
+        this.startButton.setPosition(centerX, centerY + 100);
+        this.settingsButton.setPosition(centerX, centerY + 180);
     }
 
     private coverImage(image: GameObjects.Image): void {
