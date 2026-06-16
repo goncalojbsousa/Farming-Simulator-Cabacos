@@ -6,6 +6,7 @@ import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { QuestService } from '../services/QuestService';
 import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { GameHud } from '../ui/GameHud';
@@ -26,6 +27,7 @@ export type BuildingInteriorData = {
     gameTime: TimeService;
     landOwnership: LandOwnershipService;
     energy: EnergyService;
+    quests: QuestService;
     onPlayerFaint: () => void;
 };
 
@@ -39,6 +41,7 @@ export class BuildingInteriorScene extends Scene {
     protected gameTime: TimeService;
     protected landOwnership: LandOwnershipService;
     protected energy: EnergyService;
+    protected quests: QuestService;
     protected hud: GameHud;
     protected screenFade: ScreenFade;
     protected faintTransitionActive = false;
@@ -58,6 +61,7 @@ export class BuildingInteriorScene extends Scene {
         this.gameTime = data.gameTime;
         this.landOwnership = data.landOwnership;
         this.energy = data.energy;
+        this.quests = data.quests;
         this.onPlayerFaint = data.onPlayerFaint;
     }
 
@@ -87,6 +91,7 @@ export class BuildingInteriorScene extends Scene {
             this.money,
             this.gameTime,
             this.energy,
+            this.quests,
             () => this.isGameplayInteractionBlocked()
         );
         this.registerUiObjects(this.hud.uiObjects);

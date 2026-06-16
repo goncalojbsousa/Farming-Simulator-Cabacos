@@ -5,6 +5,7 @@ import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { MoneyService } from '../services/MoneyService';
+import { QuestService } from '../services/QuestService';
 import { SaveGameData } from '../services/SaveService';
 import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
@@ -35,6 +36,7 @@ export class Game extends Scene {
     private landOwnership: LandOwnershipService;
     private energy: EnergyService;
     private wateringCan: WateringCanService;
+    private quests: QuestService;
     private hud: GameHud;
     private farmingSystem: FarmingSystem;
     private buildingEntrances: BuildingEntranceSystem;
@@ -63,6 +65,7 @@ export class Game extends Scene {
         this.gameTime = new TimeService();
         this.energy = new EnergyService();
         this.wateringCan = new WateringCanService();
+        this.quests = new QuestService();
         this.loadSavedServices();
         this.createNightOverlay();
 
@@ -72,6 +75,7 @@ export class Game extends Scene {
             this.money,
             this.gameTime,
             this.energy,
+            this.quests,
             () => false
         );
         this.buildingEntrances = new BuildingEntranceSystem(
@@ -83,6 +87,7 @@ export class Game extends Scene {
             this.gameTime,
             this.landOwnership,
             this.energy,
+            this.quests,
             () => this.faintPlayerInsideBuilding()
         );
         this.wateringCanSystem = new WateringCanSystem({
@@ -105,6 +110,7 @@ export class Game extends Scene {
             getAvailableFarmLayers: () => this.gameWorld.getAvailableFarmLayers(),
             energy: this.energy,
             wateringCan: this.wateringCan,
+            quests: this.quests,
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverInventory: (pointer) =>
                 this.hud.isPointerOverInventory(pointer.x, pointer.y),
@@ -134,7 +140,8 @@ export class Game extends Scene {
             energy: this.energy.getEnergy(),
             wateringCanWater: this.wateringCan.getWater(),
             unlockedFarmIds: this.landOwnership.getSnapshot(),
-            farming: this.farmingSystem.getSnapshot()
+            farming: this.farmingSystem.getSnapshot(),
+            quests: this.quests.getSnapshot()
         };
     }
 
@@ -245,6 +252,9 @@ export class Game extends Scene {
         this.gameTime.loadSnapshot(this.saveToLoad.time);
         this.energy.setEnergy(this.saveToLoad.energy);
         this.wateringCan.setWater(this.saveToLoad.wateringCanWater);
+        if (this.saveToLoad.quests) {
+            this.quests.loadSnapshot(this.saveToLoad.quests);
+        }
         this.registry.set(farmingStateKey, this.saveToLoad.farming);
     }
 

@@ -8,6 +8,7 @@ import { GameInput } from '../input/GameInput';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
+import { QuestService } from '../services/QuestService';
 import { playSound } from '../services/SoundService';
 import { WateringCanService } from '../services/WateringCanService';
 
@@ -27,6 +28,7 @@ type FarmingConfig = {
     getAvailableFarmLayers: () => Phaser.Tilemaps.TilemapLayer[];
     energy: EnergyService;
     wateringCan: WateringCanService;
+    quests: QuestService;
     worldObjects: Phaser.GameObjects.GameObject[];
     isPointerOverInventory: (pointer: Phaser.Input.Pointer) => boolean;
     refreshInventory: () => void;
@@ -224,6 +226,7 @@ export class FarmingSystem {
             lastWateredDay: null
         });
         this.game.energy.spend(plantEnergyCost);
+        this.game.quests.plantCrop(seed.cropId);
         this.game.refreshInventory();
         this.saveState();
         playSound(this.game.scene, 'plantSeed');
@@ -244,6 +247,7 @@ export class FarmingSystem {
         crop.lastWateredDay = currentDay;
         crop.statusIndicator.setVisible(false);
         this.game.energy.spend(waterEnergyCost);
+        this.game.quests.waterPlant();
         this.game.refreshInventory();
         this.saveState();
         playSound(this.game.scene, 'waterPlants');
