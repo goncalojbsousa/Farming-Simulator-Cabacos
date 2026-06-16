@@ -5,6 +5,11 @@ export type InventorySlot = {
     quantity: number;
 };
 
+export type InventorySnapshot = {
+    slots: InventorySlot[];
+    selectedSlotIndex: number;
+};
+
 export const hotbarSlotCount = 8;
 export const inventorySlotCount = 16;
 
@@ -124,6 +129,27 @@ export class InventoryService {
             this.selectedSlotIndex = toIndex;
         }
 
+        this.notifyChange();
+    }
+
+    getSnapshot(): InventorySnapshot {
+        return {
+            slots: this.slots.map((slot) => ({ ...slot })),
+            selectedSlotIndex: this.selectedSlotIndex
+        };
+    }
+
+    loadSnapshot(snapshot: InventorySnapshot): void {
+        snapshot.slots.forEach((savedSlot, index) => {
+            if (!this.slots[index]) {
+                return;
+            }
+
+            this.slots[index].itemId = savedSlot.itemId;
+            this.slots[index].quantity = savedSlot.quantity;
+        });
+
+        this.selectedSlotIndex = snapshot.selectedSlotIndex;
         this.notifyChange();
     }
 

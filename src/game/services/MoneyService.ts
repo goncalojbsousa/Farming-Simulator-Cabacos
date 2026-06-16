@@ -21,6 +21,11 @@ export class MoneyService {
         this.notifyChange();
     }
 
+    setBalance(balance: number): void {
+        this.balance = balance;
+        this.notifyChange();
+    }
+
     onChange(callback: () => void): () => void {
         this.changeCallbacks.push(callback);
 

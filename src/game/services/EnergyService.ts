@@ -12,6 +12,10 @@ export class EnergyService {
         return maxEnergy;
     }
 
+    setEnergy(energy: number): void {
+        this.energy = Math.max(0, Math.min(maxEnergy, energy));
+    }
+
     hasEnergy(amount: number): boolean {
         return this.energy >= amount;
     }

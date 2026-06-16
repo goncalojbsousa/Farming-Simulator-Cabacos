@@ -16,7 +16,7 @@ const plantEnergyCost = 1;
 const harvestEnergyCost = 2;
 const waterEnergyCost = 1;
 const tilledSoilDuration = 2;
-const farmingStateKey = 'farmingState';
+export const farmingStateKey = 'farmingState';
 
 type FarmingConfig = {
     scene: Phaser.Scene;
@@ -53,14 +53,14 @@ type TilledSoil = {
     tilledDay: number;
 };
 
-type SavedTilledSoil = {
+export type SavedTilledSoil = {
     layerName: string;
     tileX: number;
     tileY: number;
     tilledDay: number;
 };
 
-type SavedCrop = {
+export type SavedCrop = {
     layerName: string;
     tileX: number;
     tileY: number;
@@ -71,7 +71,7 @@ type SavedCrop = {
     lastWateredDay: number | null;
 };
 
-type SavedFarmingState = {
+export type SavedFarmingState = {
     tilledSoils: SavedTilledSoil[];
     crops: SavedCrop[];
 };
@@ -88,6 +88,10 @@ export class FarmingSystem {
         game.uiCamera.ignore(this.tileHighlight);
         this.loadSavedState();
 
+    }
+
+    getSnapshot(): SavedFarmingState {
+        return this.createSnapshot();
     }
 
     update(input: GameInput, currentDay: number): void {
@@ -342,6 +346,10 @@ export class FarmingSystem {
     }
 
     private saveState(): void {
+        this.game.scene.registry.set(farmingStateKey, this.createSnapshot());
+    }
+
+    private createSnapshot(): SavedFarmingState {
         const tilledSoils: SavedTilledSoil[] = [];
         const crops: SavedCrop[] = [];
 
@@ -367,10 +375,10 @@ export class FarmingSystem {
             });
         }
 
-        this.game.scene.registry.set(farmingStateKey, {
+        return {
             tilledSoils,
             crops
-        } satisfies SavedFarmingState);
+        };
     }
 
     private loadSavedState(): void {

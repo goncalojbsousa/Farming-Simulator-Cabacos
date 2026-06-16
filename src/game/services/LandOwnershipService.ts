@@ -31,4 +31,12 @@ export class LandOwnershipService {
     buyFarm(farmId: FarmId): void {
         this.ownedFarmIds.add(farmId);
     }
+
+    getSnapshot(): FarmId[] {
+        return [...this.ownedFarmIds];
+    }
+
+    loadSnapshot(farmIds: FarmId[]): void {
+        this.ownedFarmIds = new Set(['farm', ...farmIds]);
+    }
 }
