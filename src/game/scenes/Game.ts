@@ -5,6 +5,8 @@ import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { MoneyService } from '../services/MoneyService';
+import { QuestService } from '../services/QuestService';
+import { SaveGameData } from '../services/SaveService';
 import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { WateringCanService } from '../services/WateringCanService';
@@ -21,6 +23,10 @@ const nightStartHour = 17;
 const fullyDarkHour = 22;
 const maxNightAlpha = 0.6;
 
+type GameSceneData = {
+    save?: SaveGameData;
+};
+
 export class Game extends Scene {
     private gameWorld: GameWorld;
     private gameInput: GameInput;
@@ -30,6 +36,7 @@ export class Game extends Scene {
     private landOwnership: LandOwnershipService;
     private energy: EnergyService;
     private wateringCan: WateringCanService;
+    private quests: QuestService;
     private hud: GameHud;
     private farmingSystem: FarmingSystem;
     private buildingEntrances: BuildingEntranceSystem;
@@ -38,13 +45,19 @@ export class Game extends Scene {
     private screenFade: ScreenFade;
     private nightOverlay: Phaser.GameObjects.Rectangle;
     private faintTransitionActive = false;
+    private saveToLoad?: SaveGameData;
 
     constructor() {
         super('Game');
     }
 
+    init(data?: GameSceneData): void {
+        this.saveToLoad = data?.save;
+    }
+
     create(): void {
         this.landOwnership = new LandOwnershipService();
+        this.loadSavedLandOwnership();
         this.gameWorld = new GameWorld(this, this.landOwnership);
         this.gameInput = new GameInput(this);
         this.inventory = new InventoryService();
@@ -52,7 +65,8 @@ export class Game extends Scene {
         this.gameTime = new TimeService();
         this.energy = new EnergyService();
         this.wateringCan = new WateringCanService();
-        this.addStartingItems();
+        this.quests = new QuestService();
+        this.loadSavedServices();
         this.createNightOverlay();
 
         this.hud = new GameHud(
@@ -61,6 +75,7 @@ export class Game extends Scene {
             this.money,
             this.gameTime,
             this.energy,
+            this.quests,
             () => false
         );
         this.buildingEntrances = new BuildingEntranceSystem(
@@ -72,6 +87,7 @@ export class Game extends Scene {
             this.gameTime,
             this.landOwnership,
             this.energy,
+            this.quests,
             () => this.faintPlayerInsideBuilding()
         );
         this.wateringCanSystem = new WateringCanSystem({
@@ -84,7 +100,7 @@ export class Game extends Scene {
 
         this.createUiCamera();
         this.screenFade = new ScreenFade(this);
-        this.gameWorld.camera.ignore(this.screenFade.getGameObject());
+        this.gameWorld.camera.ignore(this.screenFade.gameObject);
         this.farmingSystem = new FarmingSystem({
             scene: this,
             worldCamera: this.gameWorld.camera,
@@ -94,11 +110,14 @@ export class Game extends Scene {
             getAvailableFarmLayers: () => this.gameWorld.getAvailableFarmLayers(),
             energy: this.energy,
             wateringCan: this.wateringCan,
+            quests: this.quests,
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverInventory: (pointer) =>
                 this.hud.isPointerOverInventory(pointer.x, pointer.y),
-            refreshInventory: () => this.hud.refresh()
+            refreshInventory: () => this.hud.refresh(),
+            savedState: this.saveToLoad?.farming
         });
+        this.loadSavedPlayerPosition();
 
         this.scale.on('resize', this.resizeGame, this);
         this.events.on('wake', this.onWake, this);
@@ -106,6 +125,25 @@ export class Game extends Scene {
             this.scale.off('resize', this.resizeGame, this);
             this.events.off('wake', this.onWake, this);
         });
+    }
+
+    createSaveGame(): SaveGameData {
+        return {
+            version: 1,
+            savedAt: new Date().toISOString(),
+            playerPosition: {
+                x: this.gameWorld.player.sprite.x,
+                y: this.gameWorld.player.sprite.y
+            },
+            inventory: this.inventory.getSnapshot(),
+            time: this.gameTime.getSnapshot(),
+            money: this.money.getBalance(),
+            energy: this.energy.getEnergy(),
+            wateringCanWater: this.wateringCan.getWater(),
+            unlockedFarmIds: this.landOwnership.getSnapshot(),
+            farming: this.farmingSystem.getSnapshot(),
+            quests: this.quests.getSnapshot()
+        };
     }
 
     update(time: number): void {
@@ -148,8 +186,8 @@ export class Game extends Scene {
     private createUiCamera(): void {
         const uiObjects = [
             ...this.hud.uiObjects,
-            ...this.buildingEntrances.getUiObjects(),
-            ...this.wateringCanSystem.getUiObjects()
+            ...this.buildingEntrances.uiObjects,
+            ...this.wateringCanSystem.uiObjects
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -197,6 +235,37 @@ export class Game extends Scene {
         }
     }
 
+    private loadSavedLandOwnership(): void {
+        if (this.saveToLoad) {
+            this.landOwnership.loadSnapshot(this.saveToLoad.unlockedFarmIds);
+        }
+    }
+
+    private loadSavedServices(): void {
+        if (!this.saveToLoad) {
+            this.addStartingItems();
+            return;
+        }
+
+        this.inventory.loadSnapshot(this.saveToLoad.inventory);
+        this.money.setBalance(this.saveToLoad.money);
+        this.gameTime.loadSnapshot(this.saveToLoad.time);
+        this.energy.setEnergy(this.saveToLoad.energy);
+        this.wateringCan.setWater(this.saveToLoad.wateringCanWater);
+        if (this.saveToLoad.quests) {
+            this.quests.loadSnapshot(this.saveToLoad.quests);
+        }
+    }
+
+    private loadSavedPlayerPosition(): void {
+        if (this.saveToLoad?.playerPosition) {
+            this.gameWorld.movePlayerToPosition(
+                this.saveToLoad.playerPosition.x,
+                this.saveToLoad.playerPosition.y
+            );
+        }
+    }
+
     private resizeGame(): void {
         this.gameWorld.resize();
         this.layoutNightOverlay();
@@ -214,10 +283,6 @@ export class Game extends Scene {
         if (this.faintTransitionActive) {
             this.screenFade.fadeOut(() => this.faintTransitionActive = false);
         }
-    }
-
-    refreshSharedHud(): void {
-        this.refreshUi();
     }
 
     private faintPlayerInsideBuilding(): void {

@@ -1,12 +1,103 @@
-# Quinta Cabacos
+# Quinta Cabaços
 
 <p align="center">
-  <img src="public/assets/mainmenu/logo_quinta_cabacos.png" alt="Logo Quinta Cabacos" width="560">
+  <img src="public/assets/mainmenu/logo_quinta_cabacos.png" alt="Logo Quinta Cabaços" width="560">
 </p>
 
-**Quinta Cabacos** é um jogo 2D em pixel art desenvolvido em **Phaser 3**, **TypeScript** e **Vite**. O projeto simula uma pequena quinta onde o jogador pode explorar o mapa, entrar em edifícios, gerir inventário, comprar sementes e cultivar plantações.
+**Quinta Cabaços** é um jogo 2D top-down em pixel art desenvolvido em **Phaser 3**, **TypeScript** e **Vite**. O jogador gere uma pequena quinta, compra sementes e ferramentas, cultiva plantas, vende colheitas, compra novos terrenos e completa quests para ganhar dinheiro.
 
-O jogo foi desenvolvido como projeto académico, com foco numa implementação simples, legível e fácil de apresentar.
+O projeto foi desenvolvido para a unidade curricular de Tecnologias Multimédia 2025/2026, com uma estrutura simples, modular e fácil de apresentar.
+
+## Grupo
+
+| Elemento | Número de aluno | GitHub |
+|---|---|---|
+| Cristiano Fonseca | 29725  | [m1guelfonseca](https://github.com/m1guelfonseca) |
+| Gonçalo Sousa | 29726 | [goncalojbsousa](https://github.com/goncalojbsousa) |
+
+## Tecnologias
+
+| Tecnologia | Uso |
+|---|---|
+| **Phaser 3.90.0** | Motor 2D do jogo, incluído via npm |
+| **TypeScript** | Código principal do jogo, com tipagem para facilitar manutenção |
+| **Vite 6.3.1** | Servidor local e build do projeto |
+| **Tiled** | Criação do mapa principal, interiores, colisões e zonas de interação |
+| **HTML/CSS** | Estrutura base da página onde o jogo corre |
+
+## Descrição do Jogo
+
+O jogo segue uma lógica de **farm simulator** em 2D. O objetivo é evoluir a quinta através de ciclos de cultivo e economia:
+
+- comprar sementes na loja;
+- preparar terreno com a enxada;
+- plantar e regar culturas;
+- esperar pelo crescimento ao longo dos dias;
+- colher e vender no mercado;
+- comprar ferramentas e novos terrenos;
+- ativar e completar quests no Crop Market.
+
+O estado do jogo é apresentado no HUD: dinheiro, dia/hora, energia, água do regador, inventário/hotbar e quest ativa.
+
+## Regras e Sistemas Implementados
+
+### Cultivo
+
+- O jogador só pode plantar em terreno preparado.
+- A enxada prepara o solo.
+- As sementes ocupam slots do inventário/hotbar.
+- As plantas precisam de água para crescer.
+- Cada cultura tem tempos de crescimento próprios.
+- Quando a cultura está pronta, aparece um indicador visual e pode ser colhida com a foice.
+
+### Energia, tempo e desmaio
+
+- Usar ferramentas, plantar, colher e regar consome energia.
+- O dia avança com o tempo de jogo.
+- Se o jogador ficar ativo até às 02:00, desmaia.
+- Ao desmaiar, perde parte do dinheiro, recupera energia parcialmente e volta para a quinta de manhã.
+- Dormir em casa avança para o dia seguinte e recupera energia.
+
+### Economia
+
+- O jogador começa com dinheiro inicial.
+- Sementes e ferramentas podem ser compradas nas lojas.
+- Colheitas podem ser vendidas no Crop Market.
+- Terrenos extra podem ser comprados na câmara municipal.
+
+### Quests
+
+As quests são ativadas na tab **Quests** do Crop Market. Apenas uma quest pode estar ativa de cada vez.
+
+Quests atuais:
+
+| Quest | Objetivo | Recompensa |
+|---|---|---|
+| Plantar Abóboras | Plantar 3 abóboras | 75 $ |
+| Vender Cenouras | Vender 3 cenouras no Crop Market | 60 $ |
+| Regar Plantas | Regar qualquer tipo de planta 10 vezes | 50 $ |
+
+Quando uma quest fica completa, o jogador deve voltar ao Crop Market e clicar em **Concluir** para receber a recompensa.
+
+### Inventário e save
+
+- Hotbar com 8 slots.
+- Inventário extra com drag and drop entre slots.
+- Sistema de save em 3 slots.
+- O save guarda inventário, dinheiro, tempo, energia, água do regador, terrenos comprados, plantas/solo e progresso das quests.
+
+## Controlos
+
+| Tecla / Ação | Função |
+|---|---|
+| `W`, `A`, `S`, `D` | Mover o jogador |
+| Setas direcionais | Mover o jogador |
+| `E` | Interagir com edifícios, lojas, cama, mercado, poço e saídas |
+| `I` | Abrir ou fechar o inventário |
+| `ESC` | Abrir menu de pausa ou fechar painéis |
+| `1` a `8` | Selecionar slot da hotbar |
+| Clique esquerdo | Usar item selecionado no terreno |
+| Arrastar com o rato | Mover itens entre inventário e hotbar |
 
 ## Imagens do Projeto
 
@@ -39,82 +130,56 @@ O jogo foi desenvolvido como projeto académico, com foco numa implementação s
   </tr>
 </table>
 
-## Como Jogar
+## Aspetos Multimédia
 
-O jogador começa no mapa principal da quinta. A partir daí pode deslocar-se pelo mundo, interagir com edifícios e usar ferramentas ou sementes através da hotbar.
+O projeto usa recursos multimédia adequados ao estilo pixel art e ao carregamento no browser:
 
-Objetivo principal:
+| Tipo | Formato | Uso |
+|---|---|---|
+| Imagens | `.png` | Tilesets, interiores, UI, logo, ferramentas, culturas e jogador |
+| Mapas | `.tmj` | Mapas criados/editados no Tiled |
+| Sons | `.mp3` | Efeitos de interação, compra, venda, ferramentas, rega, sono e feedback de erro |
+| Spritesheets | `.png` | Animações do jogador, ferramentas/culturas por frames e barra de energia |
 
-- Explorar a quinta.
-- Entrar nos edifícios disponíveis.
-- Comprar sementes na loja.
-- Preparar terreno com a pá.
-- Plantar sementes.
-- Acompanhar o crescimento das culturas ao longo dos dias.
+Resumo dos assets em `public/assets`:
 
-## Controlos
+- 47 ficheiros `.png`, cerca de 5.53 MB.
+- 17 ficheiros `.mp3`, cerca de 0.31 MB.
+- 6 ficheiros `.tmj`, cerca de 0.37 MB.
+- Total aproximado: 6.21 MB.
 
-| Tecla / Ação | Função |
-|---|---|
-| `W`, `A`, `S`, `D` | Mover o jogador |
-| Setas direcionais | Mover o jogador |
-| `E` | Interagir / entrar / sair / abrir loja |
-| `I` | Abrir ou fechar o inventário |
-| `ESC` | Pausar ou continuar o jogo |
-| `1` a `8` | Selecionar slot da hotbar |
-| Clique esquerdo | Usar item selecionado no terreno |
-| Arrastar com o rato | Mover itens entre slots do inventário/hotbar |
+Os mapas e interiores foram compostos no Tiled a partir dos tilesets incluídos no projeto. Os sprites e elementos de UI foram integrados em tamanhos proporcionais ao uso no jogo, evitando imagens demasiado grandes para elementos pequenos. Os sons estão em MP3 comprimido, em ficheiros curtos, para manter o carregamento leve.
 
-## Features
+## Suporte Multilingue
 
-- Menu inicial personalizado com logo e arte própria.
-- Sistema de idiomas em português e inglês.
-- Mapa principal criado no **Tiled**.
-- Colisões configuradas através de layers do Tiled.
-- Sistema de interações com objetos do Tiled.
-- Entrada e saída de edifícios:
-  - Casa do jogador.
-  - Mercado de colheitas.
-  - Loja de sementes.
-  - Câmara municipal.
-- Interiores independentes para edifícios.
-- Jogador com animações de idle e movimento.
-- Inventário com hotbar.
-- Arrastar itens entre slots.
-- Sistema de dinheiro.
-- Loja de sementes com compra de vários tipos de sementes.
-- Sistema de tempo com dias e horas.
-- Sistema de cultivo:
-  - Preparar terreno com a pá.
-  - Plantar sementes.
-  - Crescimento das culturas ao longo dos dias.
-- Assets em pixel art integrados no projeto.
+O jogo suporta **português** e **inglês**. O idioma pode ser alterado nas definições.
 
-## Tecnologias Utilizadas
+A estrutura de tradução está centralizada em:
 
-- **Phaser 3**: motor principal do jogo.
-- **TypeScript**: linguagem usada no desenvolvimento.
-- **Vite**: servidor de desenvolvimento e build.
-- **Tiled**: criação dos mapas, colisões e interações.
-- **HTML/CSS**: estrutura base da página onde o jogo corre.
+```text
+src/game/services/LanguageService.ts
+```
+
+Isto evita strings duplicadas espalhadas pelo código e permite traduzir menus, HUD, lojas, quests, itens e mensagens de feedback.
 
 ## Estrutura do Projeto
 
 | Pasta / Ficheiro | Descrição |
 |---|---|
-| `src/game/main.ts` | Configuração principal do Phaser |
-| `src/game/scenes` | Scenes do jogo, menus e interiores |
+| `index.html` | Página base onde o jogo é montado |
+| `src/main.ts` | Entrada da aplicação |
+| `src/game/main.ts` | Configuração principal do Phaser e registo das scenes |
+| `src/game/scenes` | Menus, jogo principal, interiores, lojas e pausa |
+| `src/game/world` | Criação do mapa principal e câmara |
 | `src/game/objects` | Objetos principais, como o jogador |
-| `src/game/systems` | Sistemas de gameplay, como cultivo e entradas |
-| `src/game/ui` | Interface, inventário, hotbar e painéis |
-| `src/game/services` | Serviços de idioma, dinheiro, inventário e tempo |
-| `public/assets` | Imagens, sprites, tilesets e assets do jogo |
-| `public/assets/mainmenu` | Logo e arte do menu inicial |
-| `public/assets/farming` | Indicadores e elementos visuais de cultivo |
-| `public/assets/tilemap` | Mapas `.tmj`, tilesets e interiores |
-| `public/assets/ui` | Componentes comuns, HUD e elementos das lojas |
+| `src/game/systems` | Sistemas de gameplay: cultivo, entradas, regador |
+| `src/game/services` | Estado e serviços: dinheiro, inventário, tempo, saves, quests, idioma |
+| `src/game/ui` | HUD, inventário, lojas, painéis e displays |
+| `src/game/data` | Dados dos itens, sementes, ferramentas e culturas |
+| `public/assets` | Imagens, áudio, tilesets, tilemaps e UI |
+| `docs` | Documentação auxiliar |
 
-## Instalação e Execução
+## Como Executar
 
 Instalar dependências:
 
@@ -126,6 +191,12 @@ Executar em modo desenvolvimento:
 
 ```bash
 npm run dev
+```
+
+Ou sem logs do template Phaser:
+
+```bash
+npm run dev-nolog
 ```
 
 O jogo fica disponível em:
@@ -140,49 +211,23 @@ Gerar build de produção:
 npm run build
 ```
 
-Também existem versões sem envio de logs do template Phaser:
+Build sem logs do template:
 
 ```bash
-npm run dev-nolog
 npm run build-nolog
 ```
 
-## Conventional Commits
+## Checklist do Enunciado
 
-Neste projeto usamos a convenção **Conventional Commits** para manter o histórico Git mais organizado e fácil de perceber.
-
-Formato recomendado:
-
-```text
-tipo: descrição curta da alteração
-```
-
-Exemplos:
-
-```text
-feat: add seed shop interior
-fix: correct crop market image path
-docs: update project README
-style: adjust main menu logo position
-refactor: simplify building entrance system
-```
-
-Tipos mais usados:
-
-| Tipo | Uso |
+| Requisito | Estado |
 |---|---|
-| `feat` | Nova funcionalidade |
-| `fix` | Correção de bug |
-| `docs` | Alterações de documentação |
-| `style` | Ajustes visuais ou formatação |
-| `refactor` | Reorganização de código sem mudar comportamento |
-| `chore` | Tarefas auxiliares do projeto |
-
-## Autores
-
-- Miguel Fonseca
-- Gonçalo Sousa
-
-## Notas
-
-Este projeto partiu de um template Phaser com Vite e foi adaptado para o jogo **Quinta Cabacos**, incluindo mapas próprios, assets personalizados, interiores, inventário, loja e sistema de cultivo.
+| Phaser 3 no browser | Implementado com Phaser 3.90.0 via npm |
+| Projeto na raiz do repositório | Sim |
+| Grupo de 2 alunos | Sim |
+| Suporte a 2 línguas | Português e inglês |
+| Pelo menos 1 som | Vários efeitos MP3 integrados |
+| Input claro | Teclado, rato, hotbar e drag and drop |
+| Estado de jogo visível | Dinheiro, tempo, energia, água, inventário e quests |
+| Interações/colisões | Arcade Physics, tilemaps, zonas de interação e colisão |
+| README completo | Sim |
+| Tag 1.0 | Sim |

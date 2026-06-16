@@ -6,6 +6,7 @@ import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { QuestService } from '../services/QuestService';
 import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
@@ -25,6 +26,8 @@ const buildingDefinitions = [
 ] as const;
 
 export class BuildingEntranceSystem {
+    readonly uiObjects: Phaser.GameObjects.GameObject[];
+
     private entrances: BuildingEntrance[] = [];
     private prompt: InteractionPrompt;
 
@@ -37,6 +40,7 @@ export class BuildingEntranceSystem {
         private gameTime: TimeService,
         private landOwnership: LandOwnershipService,
         private energy: EnergyService,
+        private quests: QuestService,
         private onPlayerFaint: () => void
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
@@ -59,7 +63,8 @@ export class BuildingEntranceSystem {
         }
 
         this.prompt = new InteractionPrompt(scene);
-        this.prompt.setScrollFactor(0);
+        this.prompt.container.setScrollFactor(0);
+        this.uiObjects = [this.prompt.container];
 
         this.layout();
     }
@@ -82,20 +87,17 @@ export class BuildingEntranceSystem {
                 gameTime: this.gameTime,
                 landOwnership: this.landOwnership,
                 energy: this.energy,
+                quests: this.quests,
                 onPlayerFaint: this.onPlayerFaint
             });
         }
     }
 
     layout(): void {
-        this.prompt.setPosition(
+        this.prompt.container.setPosition(
             this.scene.scale.width / 2,
             this.scene.scale.height - 120
         );
-    }
-
-    getUiObjects(): Phaser.GameObjects.GameObject[] {
-        return [this.prompt.getGameObject()];
     }
 
     private getCurrentEntrance(): BuildingEntrance | undefined {

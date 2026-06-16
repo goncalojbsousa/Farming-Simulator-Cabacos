@@ -2,6 +2,10 @@ import { GameObjects, Geom, Scene } from 'phaser';
 import { playSound } from '../services/SoundService';
 import { createPixelNineSlice } from './PixelNineSlice';
 
+export type TextButton = GameObjects.Container & {
+    label: GameObjects.Text;
+};
+
 export function createTextButton(
     scene: Scene,
     x: number,
@@ -12,7 +16,7 @@ export function createTextButton(
     onClick: () => void,
     isSelected = false,
     playClickSound = true
-): GameObjects.Container {
+): TextButton {
     const buttonHeight = Math.min(height, 39);
     const fontSize = Math.min(22, Math.max(13, Math.floor(buttonHeight * 0.5)));
     const background = createPixelNineSlice(
@@ -41,9 +45,11 @@ export function createTextButton(
     const button = scene.add.container(x, y, [background, text])
         .setSize(width, buttonHeight)
         .setInteractive(
-            new Geom.Rectangle(0, 0, width, buttonHeight),
+            new Geom.Rectangle(-width / 2, -buttonHeight / 2, width, buttonHeight),
             Geom.Rectangle.Contains
-        );
+        ) as TextButton;
+
+    button.label = text;
 
     button.on('pointerover', () => {
         if (!isSelected) {

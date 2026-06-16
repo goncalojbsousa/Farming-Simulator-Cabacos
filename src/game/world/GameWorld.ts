@@ -78,7 +78,7 @@ export class GameWorld {
 
         for (const farmOption of farmPurchaseOptions) {
             const farmCollisionLayer = this.createOptionalCollisionLayer(
-                this.getPurchaseCollisionLayerName(farmOption.farmId),
+                `buy_${farmOption.farmId}_collision`,
                 tilesets
             );
 
@@ -157,7 +157,7 @@ export class GameWorld {
     private isCollisionLayer(layerName: string): boolean {
         return layerName === 'Collision'
             || farmPurchaseOptions.some((farmOption) =>
-                layerName === this.getPurchaseCollisionLayerName(farmOption.farmId)
+                layerName === `buy_${farmOption.farmId}_collision`
             );
     }
 
@@ -173,19 +173,15 @@ export class GameWorld {
 
     private getFarmIdFromPurchaseSignLayerName(layerName: string): FarmId | undefined {
         return farmPurchaseOptions.find((farmOption) =>
-            layerName === this.getPurchaseSignLayerName(farmOption.farmId)
+            layerName === `buy_${farmOption.farmId}`
         )?.farmId;
-    }
-
-    private getPurchaseSignLayerName(farmId: FarmId): string {
-        return `buy_${farmId}`;
-    }
-
-    private getPurchaseCollisionLayerName(farmId: FarmId): string {
-        return `buy_${farmId}_collision`;
     }
 
     movePlayerToSpawn(): void {
         this.player.sprite.setPosition(playerSpawnX, playerSpawnY).setVelocity(0);
+    }
+
+    movePlayerToPosition(x: number, y: number): void {
+        this.player.sprite.setPosition(x, y).setVelocity(0);
     }
 }

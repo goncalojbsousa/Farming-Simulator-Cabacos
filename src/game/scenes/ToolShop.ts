@@ -30,39 +30,12 @@ export class ToolShop extends BuildingInteriorScene {
             () => this.hud.refresh()
         );
 
-        this.registerUiObjects(this.shopPanel.getUiObjects());
+        this.setActivePanel(this.shopPanel);
     }
 
     update(time: number): void {
         super.update(time);
 
-        if (this.faintTransitionActive) {
-            return;
-        }
-
-        const isPlayerInShopZone = this.isPlayerInside(this.shopZone);
-        if (isPlayerInShopZone && !this.shopPanel.isOpen()) {
-            this.shopPrompt.show();
-        } else {
-            this.shopPrompt.hide();
-        }
-
-        if (!isPlayerInShopZone) {
-            this.shopPanel.close();
-        } else if (this.gameInput.interactPressed()) {
-            this.shopPanel.toggle();
-        }
-
-        if (this.gameInput.escapePressed()) {
-            this.shopPanel.close();
-        }
-    }
-
-    protected isGameplayInteractionBlocked(): boolean {
-        return this.shopPanel?.isOpen() ?? false;
-    }
-
-    protected layoutInteriorUi(): void {
-        this.shopPanel.layout();
+        this.updatePanelInteraction(this.shopZone, this.shopPrompt, this.shopPanel);
     }
 }
