@@ -188,4 +188,8 @@ export class GameWorld {
     movePlayerToSpawn(): void {
         this.player.sprite.setPosition(playerSpawnX, playerSpawnY).setVelocity(0);
     }
+
+    movePlayerToPosition(x: number, y: number): void {
+        this.player.sprite.setPosition(x, y).setVelocity(0);
+    }
 }

@@ -11,6 +11,10 @@ export class WateringCanService {
         return maxWater;
     }
 
+    setWater(water: number): void {
+        this.water = Math.max(0, Math.min(maxWater, water));
+    }
+
     fill(): void {
         this.water = maxWater;
     }
