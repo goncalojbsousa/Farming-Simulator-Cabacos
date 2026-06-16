@@ -15,6 +15,8 @@ const seedRowSpacing = 35;
 const purchaseMessageY = 218;
 
 export class SeedShopPanel {
+    readonly container: GameObjects.Container;
+
     private menu: MenuPanel;
     private purchaseMessage: GameObjects.Text;
 
@@ -31,6 +33,7 @@ export class SeedShopPanel {
             title: translate('seedShopTitle'),
             closeButton: true
         });
+        this.container = this.menu.container;
 
         this.purchaseMessage = scene.add.text(0, purchaseMessageY, '', {
             fontFamily: 'Arial Black',
@@ -72,16 +75,8 @@ export class SeedShopPanel {
         return this.menu.isOpen();
     }
 
-    containsScreenPoint(x: number, y: number): boolean {
-        return this.menu.containsPoint(x, y);
-    }
-
     layout(): void {
         this.menu.center(true, panelCenterOffsetY);
-    }
-
-    getUiObjects(): GameObjects.GameObject[] {
-        return [this.menu.container];
     }
 
     private buySeed(seed: SeedItem): void {

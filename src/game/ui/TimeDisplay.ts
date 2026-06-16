@@ -4,14 +4,14 @@ import { TimeService } from '../services/TimeService';
 import { createPixelNineSlice } from './PixelNineSlice';
 
 const cardX = 122;
-const cardY = 89;
+const cardY = 142;
 const frameWidth = 214;
 const frameHeight = 48;
 const iconX = -78;
 const textX = -51;
 
 export class TimeDisplay {
-    private container: GameObjects.Container;
+    readonly container: GameObjects.Container;
     private dayText: GameObjects.Text;
     private clockText: GameObjects.Text;
 
@@ -44,6 +44,7 @@ export class TimeDisplay {
             .setScrollFactor(0)
             .setDepth(950);
 
+        this.layout();
         this.refresh();
     }
 
@@ -55,7 +56,7 @@ export class TimeDisplay {
         this.clockText.setText(`${hour}:${minute}`);
     }
 
-    getUiObjects(): GameObjects.GameObject[] {
-        return [this.container];
+    layout(): void {
+        this.container.setPosition(cardX, cardY);
     }
 }

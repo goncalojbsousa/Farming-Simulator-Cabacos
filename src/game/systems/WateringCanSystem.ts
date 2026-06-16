@@ -23,6 +23,8 @@ type WateringCanSystemConfig = {
 };
 
 export class WateringCanSystem {
+    readonly uiObjects: GameObjects.GameObject[];
+
     private wellZones: Geom.Rectangle[] = [];
     private prompt: InteractionPrompt;
     private waterText: GameObjects.Text;
@@ -31,7 +33,7 @@ export class WateringCanSystem {
         this.createWellZones();
 
         this.prompt = new InteractionPrompt(config.scene, translate('fillWateringCan'));
-        this.prompt.setScrollFactor(0);
+        this.prompt.container.setScrollFactor(0);
 
         this.waterText = config.scene.add.text(0, 0, '', {
             fontFamily: 'Arial Black',
@@ -46,13 +48,19 @@ export class WateringCanSystem {
             .setResolution(2)
             .setVisible(false);
 
+        this.uiObjects = [
+            this.prompt.container,
+            this.waterText
+        ];
+
         this.layout();
     }
 
     update(input: GameInput): void {
         const hasWateringCanSelected = this.isWateringCanSelected();
+        const wateringCanHotbarSlot = this.getWateringCanHotbarSlot();
 
-        this.updateWaterText(hasWateringCanSelected);
+        this.updateWaterText(hasWateringCanSelected, wateringCanHotbarSlot);
 
         const currentWell = hasWateringCanSelected
             ? this.getCurrentWellZone()
@@ -69,7 +77,7 @@ export class WateringCanSystem {
                 === this.config.wateringCan.getMaxWater();
 
             this.config.wateringCan.fill();
-            this.updateWaterText(true);
+            this.updateWaterText(true, wateringCanHotbarSlot);
 
             if (!wasFull) {
                 playSound(this.config.scene, 'getWater');
@@ -78,18 +86,11 @@ export class WateringCanSystem {
     }
 
     layout(): void {
-        this.prompt.setPosition(
+        this.prompt.container.setPosition(
             this.config.scene.scale.width / 2,
             this.config.scene.scale.height - 150
         );
-        this.positionWaterText();
-    }
-
-    getUiObjects(): GameObjects.GameObject[] {
-        return [
-            this.prompt.getGameObject(),
-            this.waterText
-        ];
+        this.positionWaterText(this.getWateringCanHotbarSlot());
     }
 
     private createWellZones(): void {
@@ -115,19 +116,17 @@ export class WateringCanSystem {
         return selectedSlot.itemId === 'wateringCan';
     }
 
-    private updateWaterText(isVisible: boolean): void {
+    private updateWaterText(isVisible: boolean, slotIndex: number | null): void {
         this.waterText
             .setText(
                 `${translate('water')}: ${this.config.wateringCan.getWater()}/${this.config.wateringCan.getMaxWater()}`
             )
-            .setVisible(isVisible && this.getWateringCanHotbarSlot() !== null);
+            .setVisible(isVisible && slotIndex !== null);
 
-        this.positionWaterText();
+        this.positionWaterText(slotIndex);
     }
 
-    private positionWaterText(): void {
-        const slotIndex = this.getWateringCanHotbarSlot();
-
+    private positionWaterText(slotIndex: number | null): void {
         if (slotIndex === null) {
             return;
         }

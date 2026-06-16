@@ -11,7 +11,7 @@ import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { WateringCanService } from '../services/WateringCanService';
 import { BuildingEntranceSystem } from '../systems/BuildingEntranceSystem';
-import { FarmingSystem, farmingStateKey } from '../systems/FarmingSystem';
+import { FarmingSystem } from '../systems/FarmingSystem';
 import { WateringCanSystem } from '../systems/WateringCanSystem';
 import { GameHud } from '../ui/GameHud';
 import { ScreenFade } from '../ui/ScreenFade';
@@ -100,7 +100,7 @@ export class Game extends Scene {
 
         this.createUiCamera();
         this.screenFade = new ScreenFade(this);
-        this.gameWorld.camera.ignore(this.screenFade.getGameObject());
+        this.gameWorld.camera.ignore(this.screenFade.gameObject);
         this.farmingSystem = new FarmingSystem({
             scene: this,
             worldCamera: this.gameWorld.camera,
@@ -114,7 +114,8 @@ export class Game extends Scene {
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverInventory: (pointer) =>
                 this.hud.isPointerOverInventory(pointer.x, pointer.y),
-            refreshInventory: () => this.hud.refresh()
+            refreshInventory: () => this.hud.refresh(),
+            savedState: this.saveToLoad?.farming
         });
         this.loadSavedPlayerPosition();
 
@@ -185,8 +186,8 @@ export class Game extends Scene {
     private createUiCamera(): void {
         const uiObjects = [
             ...this.hud.uiObjects,
-            ...this.buildingEntrances.getUiObjects(),
-            ...this.wateringCanSystem.getUiObjects()
+            ...this.buildingEntrances.uiObjects,
+            ...this.wateringCanSystem.uiObjects
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -242,7 +243,6 @@ export class Game extends Scene {
 
     private loadSavedServices(): void {
         if (!this.saveToLoad) {
-            this.registry.remove(farmingStateKey);
             this.addStartingItems();
             return;
         }
@@ -255,7 +255,6 @@ export class Game extends Scene {
         if (this.saveToLoad.quests) {
             this.quests.loadSnapshot(this.saveToLoad.quests);
         }
-        this.registry.set(farmingStateKey, this.saveToLoad.farming);
     }
 
     private loadSavedPlayerPosition(): void {
@@ -284,10 +283,6 @@ export class Game extends Scene {
         if (this.faintTransitionActive) {
             this.screenFade.fadeOut(() => this.faintTransitionActive = false);
         }
-    }
-
-    refreshSharedHud(): void {
-        this.refreshUi();
     }
 
     private faintPlayerInsideBuilding(): void {

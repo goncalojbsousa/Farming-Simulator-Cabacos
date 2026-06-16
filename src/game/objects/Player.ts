@@ -13,22 +13,7 @@ export class Player {
         this.sprite.setBodySize(8, 8);
         this.sprite.setOffset(44, 28);
 
-        scene.anims.create({
-            key: 'idle',
-            frames: scene.anims.generateFrameNumbers('idle', { start: 0, end: 8 }),
-            frameRate: 9,
-            repeat: -1
-        });
-
-        scene.anims.create({
-            key: 'walk',
-            frames: scene.anims.generateFrameNumbers('walk', { start: 0, end: 7 }),
-            frameRate: 8,
-            repeat: -1
-        });
-
         this.sprite.play('idle');
-
     }
 
     update(input: GameInput): void {

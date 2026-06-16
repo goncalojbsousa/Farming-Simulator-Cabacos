@@ -28,49 +28,15 @@ export class CropMarket extends BuildingInteriorScene {
             this.inventory,
             this.money,
             this.quests,
-            () => this.refreshAfterMarketAction()
+            () => this.hud.refresh()
         );
 
-        this.registerUiObjects(this.marketPanel.getUiObjects());
+        this.setActivePanel(this.marketPanel);
     }
 
     update(time: number): void {
         super.update(time);
 
-        if (this.faintTransitionActive) {
-            return;
-        }
-
-        const isPlayerInMarketZone = this.isPlayerInside(this.marketZone);
-        if (isPlayerInMarketZone && !this.marketPanel.isOpen()) {
-            this.marketPrompt.show();
-        } else {
-            this.marketPrompt.hide();
-        }
-
-        if (!isPlayerInMarketZone) {
-            this.marketPanel.close();
-        } else if (this.gameInput.interactPressed()) {
-            this.marketPanel.toggle();
-        }
-
-        if (this.gameInput.escapePressed()) {
-            this.marketPanel.close();
-        }
-    }
-
-    protected isGameplayInteractionBlocked(): boolean {
-        return this.marketPanel?.isOpen() ?? false;
-    }
-
-    protected layoutInteriorUi(): void {
-        this.marketPanel.layout();
-    }
-
-    private refreshAfterMarketAction(): void {
-        this.hud.refresh();
-
-        const gameScene = this.scene.get('Game') as { refreshSharedHud?: () => void };
-        gameScene.refreshSharedHud?.();
+        this.updatePanelInteraction(this.marketZone, this.marketPrompt, this.marketPanel);
     }
 }

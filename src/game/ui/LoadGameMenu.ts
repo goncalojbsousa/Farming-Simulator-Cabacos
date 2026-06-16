@@ -1,30 +1,33 @@
-import { GameObjects, Scene } from 'phaser';
+import { Scene } from 'phaser';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { SaveService, SaveSlotInfo, saveSlotIds } from '../services/SaveService';
 import { MenuPanel } from './MenuPanel';
-import { createTextButton } from './TextButton';
+import { createTextButton, TextButton } from './TextButton';
 
 type LoadGameMenuConfig = {
     title: string;
     slotLabelKey: TranslationKey;
     onSelectSlot: (slotId: string) => void;
     onBack: () => void;
+    depth?: number;
 };
 
 export class LoadGameMenu {
     private menu: MenuPanel;
-    private slotButtons: GameObjects.Container[] = [];
-    private backButton: GameObjects.Container;
+    private slotButtons: TextButton[] = [];
+    private backButton: TextButton;
 
     constructor(
-        private scene: Scene,
+        scene: Scene,
         private config: LoadGameMenuConfig
     ) {
+        const depth = config.depth ?? 20;
+
         this.menu = new MenuPanel(scene, {
             width: 420,
             height: 450,
             title: config.title,
-            depth: 1
+            depth
         });
         this.menu.close();
 
@@ -37,8 +40,9 @@ export class LoadGameMenu {
                 54,
                 this.getSlotLabel(slotId),
                 () => config.onSelectSlot(slotId)
-            ).setName(`slotButton${index + 1}`).setDepth(2).setVisible(false)
+            ).setName(`slotButton${index + 1}`).setVisible(false)
         );
+        this.slotButtons.forEach((button) => this.menu.addContent(button));
 
         this.backButton = createTextButton(
             scene,
@@ -48,7 +52,8 @@ export class LoadGameMenu {
             56,
             translate('back'),
             config.onBack
-        ).setDepth(2).setVisible(false);
+        ).setVisible(false);
+        this.menu.addContent(this.backButton);
     }
 
     open(): void {
@@ -67,21 +72,16 @@ export class LoadGameMenu {
     }
 
     layout(): void {
-        const centerX = this.scene.scale.width / 2;
-        const centerY = this.scene.scale.height / 2;
-
         this.menu.center(true);
         this.slotButtons.forEach((button, index) => {
-            button.setPosition(centerX, centerY - 80 + index * 70);
+            button.setPosition(0, -80 + index * 70);
         });
-        this.backButton.setPosition(centerX, centerY + 150);
+        this.backButton.setPosition(0, 150);
     }
 
     refresh(): void {
         this.slotButtons.forEach((button, index) => {
-            const label = button.getAt(1) as GameObjects.Text;
-
-            label.setText(this.getSlotLabel(saveSlotIds[index]));
+            button.label.setText(this.getSlotLabel(saveSlotIds[index]));
         });
     }
 

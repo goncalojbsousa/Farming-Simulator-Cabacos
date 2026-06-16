@@ -118,6 +118,18 @@ export class Preloader extends Scene {
 
     create() {
         this.textures.get('button').add('trimmed', 0, 12, 0, 24, 13);
+        this.anims.create({
+            key: 'idle',
+            frames: this.anims.generateFrameNumbers('idle', { start: 0, end: 8 }),
+            frameRate: 9,
+            repeat: -1
+        });
+        this.anims.create({
+            key: 'walk',
+            frames: this.anims.generateFrameNumbers('walk', { start: 0, end: 7 }),
+            frameRate: 8,
+            repeat: -1
+        });
         this.scene.start('MainMenu');
     }
 }
