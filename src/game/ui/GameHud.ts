@@ -47,10 +47,10 @@ export class GameHud {
 
         this.uiObjects = [
             ...this.inventoryUi.uiObjects,
-            ...this.moneyDisplay.getUiObjects(),
-            ...this.timeDisplay.getUiObjects(),
-            ...this.energyDisplay.getUiObjects(),
-            ...this.questDisplay.getUiObjects()
+            this.moneyDisplay.container,
+            this.timeDisplay.container,
+            this.energyDisplay.container,
+            this.questDisplay.container
         ];
     }
 
@@ -70,6 +70,8 @@ export class GameHud {
     layout(): void {
         this.inventoryUi.layout();
         this.energyDisplay.layout();
+        this.moneyDisplay.layout();
+        this.timeDisplay.layout();
         this.questDisplay.layout();
     }
 

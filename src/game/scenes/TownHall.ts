@@ -35,7 +35,7 @@ export class TownHall extends BuildingInteriorScene {
             () => this.hud.refresh()
         );
 
-        this.registerUiObjects(this.farmPurchasePanel.getUiObjects());
+        this.setActivePanel(this.farmPurchasePanel);
     }
 
     update(time: number): void {
@@ -45,30 +45,10 @@ export class TownHall extends BuildingInteriorScene {
             return;
         }
 
-        const isPlayerInFarmPurchaseZone = this.isPlayerInside(this.farmPurchaseZone);
-
-        if (isPlayerInFarmPurchaseZone && !this.farmPurchasePanel.isOpen()) {
-            this.farmPurchasePrompt.show();
-        } else {
-            this.farmPurchasePrompt.hide();
-        }
-
-        if (!isPlayerInFarmPurchaseZone) {
-            this.farmPurchasePanel.close();
-        } else if (this.gameInput.interactPressed()) {
-            this.farmPurchasePanel.toggle();
-        }
-
-        if (this.gameInput.escapePressed()) {
-            this.farmPurchasePanel.close();
-        }
-    }
-
-    protected isGameplayInteractionBlocked(): boolean {
-        return this.farmPurchasePanel?.isOpen() ?? false;
-    }
-
-    protected layoutInteriorUi(): void {
-        this.farmPurchasePanel?.layout();
+        this.updatePanelInteraction(
+            this.farmPurchaseZone,
+            this.farmPurchasePrompt,
+            this.farmPurchasePanel
+        );
     }
 }

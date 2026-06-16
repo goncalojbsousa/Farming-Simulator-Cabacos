@@ -1,10 +1,10 @@
 import { GameObjects, Scene } from 'phaser';
 
 export class ScreenFade {
-    private blackOverlay: GameObjects.Rectangle;
+    readonly gameObject: GameObjects.Rectangle;
 
     constructor(private scene: Scene) {
-        this.blackOverlay = scene.add.rectangle(0, 0, 1, 1, 0x000000)
+        this.gameObject = scene.add.rectangle(0, 0, 1, 1, 0x000000)
             .setOrigin(0)
             .setScrollFactor(0)
             .setDepth(2000)
@@ -22,7 +22,7 @@ export class ScreenFade {
 
     fadeIn(onComplete: () => void): void {
         this.scene.tweens.add({
-            targets: this.blackOverlay,
+            targets: this.gameObject,
             alpha: 1,
             duration: 700,
             onComplete
@@ -31,7 +31,7 @@ export class ScreenFade {
 
     fadeOut(onComplete?: () => void): void {
         this.scene.tweens.add({
-            targets: this.blackOverlay,
+            targets: this.gameObject,
             alpha: 0,
             duration: 700,
             delay: 300,
@@ -40,14 +40,10 @@ export class ScreenFade {
     }
 
     showBlack(): void {
-        this.blackOverlay.setAlpha(1);
+        this.gameObject.setAlpha(1);
     }
 
     layout(): void {
-        this.blackOverlay.setSize(this.scene.scale.width, this.scene.scale.height);
-    }
-
-    getGameObject(): GameObjects.GameObject {
-        return this.blackOverlay;
+        this.gameObject.setSize(this.scene.scale.width, this.scene.scale.height);
     }
 }

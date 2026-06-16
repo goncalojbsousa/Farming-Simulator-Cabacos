@@ -17,6 +17,8 @@ type FarmRowView = {
 };
 
 export class FarmPurchasePanel {
+    readonly container: GameObjects.Container;
+
     private menu: MenuPanel;
     private statusMessage: GameObjects.Text;
     private farmRows: FarmRowView[] = [];
@@ -34,6 +36,7 @@ export class FarmPurchasePanel {
             depth: 1200,
             closeButton: true
         });
+        this.container = this.menu.container;
 
         this.statusMessage = scene.add.text(0, 135, '', {
             fontFamily: 'Arial',
@@ -69,10 +72,6 @@ export class FarmPurchasePanel {
 
     layout(): void {
         this.menu.center(true);
-    }
-
-    getUiObjects(): GameObjects.GameObject[] {
-        return [this.menu.container];
     }
 
     private createFarmRow(

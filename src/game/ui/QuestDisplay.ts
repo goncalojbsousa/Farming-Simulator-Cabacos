@@ -9,7 +9,7 @@ const marginRight = 24;
 const cardY = 94;
 
 export class QuestDisplay {
-    private container: GameObjects.Container;
+    readonly container: GameObjects.Container;
     private icon: GameObjects.Image;
     private statusText: GameObjects.Text;
     private titleText: GameObjects.Text;
@@ -101,11 +101,6 @@ export class QuestDisplay {
 
         this.container.setPosition(x, cardY);
     }
-
-    getUiObjects(): GameObjects.GameObject[] {
-        return [this.container];
-    }
-
     private getQuestToDisplay(): QuestView | undefined {
         const activeQuests = this.quests.getActiveQuests();
 

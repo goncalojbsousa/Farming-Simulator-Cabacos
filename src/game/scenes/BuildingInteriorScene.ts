@@ -21,6 +21,14 @@ type InteriorConfig = {
     exitObjectName: string;
 };
 
+type InteriorPanel = {
+    container: Phaser.GameObjects.GameObject;
+    isOpen(): boolean;
+    close(): void;
+    toggle(): void;
+    layout(): void;
+};
+
 export type BuildingInteriorData = {
     inventory: InventoryService;
     money: MoneyService;
@@ -50,6 +58,7 @@ export class BuildingInteriorScene extends Scene {
     private exitPrompt: InteractionPrompt;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private onPlayerFaint: () => void;
+    private activePanel?: InteriorPanel;
 
     constructor(private interiorConfig: InteriorConfig) {
         super(interiorConfig.sceneKey);
@@ -92,11 +101,11 @@ export class BuildingInteriorScene extends Scene {
             this.gameTime,
             this.energy,
             this.quests,
-            () => this.isGameplayInteractionBlocked()
+            () => this.isPanelOpen()
         );
-        this.registerUiObjects(this.hud.uiObjects);
+        this.cameras.main.ignore(this.hud.uiObjects);
         this.screenFade = new ScreenFade(this);
-        this.registerUiObjects([this.screenFade.getGameObject()]);
+        this.cameras.main.ignore(this.screenFade.gameObject);
 
         this.cameras.main.setZoom(2).setBackgroundColor('#15151f');
         this.centerCamera();
@@ -111,7 +120,7 @@ export class BuildingInteriorScene extends Scene {
     update(time: number): void {
         this.gameInput.update();
 
-        if (this.gameInput.escapePressed()) {
+        if (!this.isPanelOpen() && this.gameInput.escapePressed()) {
             openPauseMenu(this);
             return;
         }
@@ -130,7 +139,7 @@ export class BuildingInteriorScene extends Scene {
         this.hud.update(this.gameInput);
 
         const canExit = this.isPlayerInside(this.exitZone)
-            && !this.isGameplayInteractionBlocked();
+            && !this.isPanelOpen();
         if (canExit) {
             this.exitPrompt.show();
         } else {
@@ -172,10 +181,11 @@ export class BuildingInteriorScene extends Scene {
 
     protected createPrompt(message: string): InteractionPrompt {
         const prompt = new InteractionPrompt(this, message);
-        prompt.setScrollFactor(0);
+        prompt.container
+            .setScrollFactor(0)
+            .setPosition(this.scale.width / 2, this.scale.height - 120);
 
-        this.cameras.main.ignore(prompt.getGameObject());
-        this.positionPrompt(prompt);
+        this.cameras.main.ignore(prompt.container);
         return prompt;
     }
 
@@ -185,15 +195,41 @@ export class BuildingInteriorScene extends Scene {
         return zone.contains(body.center.x, body.center.y);
     }
 
-    protected isGameplayInteractionBlocked(): boolean {
-        return false;
+    protected setActivePanel(panel: InteriorPanel): void {
+        this.activePanel = panel;
+        this.cameras.main.ignore(panel.container);
     }
 
-    protected registerUiObjects(uiObjects: Phaser.GameObjects.GameObject[]): void {
-        this.cameras.main.ignore(uiObjects);
-    }
+    protected updatePanelInteraction(
+        zone: Geom.Rectangle,
+        prompt: InteractionPrompt,
+        panel: InteriorPanel
+    ): void {
+        if (this.faintTransitionActive) {
+            return;
+        }
 
-    protected layoutInteriorUi(): void { }
+        const isPlayerInZone = this.isPlayerInside(zone);
+
+        if (isPlayerInZone && !panel.isOpen()) {
+            prompt.show();
+        } else {
+            prompt.hide();
+        }
+
+        if (!isPlayerInZone) {
+            panel.close();
+            return;
+        }
+
+        if (this.gameInput.interactPressed()) {
+            panel.toggle();
+        }
+
+        if (this.gameInput.escapePressed()) {
+            panel.close();
+        }
+    }
 
     private createWalls(): Phaser.Physics.Arcade.StaticGroup {
         const walls = this.physics.add.staticGroup();
@@ -218,10 +254,10 @@ export class BuildingInteriorScene extends Scene {
     private resizeScene(): void {
         this.centerCamera();
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
-        this.positionPrompt(this.exitPrompt);
+        this.exitPrompt.container.setPosition(this.scale.width / 2, this.scale.height - 120);
         this.hud.layout();
         this.screenFade.layout();
-        this.layoutInteriorUi();
+        this.activePanel?.layout();
     }
 
     private centerCamera(): void {
@@ -230,8 +266,8 @@ export class BuildingInteriorScene extends Scene {
             .centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
     }
 
-    private positionPrompt(prompt: InteractionPrompt): void {
-        prompt.setPosition(this.scale.width / 2, this.scale.height - 120);
+    private isPanelOpen(): boolean {
+        return this.activePanel?.isOpen() ?? false;
     }
 
     private createUiCamera(): void {

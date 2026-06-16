@@ -36,15 +36,21 @@ type QuestRowView = {
     buttonLabel: GameObjects.Text;
 };
 
+type VisibleGameObject = GameObjects.GameObject & {
+    setVisible(visible: boolean): GameObjects.GameObject;
+};
+
 export class CropMarketPanel {
+    readonly container: GameObjects.Container;
+
     private menu: MenuPanel;
     private sellMessage: GameObjects.Text;
     private questStatusText: GameObjects.Text;
     private activeTab: MarketTab = 'sell';
     private tabButtons: TabButton[] = [];
     private questRows: QuestRowView[] = [];
-    private sellContent: GameObjects.GameObject[] = [];
-    private questContent: GameObjects.GameObject[] = [];
+    private sellContent: VisibleGameObject[] = [];
+    private questContent: VisibleGameObject[] = [];
 
     constructor(
         private scene: Scene,
@@ -60,6 +66,7 @@ export class CropMarketPanel {
             title: translate('cropMarketTitle'),
             closeButton: true
         });
+        this.container = this.menu.container;
 
         this.menu.addContent(
             this.createTabButton('sell', translate('marketSellTab'), -76)
@@ -92,10 +99,6 @@ export class CropMarketPanel {
 
     layout(): void {
         this.menu.center(true, panelCenterOffsetY);
-    }
-
-    getUiObjects(): GameObjects.GameObject[] {
-        return [this.menu.container];
     }
 
     private createSellContent(): void {
@@ -281,7 +284,7 @@ export class CropMarketPanel {
     }
 
     private setContentVisible(
-        objects: GameObjects.GameObject[],
+        objects: VisibleGameObject[],
         visible: boolean
     ): void {
         for (const object of objects) {
@@ -400,12 +403,12 @@ export class CropMarketPanel {
         this.onMarketUpdate();
     }
 
-    private addSellObject(gameObject: GameObjects.GameObject): void {
+    private addSellObject(gameObject: VisibleGameObject): void {
         this.menu.addContent(gameObject);
         this.sellContent.push(gameObject);
     }
 
-    private addQuestObject(gameObject: GameObjects.GameObject): void {
+    private addQuestObject(gameObject: VisibleGameObject): void {
         this.menu.addContent(gameObject);
         this.questContent.push(gameObject);
     }

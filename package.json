@@ -1,18 +1,10 @@
 {
-  "name": "template-vite-ts",
-  "description": "A Phaser 3 TypeScript template using Vite.",
+  "name": "quinta-cabacos",
+  "description": "Um jogo 2D top-down em pixel art desenvolvido em Phaser 3, TypeScript e Vite.",
   "version": "1.4.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/phaserjs/template-vite-ts.git"
-  },
-  "author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
+  "author": "Gonçalo Sousa e Miguel Fonseca",
   "license": "MIT",
   "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
-  "bugs": {
-    "url": "https://github.com/phaserjs/template-vite-ts/issues"
-  },
-  "homepage": "https://github.com/phaserjs/template-vite-ts#readme",
   "scripts": {
     "dev": "node log.js dev & vite --config vite/config.dev.mjs",
     "build": "node log.js build & vite build --config vite/config.prod.mjs",

@@ -15,6 +15,8 @@ const rowSpacing = 39;
 const messageY = 170;
 
 export class ToolShopPanel {
+    readonly container: GameObjects.Container;
+
     private menu: MenuPanel;
     private purchaseMessage: GameObjects.Text;
 
@@ -31,6 +33,7 @@ export class ToolShopPanel {
             title: translate('toolShopTitle'),
             closeButton: true
         });
+        this.container = this.menu.container;
 
         this.purchaseMessage = scene.add.text(0, messageY, '', {
             fontFamily: 'Arial Black',
@@ -74,10 +77,6 @@ export class ToolShopPanel {
 
     layout(): void {
         this.menu.center(true, panelCenterOffsetY);
-    }
-
-    getUiObjects(): GameObjects.GameObject[] {
-        return [this.menu.container];
     }
 
     private buyTool(tool: ToolItem): void {

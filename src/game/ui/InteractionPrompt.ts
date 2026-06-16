@@ -2,7 +2,7 @@ import { GameObjects, Scene } from 'phaser';
 import { createPixelNineSlice } from './PixelNineSlice';
 
 export class InteractionPrompt {
-    private container: GameObjects.Container;
+    readonly container: GameObjects.Container;
     private background: GameObjects.NineSlice;
     private text: GameObjects.Text;
 
@@ -32,14 +32,6 @@ export class InteractionPrompt {
         this.background.setSize(width / 3, 16);
     }
 
-    setPosition(x: number, y: number): void {
-        this.container.setPosition(x, y);
-    }
-
-    setScrollFactor(value: number): void {
-        this.container.setScrollFactor(value);
-    }
-
     show(message?: string): void {
         if (message) {
             this.setText(message);
@@ -50,9 +42,5 @@ export class InteractionPrompt {
 
     hide(): void {
         this.container.setVisible(false);
-    }
-
-    getGameObject(): GameObjects.GameObject {
-        return this.container;
     }
 }

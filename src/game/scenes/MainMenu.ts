@@ -27,13 +27,15 @@ export class MainMenu extends Scene {
         this.slotOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000, 0.55)
             .setOrigin(0)
             .setInteractive()
+            .setDepth(10)
             .setVisible(false);
 
         this.loadGameMenu = new LoadGameMenu(this, {
             title: translate('selectSlot'),
             slotLabelKey: 'slot',
             onSelectSlot: (slotId) => this.openSlot(slotId),
-            onBack: () => this.hideSlots()
+            onBack: () => this.hideSlots(),
+            depth: 20
         });
 
         this.settingsButton = createTextButton(this, 0, 0, 280, 60, translate('settings'), () => {
