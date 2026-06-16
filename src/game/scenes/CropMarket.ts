@@ -27,7 +27,8 @@ export class CropMarket extends BuildingInteriorScene {
             this,
             this.inventory,
             this.money,
-            () => this.refreshAfterSale()
+            this.quests,
+            () => this.refreshAfterMarketAction()
         );
 
         this.registerUiObjects(this.marketPanel.getUiObjects());
@@ -66,7 +67,7 @@ export class CropMarket extends BuildingInteriorScene {
         this.marketPanel.layout();
     }
 
-    private refreshAfterSale(): void {
+    private refreshAfterMarketAction(): void {
         this.hud.refresh();
 
         const gameScene = this.scene.get('Game') as { refreshSharedHud?: () => void };

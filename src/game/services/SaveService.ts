@@ -1,5 +1,6 @@
 import type { InventorySnapshot } from './InventoryService';
 import type { FarmId } from './LandOwnershipService';
+import type { QuestSnapshot } from './QuestService';
 import type { TimeSnapshot } from './TimeService';
 import type { SavedFarmingState } from '../systems/FarmingSystem';
 
@@ -29,6 +30,7 @@ export type SaveGameData = {
     wateringCanWater: number;
     unlockedFarmIds: FarmId[];
     farming: SavedFarmingState;
+    quests?: QuestSnapshot;
 };
 
 export class SaveService {

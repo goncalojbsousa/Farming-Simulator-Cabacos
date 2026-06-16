@@ -6,6 +6,7 @@ import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
 import { translate, TranslationKey } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
+import { QuestService } from '../services/QuestService';
 import { playSound } from '../services/SoundService';
 import { TimeService } from '../services/TimeService';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
@@ -37,6 +38,7 @@ export class BuildingEntranceSystem {
         private gameTime: TimeService,
         private landOwnership: LandOwnershipService,
         private energy: EnergyService,
+        private quests: QuestService,
         private onPlayerFaint: () => void
     ) {
         const objects = map.getObjectLayer('Interactions')?.objects ?? [];
@@ -82,6 +84,7 @@ export class BuildingEntranceSystem {
                 gameTime: this.gameTime,
                 landOwnership: this.landOwnership,
                 energy: this.energy,
+                quests: this.quests,
                 onPlayerFaint: this.onPlayerFaint
             });
         }
