@@ -10,8 +10,8 @@ export class Player {
     constructor(private scene: Scene, x: number, y: number) {
         this.sprite = scene.physics.add.sprite(x, y, 'idle');
         this.sprite.setCollideWorldBounds(true);
-        this.sprite.setBodySize(8, 8);
-        this.sprite.setOffset(44, 28);
+        this.sprite.setBodySize(8, 1);
+        this.sprite.setOffset(44, 38);
 
         this.sprite.play('idle');
     }
