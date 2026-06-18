@@ -44,7 +44,6 @@ const tools = [
     { id: 'wateringCan', nameKey: 'itemWateringCan', assetPath: 'tools/watering_can.png', buyPrice: 55 }
 ] as const;
 
-// To add a crop, add one line here and its images to the assets folder.
 export const crops = [
     { id: 'beetroot', frameWidth: 16, frameHeight: 16, seedNameKey: 'seedBeetroot', harvestNameKey: 'cropBeetroot', buyPrice: 8, sellPrice: 12, stageGrowthDays: [2, 2, 2] },
     { id: 'cabbage', frameWidth: 16, frameHeight: 13, seedNameKey: 'seedCabbage', harvestNameKey: 'cropCabbage', buyPrice: 10, sellPrice: 15, stageGrowthDays: [3, 3, 3] },
@@ -69,47 +68,47 @@ const toolItems: ToolItem[] = tools.map((tool) => ({
     buyPrice: tool.buyPrice
 }));
 
-const cropItems: GameItem[] = crops.flatMap((crop) => [
-    {
-        id: `${crop.id}Seed`,
-        nameKey: crop.seedNameKey,
-        type: 'seed',
-        assetPath: `plantation/crops/${crop.id}.png`,
-        textureKey: crop.id,
-        textureFrame: 0,
-        cropId: crop.id,
-        maxStackSize: 99,
-        buyPrice: crop.buyPrice,
-        stageGrowthDays: crop.stageGrowthDays
-    },
-    {
-        id: `${crop.id}Harvest`,
-        nameKey: crop.harvestNameKey,
-        type: 'resource',
-        assetPath: `plantation/crops/${crop.id}.png`,
-        textureKey: crop.id,
-        textureFrame: 5,
-        cropId: crop.id,
-        maxStackSize: 99,
-        sellPrice: crop.sellPrice
-    }
-]);
+const seedItems: SeedItem[] = crops.map((crop) => ({
+    id: `${crop.id}Seed`,
+    nameKey: crop.seedNameKey,
+    type: 'seed',
+    assetPath: `plantation/crops/${crop.id}.png`,
+    textureKey: crop.id,
+    textureFrame: 0,
+    cropId: crop.id,
+    maxStackSize: 99,
+    buyPrice: crop.buyPrice,
+    stageGrowthDays: crop.stageGrowthDays
+}));
 
-export const gameItems = [...toolItems, ...cropItems];
+const harvestItems: HarvestItem[] = crops.map((crop) => ({
+    id: `${crop.id}Harvest`,
+    nameKey: crop.harvestNameKey,
+    type: 'resource',
+    assetPath: `plantation/crops/${crop.id}.png`,
+    textureKey: crop.id,
+    textureFrame: 5,
+    cropId: crop.id,
+    maxStackSize: 99,
+    sellPrice: crop.sellPrice
+}));
+
+export const gameItems = [...toolItems, ...seedItems, ...harvestItems];
+
 export function getItemById(itemId: ItemId): GameItem {
     return gameItems.find((item) => item.id === itemId)!;
 }
 
 export function getSeedItems(): SeedItem[] {
-    return gameItems.filter((item) => item.type === 'seed') as SeedItem[];
+    return seedItems;
 }
 
 export function getToolShopItems(): ToolItem[] {
-    return gameItems.filter((item) => item.type === 'tool') as ToolItem[];
+    return toolItems;
 }
 
 export function getHarvestItems(): HarvestItem[] {
-    return gameItems.filter((item) => item.type === 'resource') as HarvestItem[];
+    return harvestItems;
 }
 
 export const startingToolIds = ['sickle', 'hoe'];

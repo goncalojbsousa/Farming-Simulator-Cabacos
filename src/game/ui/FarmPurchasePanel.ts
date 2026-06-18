@@ -8,11 +8,12 @@ import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { playSound } from '../services/SoundService';
 import { MenuPanel } from './MenuPanel';
+import { createPixelNineSlice } from './PixelNineSlice';
 
 type FarmRowView = {
     farmOption: FarmPurchaseOption;
     priceText: GameObjects.Text;
-    buttonBackground: GameObjects.Rectangle;
+    buttonBackground: GameObjects.NineSlice;
     buttonLabel: GameObjects.Text;
 };
 
@@ -78,8 +79,12 @@ export class FarmPurchasePanel {
         farmOption: FarmPurchaseOption,
         rowY: number
     ): GameObjects.Container {
-        const rowBackground = this.scene.add.rectangle(0, 0, 460, 64, 0x263f30, 0.95)
-            .setStrokeStyle(2, 0x8b6b3f);
+        const rowBackground = createPixelNineSlice(
+            this.scene,
+            'menuWhite',
+            460,
+            64
+        ).setAlpha(0.95);
         const farmIcon = this.createFarmIcon(-188, 0);
         const farmName = this.scene.add.text(-155, -7, translate(farmOption.nameKey), {
             fontFamily: 'Arial Black',
@@ -94,8 +99,16 @@ export class FarmPurchasePanel {
             color: '#ffe7a3'
         }).setOrigin(0, 0.5);
 
-        const buttonBackground = this.scene.add.rectangle(166, 0, 118, 34, 0x2f6d38)
-            .setStrokeStyle(3, 0x332015)
+        const buttonBackground = createPixelNineSlice(
+            this.scene,
+            'button',
+            118,
+            34,
+            3,
+            2,
+            'trimmed'
+        )
+            .setPosition(166, 0)
             .setInteractive({ useHandCursor: true });
 
         const buttonLabel = this.scene.add.text(166, 0, translate('buy'), {
@@ -115,7 +128,7 @@ export class FarmPurchasePanel {
 
         buttonBackground.on('pointerover', () => {
             if (!this.landOwnership.isFarmOwned(farmOption.farmId)) {
-                buttonBackground.setFillStyle(0xb47a3f);
+                buttonBackground.setTint(0xffd09a);
             }
         });
 
@@ -170,8 +183,14 @@ export class FarmPurchasePanel {
         row.priceText.setText(`${row.farmOption.price}$`);
         row.buttonLabel.setText(isOwned ? translate('owned') : translate('buy'));
         row.buttonBackground
-            .setFillStyle(isOwned ? 0x6b6258 : 0x8a5a31)
-            .setStrokeStyle(2, isOwned ? 0x4a4038 : 0xe3a35a);
+            .clearTint()
+            .setAlpha(1);
+
+        if (isOwned) {
+            row.buttonBackground
+                .setTint(0x8f8176)
+                .setAlpha(0.85);
+        }
     }
 
     private createFarmIcon(x: number, y: number): GameObjects.Image {
