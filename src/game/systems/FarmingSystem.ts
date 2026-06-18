@@ -291,7 +291,7 @@ export class FarmingSystem {
         const crop = this.crops[cropIndex];
         const harvestItemId = `${crop.cropId}Harvest`;
 
-        if (!this.game.inventory.addItem(harvestItemId, 1, true)) {
+        if (!this.game.inventory.addItem(harvestItemId, 1)) {
             playSound(this.game.scene, 'fail');
             return;
         }

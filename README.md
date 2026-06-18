@@ -177,6 +177,14 @@ Isto evita strings duplicadas espalhadas pelo código e permite traduzir menus, 
 | `public/assets` | Imagens, áudio, tilesets, tilemaps e UI |
 | `docs` | Documentação auxiliar |
 
+## Jogar Online
+
+O jogo está publicado no GitHub Pages e pode ser jogado no browser:
+
+```text
+https://goncalojbsousa.github.io/Farming-Simulator-Cabacos/
+```
+
 ## Como Executar
 
 Instalar dependências:
