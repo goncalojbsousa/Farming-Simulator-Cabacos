@@ -5,7 +5,7 @@ export class GameInput {
 
     private readonly arrows: Types.Input.Keyboard.CursorKeys;
     private readonly movementKeys: Record<'W' | 'A' | 'S' | 'D', Input.Keyboard.Key>;
-    private readonly actionKeys: Record<'inventory' | 'interact' | 'escape' | 'nextDay', Input.Keyboard.Key>;
+    private readonly actionKeys: Record<'inventory' | 'interact' | 'escape' | 'nextDay' | 'addMoney', Input.Keyboard.Key>;
     private readonly hotbarKeys: Input.Keyboard.Key[];
     private mouseWasDown = false;
 
@@ -27,7 +27,8 @@ export class GameInput {
             inventory: keyboard.addKey('I'),
             interact: keyboard.addKey('E'),
             escape: keyboard.addKey('ESC'),
-            nextDay: keyboard.addKey('N')
+            nextDay: keyboard.addKey('N'),
+            addMoney: keyboard.addKey('M')
         };
         this.hotbarKeys = [
             keyboard.addKey('ONE'),
@@ -77,6 +78,10 @@ export class GameInput {
 
     nextDayPressed(): boolean {
         return Input.Keyboard.JustDown(this.actionKeys.nextDay);
+    }
+
+    addMoneyPressed(): boolean {
+        return Input.Keyboard.JustDown(this.actionKeys.addMoney);
     }
 
     getHotbarSlotPressed(): number | null {

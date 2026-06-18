@@ -1,5 +1,4 @@
 import { Scene } from 'phaser';
-import { startingSeedIds, startingToolIds } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
@@ -19,6 +18,7 @@ import { GameWorld } from '../world/GameWorld';
 import { openPauseMenu } from './PauseMenu';
 
 const faintMoneyLossRate = 0.25;
+const debugMoneyReward = 50;
 const nightStartHour = 17;
 const fullyDarkHour = 22;
 const maxNightAlpha = 0.6;
@@ -66,13 +66,13 @@ export class Game extends Scene {
         this.gameWorld = new GameWorld(this, this.landOwnership);
         this.gameInput = new GameInput(this);
         this.inventory = new InventoryService();
-        this.money = new MoneyService(100);
+        this.money = new MoneyService(200);
         this.gameTime = new TimeService();
         this.energy = new EnergyService();
         this.wateringCan = new WateringCanService();
         this.quests = new QuestService();
 
-        // Either continue a saved game or start with the basic tools and seeds.
+        // Continue a saved game, otherwise start with an empty inventory.
         if (this.loadedSaveData) {
             this.inventory.loadSnapshot(this.loadedSaveData.inventory);
             this.money.setBalance(this.loadedSaveData.money);
@@ -81,14 +81,6 @@ export class Game extends Scene {
             this.wateringCan.setWater(this.loadedSaveData.wateringCanWater);
             if (this.loadedSaveData.quests) {
                 this.quests.loadSnapshot(this.loadedSaveData.quests);
-            }
-        } else {
-            for (const toolId of startingToolIds) {
-                this.inventory.addItem(toolId, 1, true);
-            }
-
-            for (const seedId of startingSeedIds) {
-                this.inventory.addItem(seedId, 5, true);
             }
         }
 
@@ -209,6 +201,10 @@ export class Game extends Scene {
 
         if (this.gameInput.nextDayPressed()) {
             this.gameTime.advanceDay();
+        }
+
+        if (this.gameInput.addMoneyPressed()) {
+            this.money.earn(debugMoneyReward);
         }
 
         this.gameTime.update(time);
