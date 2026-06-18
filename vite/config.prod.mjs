@@ -17,7 +17,7 @@ const phasermsg = () => {
 }   
 
 export default defineConfig({
-    base: './',
+    base: '/Farming-Simulator-Cabacos/',
     logLevel: 'warning',
     build: {
         rollupOptions: {
