@@ -26,7 +26,7 @@ export class HouseInterior extends BuildingInteriorScene {
     }
 
     update(time: number): void {
-        if (this.sleepTransitionActive || this.faintTransitionActive) {
+        if (this.sleepTransitionActive || this.isFaintAnimationRunning) {
             this.gameInput.update();
             return;
         }

@@ -10,8 +10,8 @@ export class Player {
     constructor(private scene: Scene, x: number, y: number) {
         this.sprite = scene.physics.add.sprite(x, y, 'idle');
         this.sprite.setCollideWorldBounds(true);
-        this.sprite.setBodySize(8, 8);
-        this.sprite.setOffset(44, 28);
+        this.sprite.setBodySize(8, 1);
+        this.sprite.setOffset(44, 38);
 
         this.sprite.play('idle');
     }
@@ -36,20 +36,15 @@ export class Player {
 
         if (horizontalMovement !== 0 || verticalMovement !== 0) {
             this.sprite.play('walk', true);
-            this.playFootstep();
+
+            if (this.scene.time.now - this.lastStepTime >= 300) {
+                const rate = PhaserMath.FloatBetween(0.92, 1.08);
+
+                playSound(this.scene, 'grassyStep', 0.12, rate);
+                this.lastStepTime = this.scene.time.now;
+            }
         } else {
             this.sprite.play('idle', true);
         }
-    }
-
-    private playFootstep(): void {
-        if (this.scene.time.now - this.lastStepTime < 300) {
-            return;
-        }
-
-        const rate = PhaserMath.FloatBetween(0.92, 1.08);
-
-        playSound(this.scene, 'grassyStep', 0.12, rate);
-        this.lastStepTime = this.scene.time.now;
     }
 }

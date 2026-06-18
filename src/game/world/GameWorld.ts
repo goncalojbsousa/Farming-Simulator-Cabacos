@@ -30,38 +30,53 @@ export class GameWorld {
             this.map.addTilesetImage(tileset.name, tileset.name)!
         );
 
-        for (const layerData of this.map.layers) {
-            if (this.isCollisionLayer(layerData.name)) {
+        // Create all visible map layers and remember special farm layers.
+        for (const mapLayerInfo of this.map.layers) {
+            const farmIdFromLayerName = mapLayerInfo.name === 'farm'
+                || mapLayerInfo.name === 'farm2'
+                || mapLayerInfo.name === 'farm3'
+                ? mapLayerInfo.name
+                : undefined;
+            const farmSoldByThisSign = farmPurchaseOptions.find((farmOption) =>
+                mapLayerInfo.name === `buy_${farmOption.farmId}`
+            );
+            const isLockedFarmCollisionLayer = farmPurchaseOptions.some((farmOption) =>
+                mapLayerInfo.name === `buy_${farmOption.farmId}_collision`
+            );
+
+            if (mapLayerInfo.name === 'Collision' || isLockedFarmCollisionLayer) {
                 continue;
             }
 
-            const layer = this.map.createLayer(
-                layerData.name,
+            const visibleMapLayer = this.map.createLayer(
+                mapLayerInfo.name,
                 tilesets,
                 0,
                 0
             ) as Phaser.Tilemaps.TilemapLayer;
-            const depthProperty = layerData.properties?.find(
+            const tiledDepthProperty = mapLayerInfo.properties?.find(
                 (property: { name?: string }) => property.name === 'gamemaker_depth'
             );
 
-            if (depthProperty) {
-                layer.setDepth(-(depthProperty as { value: number }).value);
+            if (tiledDepthProperty) {
+                visibleMapLayer.setDepth(-(tiledDepthProperty as { value: number }).value);
             }
 
-            const farmId = this.getFarmIdFromLayerName(layerData.name);
-            if (farmId) {
-                this.farmLayersById.set(farmId, layer);
+            if (farmIdFromLayerName) {
+                this.farmLayersById.set(farmIdFromLayerName, visibleMapLayer);
             }
 
-            const purchaseSignFarmId = this.getFarmIdFromPurchaseSignLayerName(layerData.name);
-            if (purchaseSignFarmId) {
-                this.purchaseSignLayersByFarmId.set(purchaseSignFarmId, layer);
+            if (farmSoldByThisSign) {
+                this.purchaseSignLayersByFarmId.set(
+                    farmSoldByThisSign.farmId,
+                    visibleMapLayer
+                );
             }
 
-            this.worldObjects.push(layer);
+            this.worldObjects.push(visibleMapLayer);
         }
 
+        // Invisible collision layer that blocks normal walls and objects.
         const collisionLayer = this.map.createLayer(
             'Collision',
             tilesets,
@@ -76,18 +91,24 @@ export class GameWorld {
         this.worldObjects.push(this.player.sprite);
         scene.physics.add.collider(this.player.sprite, collisionLayer);
 
+        // Extra invisible walls block farm land until the player buys it.
         for (const farmOption of farmPurchaseOptions) {
-            const farmCollisionLayer = this.createOptionalCollisionLayer(
-                `buy_${farmOption.farmId}_collision`,
-                tilesets
-            );
+            const lockedFarmCollisionLayerName = `buy_${farmOption.farmId}_collision`;
 
-            if (farmCollisionLayer) {
-                const collider = scene.physics.add.collider(
-                    this.player.sprite,
-                    farmCollisionLayer
+            if (this.map.getLayer(lockedFarmCollisionLayerName)) {
+                const lockedFarmCollisionLayer = this.map.createLayer(
+                    lockedFarmCollisionLayerName,
+                    tilesets,
+                    0,
+                    0
+                ) as Phaser.Tilemaps.TilemapLayer;
+
+                lockedFarmCollisionLayer.setCollisionByExclusion([-1]).setAlpha(0);
+                this.worldObjects.push(lockedFarmCollisionLayer);
+                this.collisionCollidersByFarmId.set(
+                    farmOption.farmId,
+                    scene.physics.add.collider(this.player.sprite, lockedFarmCollisionLayer)
                 );
-                this.collisionCollidersByFarmId.set(farmOption.farmId, collider);
             }
         }
 
@@ -133,48 +154,6 @@ export class GameWorld {
                 this.collisionCollidersByFarmId.delete(farmOption.farmId);
             }
         }
-    }
-
-    private createOptionalCollisionLayer(
-        layerName: string,
-        tilesets: Phaser.Tilemaps.Tileset[]
-    ): Phaser.Tilemaps.TilemapLayer | undefined {
-        if (!this.map.getLayer(layerName)) {
-            return undefined;
-        }
-
-        const collisionLayer = this.map.createLayer(
-            layerName,
-            tilesets,
-            0,
-            0
-        ) as Phaser.Tilemaps.TilemapLayer;
-        collisionLayer.setCollisionByExclusion([-1]).setAlpha(0);
-        this.worldObjects.push(collisionLayer);
-        return collisionLayer;
-    }
-
-    private isCollisionLayer(layerName: string): boolean {
-        return layerName === 'Collision'
-            || farmPurchaseOptions.some((farmOption) =>
-                layerName === `buy_${farmOption.farmId}_collision`
-            );
-    }
-
-    private getFarmIdFromLayerName(layerName: string): FarmId | undefined {
-        if (layerName === 'farm') {
-            return 'farm';
-        }
-
-        return farmPurchaseOptions.find((farmOption) =>
-            farmOption.farmId === layerName
-        )?.farmId;
-    }
-
-    private getFarmIdFromPurchaseSignLayerName(layerName: string): FarmId | undefined {
-        return farmPurchaseOptions.find((farmOption) =>
-            layerName === `buy_${farmOption.farmId}`
-        )?.farmId;
     }
 
     movePlayerToSpawn(): void {

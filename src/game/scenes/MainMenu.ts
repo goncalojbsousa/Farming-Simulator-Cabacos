@@ -24,6 +24,7 @@ export class MainMenu extends Scene {
             this.showSlots();
         }).setName('startButton');
 
+        // transparent black bg
         this.slotOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000, 0.55)
             .setOrigin(0)
             .setInteractive()
