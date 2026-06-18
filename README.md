@@ -6,8 +6,6 @@
 
 **Quinta Cabaços** é um jogo 2D top-down em pixel art desenvolvido em **Phaser 3**, **TypeScript** e **Vite**. O jogador gere uma pequena quinta, compra sementes e ferramentas, cultiva plantas, vende colheitas, compra novos terrenos e completa quests para ganhar dinheiro.
 
-O projeto foi desenvolvido para a unidade curricular de Tecnologias Multimédia 2025/2026, com uma estrutura simples, modular e fácil de apresentar.
-
 ## Grupo
 
 | Elemento | Número de aluno | GitHub |

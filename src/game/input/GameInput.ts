@@ -3,13 +3,10 @@ import { Input, Scene, Types } from 'phaser';
 export class GameInput {
     readonly pointer: Input.Pointer;
 
-    private arrows: Types.Input.Keyboard.CursorKeys;
-    private movementKeys: Record<'W' | 'A' | 'S' | 'D', Input.Keyboard.Key>;
-    private inventoryKey: Input.Keyboard.Key;
-    private interactKey: Input.Keyboard.Key;
-    private escapeKey: Input.Keyboard.Key;
-    private nextDayKey: Input.Keyboard.Key;
-    private hotbarKeys: Input.Keyboard.Key[];
+    private readonly arrows: Types.Input.Keyboard.CursorKeys;
+    private readonly movementKeys: Record<'W' | 'A' | 'S' | 'D', Input.Keyboard.Key>;
+    private readonly actionKeys: Record<'inventory' | 'interact' | 'escape' | 'nextDay', Input.Keyboard.Key>;
+    private readonly hotbarKeys: Input.Keyboard.Key[];
     private mouseWasDown = false;
 
     mousePressed = false;
@@ -20,11 +17,18 @@ export class GameInput {
 
         this.pointer = scene.input.activePointer;
         this.arrows = keyboard.createCursorKeys();
-        this.movementKeys = keyboard.addKeys('W,A,S,D') as typeof this.movementKeys;
-        this.inventoryKey = keyboard.addKey('I');
-        this.interactKey = keyboard.addKey('E');
-        this.escapeKey = keyboard.addKey('ESC');
-        this.nextDayKey = keyboard.addKey('N');
+        this.movementKeys = {
+            W: keyboard.addKey('W'),
+            A: keyboard.addKey('A'),
+            S: keyboard.addKey('S'),
+            D: keyboard.addKey('D')
+        };
+        this.actionKeys = {
+            inventory: keyboard.addKey('I'),
+            interact: keyboard.addKey('E'),
+            escape: keyboard.addKey('ESC'),
+            nextDay: keyboard.addKey('N')
+        };
         this.hotbarKeys = [
             keyboard.addKey('ONE'),
             keyboard.addKey('TWO'),
@@ -60,19 +64,19 @@ export class GameInput {
     }
 
     inventoryPressed(): boolean {
-        return Input.Keyboard.JustDown(this.inventoryKey);
+        return Input.Keyboard.JustDown(this.actionKeys.inventory);
     }
 
     interactPressed(): boolean {
-        return Input.Keyboard.JustDown(this.interactKey);
+        return Input.Keyboard.JustDown(this.actionKeys.interact);
     }
 
     escapePressed(): boolean {
-        return Input.Keyboard.JustDown(this.escapeKey);
+        return Input.Keyboard.JustDown(this.actionKeys.escape);
     }
 
     nextDayPressed(): boolean {
-        return Input.Keyboard.JustDown(this.nextDayKey);
+        return Input.Keyboard.JustDown(this.actionKeys.nextDay);
     }
 
     getHotbarSlotPressed(): number | null {

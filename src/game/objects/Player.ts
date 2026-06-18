@@ -36,20 +36,15 @@ export class Player {
 
         if (horizontalMovement !== 0 || verticalMovement !== 0) {
             this.sprite.play('walk', true);
-            this.playFootstep();
+
+            if (this.scene.time.now - this.lastStepTime >= 300) {
+                const rate = PhaserMath.FloatBetween(0.92, 1.08);
+
+                playSound(this.scene, 'grassyStep', 0.12, rate);
+                this.lastStepTime = this.scene.time.now;
+            }
         } else {
             this.sprite.play('idle', true);
         }
-    }
-
-    private playFootstep(): void {
-        if (this.scene.time.now - this.lastStepTime < 300) {
-            return;
-        }
-
-        const rate = PhaserMath.FloatBetween(0.92, 1.08);
-
-        playSound(this.scene, 'grassyStep', 0.12, rate);
-        this.lastStepTime = this.scene.time.now;
     }
 }

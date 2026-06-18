@@ -43,21 +43,26 @@ export class Game extends Scene {
     private wateringCanSystem: WateringCanSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private screenFade: ScreenFade;
-    private nightOverlay: Phaser.GameObjects.Rectangle;
-    private faintTransitionActive = false;
-    private saveToLoad?: SaveGameData;
+    private nightDarknessOverlay: Phaser.GameObjects.Rectangle;
+    private isFaintAnimationRunning = false;
+    private loadedSaveData?: SaveGameData;
 
     constructor() {
         super('Game');
     }
 
     init(data?: GameSceneData): void {
-        this.saveToLoad = data?.save;
+        this.loadedSaveData = data?.save;
     }
 
     create(): void {
+        // Load data that changes the map before the map is created.
         this.landOwnership = new LandOwnershipService();
-        this.loadSavedLandOwnership();
+        if (this.loadedSaveData) {
+            this.landOwnership.loadSnapshot(this.loadedSaveData.unlockedFarmIds);
+        }
+
+        // Main game objects and simple services.
         this.gameWorld = new GameWorld(this, this.landOwnership);
         this.gameInput = new GameInput(this);
         this.inventory = new InventoryService();
@@ -66,9 +71,37 @@ export class Game extends Scene {
         this.energy = new EnergyService();
         this.wateringCan = new WateringCanService();
         this.quests = new QuestService();
-        this.loadSavedServices();
-        this.createNightOverlay();
 
+        // Either continue a saved game or start with the basic tools and seeds.
+        if (this.loadedSaveData) {
+            this.inventory.loadSnapshot(this.loadedSaveData.inventory);
+            this.money.setBalance(this.loadedSaveData.money);
+            this.gameTime.loadSnapshot(this.loadedSaveData.time);
+            this.energy.setEnergy(this.loadedSaveData.energy);
+            this.wateringCan.setWater(this.loadedSaveData.wateringCanWater);
+            if (this.loadedSaveData.quests) {
+                this.quests.loadSnapshot(this.loadedSaveData.quests);
+            }
+        } else {
+            for (const toolId of startingToolIds) {
+                this.inventory.addItem(toolId, 1, true);
+            }
+
+            for (const seedId of startingSeedIds) {
+                this.inventory.addItem(seedId, 5, true);
+            }
+        }
+
+        // Dark rectangle above the map that becomes visible at night.
+        this.nightDarknessOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000)
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setDepth(100);
+        this.gameWorld.worldObjects.push(this.nightDarknessOverlay);
+        this.nightDarknessOverlay.setSize(this.scale.width, this.scale.height);
+        this.updateNightDarkness();
+
+        // Interface and interaction systems.
         this.hud = new GameHud(
             this,
             this.inventory,
@@ -88,7 +121,7 @@ export class Game extends Scene {
             this.landOwnership,
             this.energy,
             this.quests,
-            () => this.faintPlayerInsideBuilding()
+            () => this.faintPlayerFromBuilding()
         );
         this.wateringCanSystem = new WateringCanSystem({
             scene: this,
@@ -98,7 +131,17 @@ export class Game extends Scene {
             wateringCan: this.wateringCan
         });
 
-        this.createUiCamera();
+        // One camera follows the world, another draws menus and HUD fixed on screen.
+        const fixedScreenObjects = [
+            ...this.hud.uiObjects,
+            ...this.buildingEntrances.uiObjects,
+            ...this.wateringCanSystem.uiObjects
+        ];
+
+        this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+        this.uiCamera.ignore(this.gameWorld.worldObjects);
+        this.gameWorld.camera.ignore(fixedScreenObjects);
+
         this.screenFade = new ScreenFade(this);
         this.gameWorld.camera.ignore(this.screenFade.gameObject);
         this.farmingSystem = new FarmingSystem({
@@ -115,15 +158,21 @@ export class Game extends Scene {
             isPointerOverInventory: (pointer) =>
                 this.hud.isPointerOverInventory(pointer.x, pointer.y),
             refreshInventory: () => this.hud.refresh(),
-            savedState: this.saveToLoad?.farming
+            savedState: this.loadedSaveData?.farming
         });
-        this.loadSavedPlayerPosition();
 
-        this.scale.on('resize', this.resizeGame, this);
-        this.events.on('wake', this.onWake, this);
+        if (this.loadedSaveData?.playerPosition) {
+            this.gameWorld.movePlayerToPosition(
+                this.loadedSaveData.playerPosition.x,
+                this.loadedSaveData.playerPosition.y
+            );
+        }
+
+        this.scale.on('resize', this.resizeGameScreen, this);
+        this.events.on('wake', this.updateAfterReturningToGame, this);
         this.events.once('shutdown', () => {
-            this.scale.off('resize', this.resizeGame, this);
-            this.events.off('wake', this.onWake, this);
+            this.scale.off('resize', this.resizeGameScreen, this);
+            this.events.off('wake', this.updateAfterReturningToGame, this);
         });
     }
 
@@ -154,7 +203,7 @@ export class Game extends Scene {
             return;
         }
 
-        if (this.faintTransitionActive) {
+        if (this.isFaintAnimationRunning) {
             return;
         }
 
@@ -163,15 +212,15 @@ export class Game extends Scene {
         }
 
         this.gameTime.update(time);
-        this.updateNightOverlay();
+        this.updateNightDarkness();
 
         if (this.gameTime.isFaintTime()) {
-            this.faintTransitionActive = true;
+            this.isFaintAnimationRunning = true;
             this.gameWorld.player.sprite.setVelocity(0);
             playSound(this, 'faint');
             this.screenFade.play(
-                () => this.applyFaintConsequences(),
-                () => this.faintTransitionActive = false
+                () => this.sendPlayerHomeAfterFaint(),
+                () => this.isFaintAnimationRunning = false
             );
             return;
         }
@@ -183,92 +232,25 @@ export class Game extends Scene {
         this.buildingEntrances.update(this.gameInput);
     }
 
-    private createUiCamera(): void {
-        const uiObjects = [
-            ...this.hud.uiObjects,
-            ...this.buildingEntrances.uiObjects,
-            ...this.wateringCanSystem.uiObjects
-        ];
-
-        this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
-        this.uiCamera.ignore(this.gameWorld.worldObjects);
-        this.gameWorld.camera.ignore(uiObjects);
-    }
-
-    private createNightOverlay(): void {
-        this.nightOverlay = this.add.rectangle(0, 0, 1, 1, 0x000000)
-            .setOrigin(0)
-            .setScrollFactor(0)
-            .setDepth(100);
-        this.gameWorld.worldObjects.push(this.nightOverlay);
-        this.layoutNightOverlay();
-        this.updateNightOverlay();
-    }
-
-    private updateNightOverlay(): void {
+    private updateNightDarkness(): void {
         const currentHour = this.gameTime.hour + this.gameTime.minute / 60;
-        let darkness = 0;
+        let nightDarkness = 0;
 
         if (currentHour >= nightStartHour) {
-            darkness = Math.min(
+            nightDarkness = Math.min(
                 (currentHour - nightStartHour) / (fullyDarkHour - nightStartHour),
                 1
             );
         } else if (currentHour < 2) {
-            darkness = 1;
+            nightDarkness = 1;
         }
 
-        this.nightOverlay.setAlpha(darkness * maxNightAlpha);
+        this.nightDarknessOverlay.setAlpha(nightDarkness * maxNightAlpha);
     }
 
-    private layoutNightOverlay(): void {
-        this.nightOverlay.setSize(this.scale.width, this.scale.height);
-    }
-
-    private addStartingItems(): void {
-        for (const toolId of startingToolIds) {
-            this.inventory.addItem(toolId, 1, true);
-        }
-
-        for (const seedId of startingSeedIds) {
-            this.inventory.addItem(seedId, 5, true);
-        }
-    }
-
-    private loadSavedLandOwnership(): void {
-        if (this.saveToLoad) {
-            this.landOwnership.loadSnapshot(this.saveToLoad.unlockedFarmIds);
-        }
-    }
-
-    private loadSavedServices(): void {
-        if (!this.saveToLoad) {
-            this.addStartingItems();
-            return;
-        }
-
-        this.inventory.loadSnapshot(this.saveToLoad.inventory);
-        this.money.setBalance(this.saveToLoad.money);
-        this.gameTime.loadSnapshot(this.saveToLoad.time);
-        this.energy.setEnergy(this.saveToLoad.energy);
-        this.wateringCan.setWater(this.saveToLoad.wateringCanWater);
-        if (this.saveToLoad.quests) {
-            this.quests.loadSnapshot(this.saveToLoad.quests);
-        }
-    }
-
-    private loadSavedPlayerPosition(): void {
-        if (this.saveToLoad?.playerPosition) {
-            this.gameWorld.movePlayerToPosition(
-                this.saveToLoad.playerPosition.x,
-                this.saveToLoad.playerPosition.y
-            );
-        }
-    }
-
-    private resizeGame(): void {
+    private resizeGameScreen(): void {
         this.gameWorld.resize();
-        this.layoutNightOverlay();
+        this.nightDarknessOverlay.setSize(this.scale.width, this.scale.height);
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.hud.layout();
         this.buildingEntrances.layout();
@@ -276,35 +258,35 @@ export class Game extends Scene {
         this.screenFade.layout();
     }
 
-    private onWake(): void {
-        this.refreshUi();
-        this.updateNightOverlay();
+    private updateAfterReturningToGame(): void {
+        this.refreshMapAndHud();
+        this.updateNightDarkness();
 
-        if (this.faintTransitionActive) {
-            this.screenFade.fadeOut(() => this.faintTransitionActive = false);
+        if (this.isFaintAnimationRunning) {
+            this.screenFade.fadeOut(() => this.isFaintAnimationRunning = false);
         }
     }
 
-    private faintPlayerInsideBuilding(): void {
-        this.faintTransitionActive = true;
+    private faintPlayerFromBuilding(): void {
+        this.isFaintAnimationRunning = true;
         this.screenFade.showBlack();
-        this.applyFaintConsequences();
+        this.sendPlayerHomeAfterFaint();
     }
 
-    private applyFaintConsequences(): void {
-        const moneyLost = Math.floor(
+    private sendPlayerHomeAfterFaint(): void {
+        const moneyPenalty = Math.floor(
             this.money.getBalance() * faintMoneyLossRate
         );
 
-        this.money.spend(moneyLost);
+        this.money.spend(moneyPenalty);
         this.energy.restoreAfterFaint();
         this.gameTime.setMorningTime();
-        this.updateNightOverlay();
+        this.updateNightDarkness();
         this.gameWorld.movePlayerToSpawn();
-        this.refreshUi();
+        this.refreshMapAndHud();
     }
 
-    private refreshUi(): void {
+    private refreshMapAndHud(): void {
         this.gameWorld.applyLandOwnership();
         this.hud.refresh();
     }
