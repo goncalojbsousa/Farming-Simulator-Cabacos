@@ -86,7 +86,7 @@ export class SeedShopPanel {
             return;
         }
 
-        if (!this.inventory.addItem(seed.id, 1, true)) {
+        if (!this.inventory.addItem(seed.id, 1)) {
             this.purchaseMessage.setText(translate('inventoryFull'));
             playSound(this.scene, 'fail');
             return;

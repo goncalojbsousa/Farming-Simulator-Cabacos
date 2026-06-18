@@ -34,23 +34,20 @@ export class InventoryService {
         this.notifyChange();
     }
 
-    addItem(itemId: ItemId, quantity: number, hotbarFirst = false): boolean {
+    addItem(itemId: ItemId, quantity: number): boolean {
         const maxStack = getItemById(itemId).maxStackSize;
+        const hotbarSlots = this.slots.slice(0, hotbarSlotCount);
+        const inventorySlots = this.slots.slice(hotbarSlotCount);
 
-        // Add to an existing stack before looking for an empty slot.
-        let slot = this.slots.find((slot) =>
+        // Fill existing stacks first, then use empty slots with hotbar priority.
+        let slot = hotbarSlots.find((slot) =>
             slot.itemId === itemId && slot.quantity + quantity <= maxStack
         );
-
-        const preferredSlots = hotbarFirst
-            ? this.slots.slice(0, hotbarSlotCount)
-            : this.slots.slice(hotbarSlotCount);
-        const fallbackSlots = hotbarFirst
-            ? this.slots.slice(hotbarSlotCount)
-            : this.slots.slice(0, hotbarSlotCount);
-
-        slot ??= preferredSlots.find((slot) => slot.itemId === null);
-        slot ??= fallbackSlots.find((slot) => slot.itemId === null);
+        slot ??= inventorySlots.find((slot) =>
+            slot.itemId === itemId && slot.quantity + quantity <= maxStack
+        );
+        slot ??= hotbarSlots.find((slot) => slot.itemId === null);
+        slot ??= inventorySlots.find((slot) => slot.itemId === null);
 
         if (!slot) {
             return false;
