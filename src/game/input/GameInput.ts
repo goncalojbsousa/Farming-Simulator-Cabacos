@@ -1,4 +1,13 @@
 import { Input, Scene, Types } from 'phaser';
+import {
+    consumeVirtualButton,
+    expireVirtualButtons,
+    getVirtualAxisX,
+    getVirtualAxisY
+} from './VirtualInput';
+
+// Minimum joystick deflection needed to count as a movement direction.
+const joystickDeadzone = 0.25;
 
 export class GameInput {
     readonly pointer: Input.Pointer;
@@ -43,37 +52,48 @@ export class GameInput {
     }
 
     update(): void {
+        // Discard virtual button presses that no system consumed on the
+        // frame they were made, matching keyboard JustDown semantics.
+        expireVirtualButtons();
+
         this.mousePressed = this.pointer.primaryDown && !this.mouseWasDown;
         this.mouseReleased = !this.pointer.primaryDown && this.mouseWasDown;
         this.mouseWasDown = this.pointer.primaryDown;
     }
 
     isLeftDown(): boolean {
-        return this.arrows.left.isDown || this.movementKeys.A.isDown;
+        return this.arrows.left.isDown || this.movementKeys.A.isDown
+            || getVirtualAxisX() < -joystickDeadzone;
     }
 
     isRightDown(): boolean {
-        return this.arrows.right.isDown || this.movementKeys.D.isDown;
+        return this.arrows.right.isDown || this.movementKeys.D.isDown
+            || getVirtualAxisX() > joystickDeadzone;
     }
 
     isUpDown(): boolean {
-        return this.arrows.up.isDown || this.movementKeys.W.isDown;
+        return this.arrows.up.isDown || this.movementKeys.W.isDown
+            || getVirtualAxisY() < -joystickDeadzone;
     }
 
     isDownDown(): boolean {
-        return this.arrows.down.isDown || this.movementKeys.S.isDown;
+        return this.arrows.down.isDown || this.movementKeys.S.isDown
+            || getVirtualAxisY() > joystickDeadzone;
     }
 
     inventoryPressed(): boolean {
-        return Input.Keyboard.JustDown(this.actionKeys.inventory);
+        return Input.Keyboard.JustDown(this.actionKeys.inventory)
+            || consumeVirtualButton('inventory');
     }
 
     interactPressed(): boolean {
-        return Input.Keyboard.JustDown(this.actionKeys.interact);
+        return Input.Keyboard.JustDown(this.actionKeys.interact)
+            || consumeVirtualButton('interact');
     }
 
     escapePressed(): boolean {
-        return Input.Keyboard.JustDown(this.actionKeys.escape);
+        return Input.Keyboard.JustDown(this.actionKeys.escape)
+            || consumeVirtualButton('escape');
     }
 
     nextDayPressed(): boolean {
