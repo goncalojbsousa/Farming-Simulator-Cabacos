@@ -7,6 +7,13 @@ body {
     color: rgba(255, 255, 255, 0.87);
     background-color: #0f0f0f;
     overflow: hidden;
+    /* Mobile: keep the page fixed and block browser gestures over the game. */
+    position: fixed;
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #app {
@@ -18,6 +25,7 @@ body {
 #game-container {
     width: 100%;
     height: 100%;
+    touch-action: none;
 }
 
 #game-container canvas {
@@ -25,4 +33,5 @@ body {
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+    touch-action: none;
 }

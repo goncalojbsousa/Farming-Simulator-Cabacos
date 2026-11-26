@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { GameObjects, Scene } from 'phaser';
 import { getItemById } from '../data/ItemData';
 import { GameInput } from '../input/GameInput';
 import { hotbarSlotCount, InventoryService } from '../services/InventoryService';
@@ -13,6 +13,16 @@ const slotSize = 20;
 const hotbarGap = 6;
 const inventoryColumns = 4;
 const inventorySlotSpacing = 68;
+
+// Screen width below which the hotbar slots are scaled down so that the
+// eight slots still fit between the touch controls on phones.
+const compactHotbarWidth = 640;
+const compactHotbarScale = 2 / 3;
+
+// Scale used by the always visible hotbar slots for a given screen width.
+export function getHotbarScale(sceneWidth: number): number {
+    return sceneWidth < compactHotbarWidth ? compactHotbarScale : 1;
+}
 
 // Creates and controls the hotbar and inventory panel.
 export class InventoryUi {
@@ -141,7 +151,8 @@ export class InventoryUi {
 
     layout(): void {
         // Position the first eight slots in a horizontal hotbar.
-        const scaledSlotSize = slotSize * slotScale;
+        const hotbarScale = getHotbarScale(this.scene.scale.width);
+        const scaledSlotSize = slotSize * slotScale * hotbarScale;
         const hotbarWidth = hotbarSlotCount * scaledSlotSize
             + (hotbarSlotCount - 1) * hotbarGap;
         const hotbarStartX = this.scene.scale.width / 2
@@ -150,6 +161,7 @@ export class InventoryUi {
         const hotbarY = this.scene.scale.height - 44;
 
         this.slotViews.slice(0, hotbarSlotCount).forEach((slotView, slotIndex) => {
+            slotView.container.setScale(hotbarScale);
             slotView.container.setPosition(
                 hotbarStartX + slotIndex * (scaledSlotSize + hotbarGap),
                 hotbarY

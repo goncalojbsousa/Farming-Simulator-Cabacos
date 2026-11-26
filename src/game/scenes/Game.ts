@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
+import { TouchControls } from '../input/TouchControls';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
@@ -43,6 +44,7 @@ export class Game extends Scene {
     private wateringCanSystem: WateringCanSystem;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private screenFade: ScreenFade;
+    private touchControls: TouchControls;
     private nightDarknessOverlay: Phaser.GameObjects.Rectangle;
     private isFaintAnimationRunning = false;
     private loadedSaveData?: SaveGameData;
@@ -123,11 +125,15 @@ export class Game extends Scene {
             wateringCan: this.wateringCan
         });
 
+        // On touch devices, on-screen joystick and action buttons.
+        this.touchControls = new TouchControls(this);
+
         // One camera follows the world, another draws menus and HUD fixed on screen.
         const fixedScreenObjects = [
             ...this.hud.uiObjects,
             ...this.buildingEntrances.uiObjects,
-            ...this.wateringCanSystem.uiObjects
+            ...this.wateringCanSystem.uiObjects,
+            ...this.touchControls.uiObjects
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -148,7 +154,8 @@ export class Game extends Scene {
             quests: this.quests,
             worldObjects: this.gameWorld.worldObjects,
             isPointerOverInventory: (pointer) =>
-                this.hud.isPointerOverInventory(pointer.x, pointer.y),
+                this.hud.isPointerOverInventory(pointer.x, pointer.y)
+                || this.touchControls.isPointerOverControls(pointer.x, pointer.y),
             refreshInventory: () => this.hud.refresh(),
             savedState: this.loadedSaveData?.farming
         });
@@ -251,6 +258,7 @@ export class Game extends Scene {
         this.hud.layout();
         this.buildingEntrances.layout();
         this.wateringCanSystem.layout();
+        this.touchControls.layout();
         this.screenFade.layout();
     }
 
