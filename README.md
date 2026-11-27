@@ -11,7 +11,7 @@
 | Elemento | Número de aluno | GitHub |
 |---|---|---|
 | Cristiano Fonseca | 29725  | [m1guelfonseca](https://github.com/m1guelfonseca) |
-| Gonçalo Sousa | 29726 | [goncalojbsousa](https://github.com/goncalojbsousa) |
+| Gonçalo Sousa | 29726  | [goncalojbsousa](https://github.com/goncalojbsousa) |
 
 ## Tecnologias
 
@@ -96,6 +96,33 @@ Quando uma quest fica completa, o jogador deve voltar ao Crop Market e clicar em
 | `1` a `8` | Selecionar slot da hotbar |
 | Clique esquerdo | Usar item selecionado no terreno |
 | Arrastar com o rato | Mover itens entre inventário e hotbar |
+
+## Controlos Móveis (Toque)
+
+O jogo pode ser jogado em **telemóveis e tablets** através do browser. Num
+dispositivo com ecrã tátil os controlos de toque aparecem automaticamente;
+também é possível pré-visualizá-los no desktop adicionando `?touch=1` ao
+endereço (por exemplo, `https://goncalojbsousa.github.io/Farming-Simulator-Cabacos/?touch=1`).
+
+| Controlo no ecrã | Função |
+|---|---|
+| Joystick (canto inferior esquerdo) | Mover o jogador |
+| Botão grande `E` (canto inferior direito) | Interagir com edifícios, lojas, cama, mercado, poço e saídas |
+| Botão de grelha (acima do `E`) | Abrir ou fechar o inventário |
+| Botão de pausa | Abrir o menu de pausa |
+| Toque no terreno | Usar o item selecionado no terreno |
+| Toque num slot da hotbar | Selecionar o item |
+| Arrastar entre slots | Mover itens no inventário (drag and drop tátil) |
+
+Notas técnicas:
+
+- A página bloqueia gestos do browser (zoom, scroll e seleção) para que os
+  toques cheguem apenas ao jogo.
+- Os botões de ação usam os mesmos sistemas de input do teclado
+  (`GameInput`), pelo que todas as interações do jogo funcionam de forma
+  idêntica em ambas as plataformas.
+- Em ecrãs estreitos, os slots da hotbar são reduzidos automaticamente para
+  caber entre os controlos de toque.
 
 ## Imagens do Projeto
 
