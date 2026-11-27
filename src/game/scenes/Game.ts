@@ -1,5 +1,7 @@
 import { Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
+import { MobileControls } from '../input/MobileControls';
+import { isTouchDevice } from '../input/TouchSupport';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
 import { LandOwnershipService } from '../services/LandOwnershipService';
@@ -30,6 +32,7 @@ type GameSceneData = {
 export class Game extends Scene {
     private gameWorld: GameWorld;
     private gameInput: GameInput;
+    private mobileControls?: MobileControls;
     private inventory: InventoryService;
     private money: MoneyService;
     private gameTime: TimeService;
@@ -64,7 +67,9 @@ export class Game extends Scene {
 
         // Main game objects and simple services.
         this.gameWorld = new GameWorld(this, this.landOwnership);
-        this.gameInput = new GameInput(this);
+        // On-screen touch controls only appear on touch devices.
+        this.mobileControls = isTouchDevice() ? new MobileControls(this) : undefined;
+        this.gameInput = new GameInput(this, this.mobileControls);
         this.inventory = new InventoryService();
         this.money = new MoneyService(200);
         this.gameTime = new TimeService();
@@ -127,7 +132,8 @@ export class Game extends Scene {
         const fixedScreenObjects = [
             ...this.hud.uiObjects,
             ...this.buildingEntrances.uiObjects,
-            ...this.wateringCanSystem.uiObjects
+            ...this.wateringCanSystem.uiObjects,
+            ...(this.mobileControls?.uiObjects ?? [])
         ];
 
         this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
@@ -251,6 +257,7 @@ export class Game extends Scene {
         this.hud.layout();
         this.buildingEntrances.layout();
         this.wateringCanSystem.layout();
+        this.mobileControls?.layout();
         this.screenFade.layout();
     }
 

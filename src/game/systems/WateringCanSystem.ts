@@ -1,6 +1,8 @@
 import { GameObjects, Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
+import { getTouchPromptY, isTouchDevice } from '../input/TouchSupport';
 import { Player } from '../objects/Player';
+import { getHotbarSlotScale } from '../ui/layout';
 import { hotbarSlotCount, InventoryService } from '../services/InventoryService';
 import { translate } from '../services/LanguageService';
 import { playSound } from '../services/SoundService';
@@ -9,7 +11,6 @@ import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 const fillWateringCanAction = 'fill_watering_can';
 const hotbarSlotSize = 20;
-const hotbarSlotScale = 3;
 const hotbarSlotGap = 6;
 const waterTextHotbarMargin = 14;
 const wellInteractionPadding = 14;
@@ -86,10 +87,12 @@ export class WateringCanSystem {
     }
 
     layout(): void {
-        this.prompt.container.setPosition(
-            this.config.scene.scale.width / 2,
-            this.config.scene.scale.height - 150
-        );
+        const { width, height } = this.config.scene.scale;
+        const promptY = isTouchDevice()
+            ? getTouchPromptY(width, height)
+            : height - 150;
+
+        this.prompt.container.setPosition(width / 2, promptY);
         this.positionWaterText(this.getWateringCanHotbarSlot());
     }
 
@@ -131,13 +134,15 @@ export class WateringCanSystem {
             return;
         }
 
-        const scaledSlotSize = hotbarSlotSize * hotbarSlotScale;
+        const { width, height } = this.config.scene.scale;
+        const slotScale = getHotbarSlotScale(width, height);
+        const scaledSlotSize = hotbarSlotSize * slotScale;
         const totalWidth = hotbarSlotCount * scaledSlotSize
             + (hotbarSlotCount - 1) * hotbarSlotGap;
-        const startX = this.config.scene.scale.width / 2
+        const startX = width / 2
             - totalWidth / 2
             + scaledSlotSize / 2;
-        const hotbarY = this.config.scene.scale.height - 44;
+        const hotbarY = height - 44;
 
         this.waterText.setPosition(
             startX + slotIndex * (scaledSlotSize + hotbarSlotGap),

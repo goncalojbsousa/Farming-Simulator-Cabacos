@@ -6,12 +6,15 @@ import { translate } from '../services/LanguageService';
 import { MoneyService } from '../services/MoneyService';
 import { QuestService } from '../services/QuestService';
 import { TimeService } from '../services/TimeService';
+import { isCompactLayout } from './layout';
 import { InventoryUi } from './InventoryUi';
 import { createPixelNineSlice } from './PixelNineSlice';
 import { QuestDisplay } from './QuestDisplay';
 
 export class GameHud {
     readonly uiObjects: Phaser.GameObjects.GameObject[];
+
+    private scene: Scene;
 
     private inventoryUi: InventoryUi;
     private moneyPanel: Phaser.GameObjects.Container;
@@ -35,6 +38,7 @@ export class GameHud {
         quests: QuestService,
         isInteractionBlocked: () => boolean
     ) {
+        this.scene = scene;
         this.inventoryUi = new InventoryUi(scene, inventory, isInteractionBlocked);
         this.questDisplay = new QuestDisplay(scene, quests);
 
@@ -131,6 +135,7 @@ export class GameHud {
         ];
 
         this.refresh();
+        this.layout();
     }
 
     update(input: GameInput): void {
@@ -147,10 +152,24 @@ export class GameHud {
     }
 
     layout(): void {
+        const { width, height } = this.scene.scale;
+
         this.inventoryUi.layout();
-        this.energyPanel.setPosition(204, 35);
-        this.moneyPanel.setPosition(122, 88);
-        this.timePanel.setPosition(122, 142);
+
+        // Compact layout keeps the HUD panels on one side of small
+        // phone screens without covering the map.
+        if (isCompactLayout(width, height)) {
+            const panelScale = 0.75;
+
+            this.moneyPanel.setScale(panelScale).setPosition(94, 78);
+            this.timePanel.setScale(panelScale).setPosition(94, 128);
+            this.energyPanel.setScale(0.7).setPosition(width / 2, 30);
+        } else {
+            this.moneyPanel.setScale(1).setPosition(122, 88);
+            this.timePanel.setScale(1).setPosition(122, 142);
+            this.energyPanel.setScale(1).setPosition(204, 35);
+        }
+
         this.questDisplay.layout();
     }
 
