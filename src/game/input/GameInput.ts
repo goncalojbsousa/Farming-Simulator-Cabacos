@@ -1,4 +1,5 @@
 import { Input, Scene, Types } from 'phaser';
+import { MobileControls } from './MobileControls';
 
 export class GameInput {
     readonly pointer: Input.Pointer;
@@ -7,14 +8,16 @@ export class GameInput {
     private readonly movementKeys: Record<'W' | 'A' | 'S' | 'D', Input.Keyboard.Key>;
     private readonly actionKeys: Record<'inventory' | 'interact' | 'escape' | 'nextDay' | 'addMoney', Input.Keyboard.Key>;
     private readonly hotbarKeys: Input.Keyboard.Key[];
+    private readonly mobileControls?: MobileControls;
     private mouseWasDown = false;
 
     mousePressed = false;
     mouseReleased = false;
 
-    constructor(scene: Scene) {
+    constructor(scene: Scene, mobileControls?: MobileControls) {
         const keyboard = scene.input.keyboard!;
 
+        this.mobileControls = mobileControls;
         this.pointer = scene.input.activePointer;
         this.arrows = keyboard.createCursorKeys();
         this.movementKeys = {
@@ -43,9 +46,33 @@ export class GameInput {
     }
 
     update(): void {
-        this.mousePressed = this.pointer.primaryDown && !this.mouseWasDown;
-        this.mouseReleased = !this.pointer.primaryDown && this.mouseWasDown;
+        // Touches on the on-screen controls never reach the world, so
+        // pressing a touch button cannot trigger farming actions.
+        const pointerClaimed = this.mobileControls?.isPointerClaimed(this.pointer.id)
+            ?? false;
+
+        this.mousePressed = this.pointer.primaryDown
+            && !this.mouseWasDown
+            && !pointerClaimed;
+        this.mouseReleased = !this.pointer.primaryDown
+            && this.mouseWasDown
+            && !pointerClaimed;
         this.mouseWasDown = this.pointer.primaryDown;
+    }
+
+    // Analog joystick axis while the touch joystick is active,
+    // otherwise the digital keyboard direction.
+    getMovementAxis(): { x: number; y: number } {
+        const joystickAxis = this.mobileControls?.getMoveAxis();
+
+        if (joystickAxis) {
+            return joystickAxis;
+        }
+
+        return {
+            x: Number(this.isRightDown()) - Number(this.isLeftDown()),
+            y: Number(this.isDownDown()) - Number(this.isUpDown())
+        };
     }
 
     isLeftDown(): boolean {
@@ -65,15 +92,18 @@ export class GameInput {
     }
 
     inventoryPressed(): boolean {
-        return Input.Keyboard.JustDown(this.actionKeys.inventory);
+        return Input.Keyboard.JustDown(this.actionKeys.inventory)
+            || this.mobileControls?.consumeInventoryPress() === true;
     }
 
     interactPressed(): boolean {
-        return Input.Keyboard.JustDown(this.actionKeys.interact);
+        return Input.Keyboard.JustDown(this.actionKeys.interact)
+            || this.mobileControls?.consumeInteractPress() === true;
     }
 
     escapePressed(): boolean {
-        return Input.Keyboard.JustDown(this.actionKeys.escape);
+        return Input.Keyboard.JustDown(this.actionKeys.escape)
+            || this.mobileControls?.consumePausePress() === true;
     }
 
     nextDayPressed(): boolean {

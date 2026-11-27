@@ -45,6 +45,14 @@ export class InventorySlotView {
         return this.container.visible && this.container.getBounds().contains(x, y);
     }
 
+    setScale(scale: number): void {
+        this.slotImage.setScale(scale);
+        this.selectorImage.setScale(scale);
+        this.itemImage.setScale(scale);
+        this.quantityText.setPosition(8 * scale, 8 * scale);
+        this.quantityText.setFontSize(8 * scale);
+    }
+
     refresh(slot: InventorySlot, isSelected: boolean): void {
         this.selectorImage.setVisible(isSelected);
 

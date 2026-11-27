@@ -1,5 +1,7 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
+import { MobileControls } from '../input/MobileControls';
+import { getTouchPromptY, isTouchDevice } from '../input/TouchSupport';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
@@ -42,6 +44,7 @@ export type BuildingInteriorData = {
 export class BuildingInteriorScene extends Scene {
     // Shared scene services and runtime state.
     protected gameInput: GameInput;
+    private mobileControls?: MobileControls;
     protected inventory: InventoryService;
     protected money: MoneyService;
     protected gameTime: TimeService;
@@ -112,7 +115,14 @@ export class BuildingInteriorScene extends Scene {
             .setViewport(0, 0, this.scale.width, this.scale.height)
             .centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
 
-        this.gameInput = new GameInput(this);
+        // On-screen touch controls only appear on touch devices.
+        this.mobileControls = isTouchDevice() ? new MobileControls(this) : undefined;
+
+        if (this.mobileControls) {
+            this.cameras.main.ignore(this.mobileControls.uiObjects);
+        }
+
+        this.gameInput = new GameInput(this, this.mobileControls);
         this.scale.on('resize', this.resizeScene, this);
         this.events.once('shutdown', () => {
             this.scale.off('resize', this.resizeScene, this);
@@ -164,10 +174,17 @@ export class BuildingInteriorScene extends Scene {
         const prompt = new InteractionPrompt(this, message);
         prompt.container
             .setScrollFactor(0)
-            .setPosition(this.scale.width / 2, this.scale.height - 120);
+            .setPosition(this.scale.width / 2, this.getPromptY());
 
         this.cameras.main.ignore(prompt.container);
         return prompt;
+    }
+
+    // Prompts move above the touch controls on touch devices.
+    private getPromptY(): number {
+        return isTouchDevice()
+            ? getTouchPromptY(this.scale.width, this.scale.height)
+            : this.scale.height - 120;
     }
 
     protected isPlayerInside(zone: Geom.Rectangle): boolean {
@@ -263,7 +280,11 @@ export class BuildingInteriorScene extends Scene {
             .setViewport(0, 0, this.scale.width, this.scale.height)
             .centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
-        this.exitPrompt.container.setPosition(this.scale.width / 2, this.scale.height - 120);
+        const promptY = this.getPromptY();
+
+        this.exitPrompt.container.setPosition(this.scale.width / 2, promptY);
+        this.activePanel?.prompt.container.setPosition(this.scale.width / 2, promptY);
+        this.mobileControls?.layout();
         this.hud.layout();
         this.screenFade.layout();
         this.activePanel?.panel.layout();

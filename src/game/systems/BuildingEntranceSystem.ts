@@ -1,5 +1,6 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
+import { getTouchPromptY, isTouchDevice } from '../input/TouchSupport';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
@@ -94,10 +95,12 @@ export class BuildingEntranceSystem {
     }
 
     layout(): void {
-        this.prompt.container.setPosition(
-            this.scene.scale.width / 2,
-            this.scene.scale.height - 120
-        );
+        const { width, height } = this.scene.scale;
+        const promptY = isTouchDevice()
+            ? getTouchPromptY(width, height)
+            : height - 120;
+
+        this.prompt.container.setPosition(width / 2, promptY);
     }
 
     private getCurrentEntrance(): BuildingEntrance | undefined {
