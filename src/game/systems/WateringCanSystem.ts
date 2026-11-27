@@ -5,6 +5,7 @@ import { hotbarSlotCount, InventoryService } from '../services/InventoryService'
 import { translate } from '../services/LanguageService';
 import { playSound } from '../services/SoundService';
 import { WateringCanService } from '../services/WateringCanService';
+import { getHotbarScale } from '../ui/InventoryUi';
 import { InteractionPrompt } from '../ui/InteractionPrompt';
 
 const fillWateringCanAction = 'fill_watering_can';
@@ -131,7 +132,8 @@ export class WateringCanSystem {
             return;
         }
 
-        const scaledSlotSize = hotbarSlotSize * hotbarSlotScale;
+        const hotbarScale = getHotbarScale(this.config.scene.scale.width);
+        const scaledSlotSize = hotbarSlotSize * hotbarSlotScale * hotbarScale;
         const totalWidth = hotbarSlotCount * scaledSlotSize
             + (hotbarSlotCount - 1) * hotbarSlotGap;
         const startX = this.config.scene.scale.width / 2

@@ -1,5 +1,6 @@
 import { Geom, Scene } from 'phaser';
 import { GameInput } from '../input/GameInput';
+import { TouchControls } from '../input/TouchControls';
 import { Player } from '../objects/Player';
 import { EnergyService } from '../services/EnergyService';
 import { InventoryService } from '../services/InventoryService';
@@ -50,6 +51,7 @@ export class BuildingInteriorScene extends Scene {
     protected quests: QuestService;
     protected hud: GameHud;
     protected screenFade: ScreenFade;
+    protected touchControls: TouchControls;
     protected isFaintAnimationRunning = false;
 
     private player: Player;
@@ -113,6 +115,11 @@ export class BuildingInteriorScene extends Scene {
             .centerOn(this.map.widthInPixels / 2, this.map.heightInPixels / 2);
 
         this.gameInput = new GameInput(this);
+
+        // On touch devices, on-screen joystick and action buttons.
+        this.touchControls = new TouchControls(this);
+        this.cameras.main.ignore(this.touchControls.uiObjects);
+
         this.scale.on('resize', this.resizeScene, this);
         this.events.once('shutdown', () => {
             this.scale.off('resize', this.resizeScene, this);
@@ -265,6 +272,7 @@ export class BuildingInteriorScene extends Scene {
         this.uiCamera.setViewport(0, 0, this.scale.width, this.scale.height);
         this.exitPrompt.container.setPosition(this.scale.width / 2, this.scale.height - 120);
         this.hud.layout();
+        this.touchControls.layout();
         this.screenFade.layout();
         this.activePanel?.panel.layout();
     }
