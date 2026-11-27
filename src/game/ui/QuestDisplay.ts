@@ -1,4 +1,5 @@
 import { GameObjects, Scene } from 'phaser';
+import { isTouchDevice } from '../input/TouchSupport';
 import { translate } from '../services/LanguageService';
 import { QuestService, QuestView } from '../services/QuestService';
 import { createPixelNineSlice } from './PixelNineSlice';
@@ -7,6 +8,10 @@ const frameWidth = 270;
 const frameHeight = 96;
 const marginRight = 24;
 const cardY = 94;
+const compactScale = 0.85;
+const compactMargin = 12;
+const compactY = 196;
+const touchQuestOffset = 40;
 
 export class QuestDisplay {
     readonly container: GameObjects.Container;
@@ -94,12 +99,26 @@ export class QuestDisplay {
     }
 
     layout(): void {
+        const { width, height } = this.scene.scale;
+
+        // On compact screens the quest card moves under the HUD panels
+        // on the left side of the screen.
+        if (width < 620 || height < 500) {
+            this.container
+                .setScale(compactScale)
+                .setPosition(compactMargin + frameWidth * compactScale / 2, compactY);
+            return;
+        }
+
         const x = Math.max(
             frameWidth / 2 + 12,
-            this.scene.scale.width - frameWidth / 2 - marginRight
+            width - frameWidth / 2 - marginRight
         );
 
-        this.container.setPosition(x, cardY);
+        // Touch devices keep a gap below the card for the menu button.
+        const y = isTouchDevice() ? cardY + touchQuestOffset : cardY;
+
+        this.container.setScale(1).setPosition(x, y);
     }
     private getQuestToDisplay(): QuestView | undefined {
         const activeQuests = this.quests.getActiveQuests();
