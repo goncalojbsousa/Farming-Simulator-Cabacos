@@ -97,6 +97,34 @@ Quando uma quest fica completa, o jogador deve voltar ao Crop Market e clicar em
 | Clique esquerdo | Usar item selecionado no terreno |
 | Arrastar com o rato | Mover itens entre inventário e hotbar |
 
+## Suporte Móvel (Controlos Touch)
+
+O jogo também pode ser jogado em **telemóveis e tablets** diretamente no browser. Num ecrã com suporte para toque, os controlos touch aparecem automaticamente:
+
+| Controlo | Função |
+|---|---|
+| Joystick virtual (metade esquerda do ecrã) | Mover o jogador em qualquer direção, com velocidade analógica |
+| Botão **Usar** | Interagir com edifícios, lojas, cama, mercado, poço e saídas |
+| Botão **Mochila** | Abrir ou fechar o inventário |
+| Botão **Menu** | Abrir o menu de pausa |
+| Toque no terreno (perto do jogador) | Usar o item selecionado (enxada, sementes, regador, foice) |
+| Toque num slot da hotbar | Selecionar o item |
+| Arrastar entre slots | Mover itens entre inventário e hotbar |
+
+O joystick é *flutuante*: aparece onde o dedo toca na metade esquerda do ecrã e só ativa o movimento após arrastar, para que toques rápidos continuem a funcionar para usar itens no terreno.
+
+Adaptações para ecrãs pequenos:
+
+- HUD compacto: painéis de dinheiro, hora e energia reposicionados e redimensionados.
+- Hotbar com slots mais pequenos em ecrãs estreitos, para os 8 slots caberem sempre.
+- Cartão de quests reposicionado para não colidir com os controlos.
+- Prompts de interação movidos para acima dos botões touch.
+- Suporte multi-touch (joystick + botões + uso de itens em simultâneo).
+- Sem zoom, scroll ou seleção acidental da página durante o jogo (`touch-action`, `viewport` otimizado).
+- Configuração do Phaser com 3 ponteiros ativos para multi-touch.
+
+No desktop, o comportamento com teclado e rato mantém-se exatamente igual.
+
 ## Imagens do Projeto
 
 ### Mapa Principal
