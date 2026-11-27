@@ -17,24 +17,25 @@ export class Player {
     }
 
     update(input: GameInput): void {
-        const horizontalMovement =
-            Number(input.isRightDown()) - Number(input.isLeftDown());
-        const verticalMovement =
-            Number(input.isDownDown()) - Number(input.isUpDown());
-        const movement = new PhaserMath.Vector2(
-            horizontalMovement,
-            verticalMovement
-        ).normalize().scale(this.speed);
+        const axis = input.getMovementAxis();
+        const movement = new PhaserMath.Vector2(axis.x, axis.y);
 
+        // The touch joystick sends analog values; keyboard input is
+        // already digital, so only full-length vectors are normalized.
+        if (movement.length() > 1) {
+            movement.normalize();
+        }
+
+        movement.scale(this.speed);
         this.sprite.setVelocity(movement.x, movement.y);
 
-        if (horizontalMovement < 0) {
+        if (axis.x < 0) {
             this.sprite.setFlipX(true);
-        } else if (horizontalMovement > 0) {
+        } else if (axis.x > 0) {
             this.sprite.setFlipX(false);
         }
 
-        if (horizontalMovement !== 0 || verticalMovement !== 0) {
+        if (axis.x !== 0 || axis.y !== 0) {
             this.sprite.play('walk', true);
 
             if (this.scene.time.now - this.lastStepTime >= 300) {

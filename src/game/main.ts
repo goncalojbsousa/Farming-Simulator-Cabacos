@@ -32,6 +32,11 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: false
         }
     },
+    input: {
+        // The touch joystick, action buttons and farming taps can be
+        // used at the same time on touch screens.
+        activePointers: 3
+    },
     scale: {
         mode: Scale.RESIZE,
         autoCenter: Scale.CENTER_BOTH
